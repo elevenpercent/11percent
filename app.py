@@ -71,6 +71,13 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# ── Loading spinner on cold start ────────────────────────────────────────────
+with st.spinner("🔄 Loading BacktestFree... (first load may take a moment)"):
+    import yfinance  # noqa: F401 — pre-import heavy packages so pages load faster
+    import plotly    # noqa: F401
+    import pandas    # noqa: F401
+    import numpy     # noqa: F401
+
 # ── Home page content ─────────────────────────────────────────────────────────
 st.markdown("# 📈 BacktestFree")
 st.markdown("### A free, open-source backtesting platform for everyone.")
