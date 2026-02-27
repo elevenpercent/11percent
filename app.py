@@ -485,11 +485,6 @@ with right:
                 <div class="ohlc-value" style="color:#f0b429;">9</div>
             </div>
         </div>
-        <div class="ohlc-row">
-            <div class="ohlc-box">
-                <div class="ohlc-label">Stocks</div>
-                <div class="ohlc-value" style="color:#4da6ff;">Every Stock you know</div>
-            </div>
             <div class="ohlc-box">
                 <div class="ohlc-label">Cost</div>
                 <div class="ohlc-value" style="color:#00d68f;">$0</div>
