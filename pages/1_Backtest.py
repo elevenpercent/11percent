@@ -1,38 +1,80 @@
 import streamlit as st
 import sys, os
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from datetime import date, timedelta
 
-from utils.styles import SHARED_CSS
+# Maintain your path logic
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 from utils.data import get_stock_data, get_ticker_info
 from utils.strategies import STRATEGY_REGISTRY, run_backtest
 from utils.charts import chart_candles, chart_portfolio, chart_rsi, chart_macd, chart_bollinger, chart_supertrend, chart_ichimoku
 from utils.indicators import rsi, macd, bollinger_bands, supertrend, ichimoku
 
+# ── Appearance Configuration ──────────────────────────────────────────────────
 st.set_page_config(page_title="Backtest | 11%", page_icon="🔬", layout="wide")
-st.markdown(SHARED_CSS, unsafe_allow_html=True)
 
+st.markdown("""
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;600;700&family=IBM+Plex+Sans:wght@300;400;600&display=swap');
+    :root {
+        --bg:#07090d; --surface:#0d1117; --border:#1c2333; --border2:#263045;
+        --green:#00d68f; --red:#ff4757; --text:#cdd5e0; --muted:#3a4558;
+        --grid:rgba(255,255,255,0.03);
+    }
+    html,body,[data-testid="stAppViewContainer"],[data-testid="stMain"],.main {
+        background-color:var(--bg)!important; color:var(--text)!important;
+        font-family:'IBM Plex Sans',sans-serif!important;
+    }
+    [data-testid="stMain"] {
+        background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px)!important;
+        background-size:48px 48px!important;
+    }
+    [data-testid="stSidebar"] { background-color:var(--surface)!important; border-right:1px solid var(--border)!important; }
+    [data-testid="stSidebarNav"] { display:none!important; }
+    h1 { font-family:'Bebas Neue',sans-serif!important; letter-spacing:0.06em; color:var(--text)!important; font-size:4rem!important; margin-bottom:0!important; }
+    h2 { font-family:'Bebas Neue',sans-serif!important; letter-spacing:0.05em; color:var(--text)!important; }
+    h3 { font-family:'IBM Plex Mono',monospace!important; font-size:0.75rem!important; color:var(--green)!important; text-transform:uppercase; letter-spacing:0.15em; margin-bottom:1rem; }
+    
+    .stButton>button { background:transparent!important; color:var(--green)!important; border:1px solid var(--green)!important; border-radius:3px!important; font-family:'IBM Plex Mono',monospace!important; font-weight:600!important; font-size:0.78rem!important; letter-spacing:0.1em!important; padding:0.45rem 1.4rem!important; transition:all 0.15s!important; text-transform:uppercase!important; width:100%; }
+    .stButton>button:hover { background:var(--green)!important; color:#000!important; }
+    
+    [data-testid="stSidebar"] a[data-testid="stPageLink-NavLink"] { font-family:'IBM Plex Mono',monospace!important; font-size:0.72rem!important; text-transform:uppercase!important; letter-spacing:0.1em!important; color:#3a4558!important; padding:0.45rem 0.3rem!important; border-bottom:1px solid #1c2333!important; border-radius:0!important; display:block!important; }
+    [data-testid="stSidebar"] a[data-testid="stPageLink-NavLink"]:hover { color:#00d68f!important; background:transparent!important; }
+    [data-testid="stSidebar"] a[aria-current="page"] { color:#00d68f!important; background:transparent!important; }
+
+    .metric-card { background:var(--surface); border:1px solid var(--border); padding:1rem; border-radius:4px; text-align:center; }
+    .metric-val { font-family:'IBM Plex Mono',monospace; font-size:1.1rem; font-weight:700; }
+    .metric-lbl { font-family:'IBM Plex Mono',monospace; font-size:0.55rem; color:var(--muted); text-transform:uppercase; margin-top:0.3rem; }
+    .pos { color:var(--green); }
+    .neg { color:var(--red); }
+    .neu { color:var(--text); }
+</style>
+""", unsafe_allow_html=True)
+
+# ── Sidebar Navigation ────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown('<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.8rem;color:#f0b429;letter-spacing:0.1em;">11%</div>', unsafe_allow_html=True)
-    st.markdown("---")
-    st.markdown("### SETTINGS")
+    st.image("assets/logo.png", width=120)
+    st.markdown('''<div style="padding-top:1rem;padding-bottom:0.5rem;border-top:1px solid #1c2333;"><div style="font-family:IBM Plex Mono,monospace;font-size:0.6rem;color:#3a4558;text-transform:uppercase;letter-spacing:0.18em;margin-bottom:0.5rem;">Navigation</div></div>''', unsafe_allow_html=True)
+    st.page_link("app.py",                         label=" Home")
+    st.page_link("pages/1_Backtest.py",           label=" Backtest")
+    st.page_link("pages/2_Indicator_Test.py",     label=" Indicator")
+    st.page_link("pages/3_Replay.py",             label="  Replay")
+    st.page_link("pages/4_Analysis.py",           label=" Analysis")
+    st.page_link("pages/5_Assistant.py",          label=" Assistant")
 
-    ticker = st.text_input("Ticker Symbol", value="AAPL", help="e.g. AAPL, TSLA, SPY, BTC-USD").upper().strip()
-
+    st.markdown("### STRATEGY CONFIG")
+    ticker = st.text_input("Ticker Symbol", value="AAPL").upper().strip()
     col1, col2 = st.columns(2)
-    with col1:
-        start_date = st.date_input("Start", value=date.today() - timedelta(days=365*3))
-    with col2:
-        end_date = st.date_input("End", value=date.today())
-
+    with col1: start_date = st.date_input("Start", value=date.today() - timedelta(days=365*3))
+    with col2: end_date = st.date_input("End", value=date.today())
     capital = st.number_input("Capital ($)", value=10000, min_value=100, step=1000)
     strategy_name = st.selectbox("Strategy", list(STRATEGY_REGISTRY.keys()))
 
-    # Strategy params
     st.markdown("### PARAMETERS")
     strategy_info = STRATEGY_REGISTRY[strategy_name]
     user_params = {}
 
+    # Logic for parameters
     if strategy_name == "SMA Crossover":
         user_params["short"] = st.slider("Short SMA", 5, 50, 20)
         user_params["long"]  = st.slider("Long SMA", 20, 200, 50)
@@ -67,46 +109,46 @@ with st.sidebar:
         user_params["slow"]      = st.slider("MACD Slow", 15, 50, 26)
         user_params["st_window"] = st.slider("ST ATR Period", 5, 20, 10)
 
-    run_btn = st.button("▶  RUN BACKTEST", use_container_width=True)
+    run_btn = st.button("▶  RUN BACKTEST")
+    st.markdown('''<div style="margin-top:2rem;text-align:center;font-family:IBM Plex Mono,monospace;font-size:0.6rem;color:#3a4558;text-transform:uppercase;letter-spacing:0.1em;">Free · Open Source</div>''', unsafe_allow_html=True)
 
-# ── Page header ───────────────────────────────────────────────────────────────
-st.markdown("""
-<div class="page-header">
-    <h1>BACKTEST</h1>
-    <p>Test pre-built strategies against historical price data.</p>
+# ── Page Header ──────────────────────────────────────────────────────────────
+st.markdown(f"""
+<div style="padding: 2rem 0 1rem 0;">
+    <div style="font-family:'IBM Plex Mono',monospace; font-size:0.7rem; color:var(--green); text-transform:uppercase; letter-spacing:0.25em; margin-bottom:0.4rem;">Simulation Engine</div>
+    <h1>BACKTEST <span style="color:var(--green)">LAB</span></h1>
 </div>
 """, unsafe_allow_html=True)
 
-# ── Run ───────────────────────────────────────────────────────────────────────
+# ── Run Logic ─────────────────────────────────────────────────────────────────
 if run_btn:
-    with st.spinner(f"Loading {ticker}..."):
+    with st.spinner(f"Fetching {ticker}..."):
         df = get_stock_data(ticker, str(start_date), str(end_date))
     if df.empty:
+        st.error("No data found for this ticker.")
         st.stop()
 
     info = get_ticker_info(ticker)
     st.markdown(f"""
-    <div style="font-family:'IBM Plex Mono',monospace; font-size:0.78rem; color:#4a5568; margin-bottom:1.5rem;">
-        {info.get('name', ticker)} &nbsp;·&nbsp; {info.get('sector','N/A')} &nbsp;·&nbsp;
-        {len(df)} trading days &nbsp;·&nbsp; {str(start_date)} → {str(end_date)}
+    <div style="font-family:'IBM Plex Mono',monospace; font-size:0.72rem; color:var(--muted); margin-bottom:2rem; text-transform:uppercase; letter-spacing:0.05em;">
+        {info.get('name', ticker)} &nbsp;·&nbsp; {info.get('sector','N/A')} &nbsp;·&nbsp; {len(df)} candles &nbsp;·&nbsp; {start_date} → {end_date}
     </div>
     """, unsafe_allow_html=True)
 
-    with st.spinner("Running backtest..."):
-        try:
-            fn = strategy_info["fn"]
-            signals = fn(df, **user_params)
-            result = run_backtest(df, signals, float(capital))
-        except Exception as e:
-            st.error(f"Error: {e}")
-            st.stop()
+    try:
+        fn = strategy_info["fn"]
+        signals = fn(df, **user_params)
+        result = run_backtest(df, signals, float(capital))
+    except Exception as e:
+        st.error(f"Strategy Error: {e}")
+        st.stop()
 
     m = result["metrics"]
     port = result["portfolio"]
     trades = result["trades"]
 
-    # ── Metrics ───────────────────────────────────────────────────────────────
-    st.markdown("### PERFORMANCE")
+    # ── Performance Grid ──────────────────────────────────────────────────────
+    st.markdown("### PERFORMANCE METRICS")
     cols = st.columns(8)
     def mcard(col, val, lbl, fmt="pct"):
         if fmt == "pct":
@@ -115,77 +157,47 @@ if run_btn:
         elif fmt == "usd":
             cls = "neu"
             display = f"${val:,.0f}"
-        elif fmt == "raw":
-            cls = "neu"
-            display = str(val)
         else:
             cls = "neu"
             display = val
         col.markdown(f'<div class="metric-card"><div class="metric-val {cls}">{display}</div><div class="metric-lbl">{lbl}</div></div>', unsafe_allow_html=True)
 
-    mcard(cols[0], m["total_return"],  "Strategy Return")
-    mcard(cols[1], m["bh_return"],     "Buy & Hold")
-    mcard(cols[2], m["max_drawdown"],  "Max Drawdown")
-    mcard(cols[3], m["final_value"],   "Final Value", fmt="usd")
-    mcard(cols[4], m["win_rate"],      "Win Rate")
-    mcard(cols[5], m["sharpe"],        "Sharpe Ratio", fmt="pct")
+    mcard(cols[0], m["total_return"], "Strategy")
+    mcard(cols[1], m["bh_return"], "B&H")
+    mcard(cols[2], m["max_drawdown"], "Drawdown")
+    mcard(cols[3], m["final_value"], "Final", fmt="usd")
+    mcard(cols[4], m["win_rate"], "Win Rate")
+    mcard(cols[5], m["sharpe"], "Sharpe", fmt="raw")
     cols[6].markdown(f'<div class="metric-card"><div class="metric-val neu">{m["num_trades"]}</div><div class="metric-lbl">Trades</div></div>', unsafe_allow_html=True)
     alpha = m["total_return"] - m["bh_return"]
     cols[7].markdown(f'<div class="metric-card"><div class="metric-val {"pos" if alpha>=0 else "neg"}">{alpha:+.2f}%</div><div class="metric-lbl">Alpha</div></div>', unsafe_allow_html=True)
 
     # ── Charts ────────────────────────────────────────────────────────────────
-    st.markdown("### CHART")
-
-    # Build overlays for price chart
+    st.markdown("<br>### ANALYSIS CHART", unsafe_allow_html=True)
+    
     overlays = {}
-    if strategy_name in ["SMA Crossover"]:
+    if strategy_name == "SMA Crossover":
         from utils.indicators import sma
         overlays[f"SMA {user_params['short']}"] = sma(df["Close"], user_params["short"])
         overlays[f"SMA {user_params['long']}"]  = sma(df["Close"], user_params["long"])
     elif strategy_name in ["EMA Crossover", "EMA + RSI Filter"]:
         from utils.indicators import ema
-        overlays[f"EMA {user_params['ema_fast' if 'ema_fast' in user_params else 'short']}"] = \
-            ema(df["Close"], user_params.get("ema_fast", user_params.get("short")))
-        overlays[f"EMA {user_params['ema_slow' if 'ema_slow' in user_params else 'long']}"] = \
-            ema(df["Close"], user_params.get("ema_slow", user_params.get("long")))
+        overlays["Fast EMA"] = ema(df["Close"], user_params.get("ema_fast", user_params.get("short")))
+        overlays["Slow EMA"] = ema(df["Close"], user_params.get("ema_slow", user_params.get("long")))
 
     if strategy_name == "Bollinger Bands":
         st.plotly_chart(chart_bollinger(df, bollinger_bands(df["Close"], user_params["window"], user_params["num_std"])), use_container_width=True)
     elif strategy_name == "SuperTrend":
         st.plotly_chart(chart_supertrend(df, supertrend(df, user_params["window"], user_params["multiplier"])), use_container_width=True)
-    elif strategy_name == "Ichimoku":
-        st.plotly_chart(chart_ichimoku(df, ichimoku(df)), use_container_width=True)
     else:
-        st.plotly_chart(chart_candles(df, trades, overlays=overlays, title=f"{ticker} — {strategy_name}"), use_container_width=True)
-
-    # Sub-indicator charts
-    if strategy_name in ["RSI", "RSI + Bollinger Bands", "EMA + RSI Filter"]:
-        rsi_data = rsi(df["Close"], user_params.get("rsi_window", user_params.get("window", 14)))
-        st.plotly_chart(chart_rsi(rsi_data, user_params.get("oversold", 30), user_params.get("overbought", 70)), use_container_width=True)
-    if strategy_name in ["MACD", "MACD + SuperTrend"]:
-        macd_data = macd(df["Close"], user_params.get("fast", 12), user_params.get("slow", 26))
-        st.plotly_chart(chart_macd(macd_data["macd"], macd_data["signal"], macd_data["histogram"]), use_container_width=True)
+        st.plotly_chart(chart_candles(df, trades, overlays=overlays, title=f"{ticker} Analysis"), use_container_width=True)
 
     st.plotly_chart(chart_portfolio(port, df, float(capital)), use_container_width=True)
 
-    # ── Trade log ─────────────────────────────────────────────────────────────
     if not trades.empty:
-        with st.expander("📋 TRADE LOG"):
-            st.dataframe(trades.set_index("date").style.applymap(
-                lambda v: "color:#00d68f" if v == "BUY" else ("color:#ff4757" if "SELL" in str(v) else ""),
-                subset=["action"]
-            ), use_container_width=True)
+        with st.expander("📋 VIEW COMPLETE TRADE LOG"):
+            st.dataframe(trades, use_container_width=True)
 
-    # Save for assistant context
-    st.session_state["last_backtest"] = {
-        "ticker": ticker, "strategy": strategy_name,
-        "params": user_params, "metrics": m,
-    }
-    st.success("✅ Done! Visit the **AI Assistant** page to get these results explained.")
-
+    st.session_state["last_backtest"] = {"ticker": ticker, "strategy": strategy_name, "params": user_params, "metrics": m}
 else:
-    st.markdown("""
-    <div class="info-box">
-        ← Configure your strategy in the sidebar and hit RUN BACKTEST to get started.
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown('<div style="background:var(--surface); border:1px solid var(--border); padding:3rem; border-radius:8px; text-align:center; color:var(--muted); font-family:IBM Plex Mono; font-size:0.8rem; letter-spacing:0.1em;">← CONFIGURE AND RUN TO GENERATE BACKTEST RESULTS</div>', unsafe_allow_html=True)
