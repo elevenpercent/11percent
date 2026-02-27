@@ -52,6 +52,11 @@ st.markdown("""
         border-right: 1px solid var(--border) !important;
     }
 
+    /* ── Hide Streamlit's default page nav (we use our own) ── */
+    [data-testid="stSidebarNav"] {
+        display: none !important;
+    }
+
     /* ── Typography ── */
     h1 { font-family: 'Bebas Neue', sans-serif !important; letter-spacing: 0.06em; color: var(--text) !important; }
     h2 { font-family: 'Bebas Neue', sans-serif !important; letter-spacing: 0.05em; color: var(--text) !important; }
@@ -315,6 +320,27 @@ st.markdown("""
     }
 
     hr { border-color: var(--border) !important; }
+
+    /* ── Page links in sidebar ── */
+    [data-testid="stSidebar"] a[data-testid="stPageLink-NavLink"] {
+        font-family: 'IBM Plex Mono', monospace !important;
+        font-size: 0.72rem !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.1em !important;
+        color: #3a4558 !important;
+        padding: 0.45rem 0.3rem !important;
+        border-bottom: 1px solid #1c2333 !important;
+        border-radius: 0 !important;
+        display: block !important;
+    }
+    [data-testid="stSidebar"] a[data-testid="stPageLink-NavLink"]:hover {
+        color: #00d68f !important;
+        background: transparent !important;
+    }
+    [data-testid="stSidebar"] a[aria-current="page"] {
+        color: #00d68f !important;
+        background: transparent !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -333,33 +359,20 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     st.markdown("""
-    <div style="padding-top:1.2rem;">
+    <div style="padding-top:1.2rem; padding-bottom:0.5rem;">
         <div style="font-family:'IBM Plex Mono',monospace; font-size:0.6rem; color:#3a4558;
-                    text-transform:uppercase; letter-spacing:0.18em; margin-bottom:1rem;">
+                    text-transform:uppercase; letter-spacing:0.18em; margin-bottom:0.5rem;">
             Navigation
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    nav_items = [
-        ("🔬", "Backtest",       "green"),
-        ("📊", "Indicator Test", "gold"),
-        ("▶",  "Replay",         "red"),
-        ("🧠", "Analysis",       "blue"),
-        ("💬", "Assistant",      "green"),
-    ]
-    for icon, label, color in nav_items:
-        colors = {"green": "#00d68f", "gold": "#f0b429", "red": "#ff4757", "blue": "#4da6ff"}
-        st.markdown(f"""
-        <div style="display:flex; align-items:center; gap:0.8rem; padding:0.5rem 0.3rem;
-                    border-bottom:1px solid #1c2333; cursor:pointer;">
-            <span style="font-size:0.9rem;">{icon}</span>
-            <span style="font-family:'IBM Plex Mono',monospace; font-size:0.72rem;
-                         color:#3a4558; text-transform:uppercase; letter-spacing:0.1em;">{label}</span>
-            <span style="margin-left:auto; width:6px; height:6px; border-radius:50%;
-                         background:{colors[color]};"></span>
-        </div>
-        """, unsafe_allow_html=True)
+    st.page_link("app_preview.py",            label="🏠  Home")
+    st.page_link("pages/1_Backtest.py",       label="🔬  Backtest")
+    st.page_link("pages/2_Indicator_Test.py", label="📊  Indicator Test")
+    st.page_link("pages/3_Replay.py",         label="▶   Replay")
+    st.page_link("pages/4_Analysis.py",       label="🧠  Analysis")
+    st.page_link("pages/5_Assistant.py",      label="💬  Assistant")
 
     st.markdown("""
     <div style="position:absolute; bottom:1.5rem; left:1rem; right:1rem;">
@@ -473,7 +486,7 @@ with right:
                     color:#3a4558; text-transform:uppercase; letter-spacing:0.18em; margin-bottom:0.6rem;">
             Market Status
         </div>
-        <div style="background:var(--surface); border:1px solid #1c2333; border-radius:6px; padding:1rem;">
+        <div style="background:#0d1117; border:1px solid #1c2333; border-radius:6px; padding:1rem;">
             <div style="display:flex; justify-content:space-between; align-items:center;
                         font-family:'IBM Plex Mono',monospace; font-size:0.72rem; margin-bottom:0.6rem;">
                 <span style="color:#3a4558;">NYSE</span>
