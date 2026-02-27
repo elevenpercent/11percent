@@ -482,29 +482,17 @@ with right:
             </div>
         </div>
 
-        <div style="margin-top:1.5rem; font-family:'IBM Plex Mono',monospace; font-size:0.6rem;
-                    color:#3a4558; text-transform:uppercase; letter-spacing:0.18em; margin-bottom:0.6rem;">
-            Market Status
-        </div>
-        <div style="background:#0d1117; border:1px solid #1c2333; border-radius:6px; padding:1rem;">
-            <div style="display:flex; justify-content:space-between; align-items:center;
-                        font-family:'IBM Plex Mono',monospace; font-size:0.72rem; margin-bottom:0.6rem;">
-                <span style="color:#3a4558;">NYSE</span>
-                <span style="color:#00d68f;">● OPEN</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center;
-                        font-family:'IBM Plex Mono',monospace; font-size:0.72rem; margin-bottom:0.6rem;">
-                <span style="color:#3a4558;">NASDAQ</span>
-                <span style="color:#00d68f;">● OPEN</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center;
-                        font-family:'IBM Plex Mono',monospace; font-size:0.72rem;">
-                <span style="color:#3a4558;">CRYPTO</span>
-                <span style="color:#00d68f;">● 24/7</span>
-            </div>
-        </div>
     </div>
     """, unsafe_allow_html=True)
+
+    # Market Status — using st.columns to avoid flex sanitization
+    st.markdown('<div style="font-family:IBM Plex Mono,monospace;font-size:0.6rem;color:#3a4558;text-transform:uppercase;letter-spacing:0.18em;margin:1rem 0 0.5rem 0;">Market Status</div>', unsafe_allow_html=True)
+    _ms = {"NYSE": "OPEN", "NASDAQ": "OPEN", "CRYPTO": "24/7"}
+    for exchange, status in _ms.items():
+        _c1, _c2 = st.columns(2)
+        _c1.markdown(f'<div style="font-family:IBM Plex Mono,monospace;font-size:0.7rem;color:#3a4558;padding:0.3rem 0;">{exchange}</div>', unsafe_allow_html=True)
+        _c2.markdown(f'<div style="font-family:IBM Plex Mono,monospace;font-size:0.7rem;color:#00d68f;padding:0.3rem 0;">● {status}</div>', unsafe_allow_html=True)
+
 
 # ── Divider ───────────────────────────────────────────────────────────────────
 st.markdown("""
