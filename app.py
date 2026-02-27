@@ -596,10 +596,10 @@ st.markdown("""
             display:flex; justify-content:space-between; align-items:center;">
     <div style="font-family:'IBM Plex Mono',monospace; font-size:0.65rem; color:#3a4558;">
         <span style="color:#00d68f;">11</span><span style="color:#ff4757;">%</span>
-        &nbsp;·&nbsp; Free · Open Source · Educational Use Only
+        &nbsp;·&nbsp; Free · Open Source · Educational Use Only · Rishi Gopinath · Please dont sue ·
     </div>
     <div style="font-family:'IBM Plex Mono',monospace; font-size:0.65rem; color:#3a4558;">
-        ⚠️ Not financial advice. Past performance ≠ future results.
+         Not financial advice. Past performance ≠ future results.
     </div>
 </div>
 """, unsafe_allow_html=True)
