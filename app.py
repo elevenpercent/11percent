@@ -3,11 +3,11 @@ import yfinance, plotly, pandas, numpy
 
 st.set_page_config(
     page_title="11% — Trading Platform",
-    page_icon="📈",
+    page_icon="💲",
     layout="wide",
     initial_sidebar_state="expanded",
 )
-
+st.image("assets/logo.png", width=120)
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;600;700&family=IBM+Plex+Sans:wght@300;400;600&display=swap');
