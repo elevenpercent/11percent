@@ -436,7 +436,6 @@ with left:
         <div class="hero-title">
             <span class="green">BACK</span><br>
             <span class="red">TEST</span><br>
-            <span class="gold">FREE</span>
         </div>
         <p class="hero-subtitle">
             A professional-grade trading platform built for everyone.
@@ -503,20 +502,6 @@ with right:
         _c2.markdown(f'<div style="font-family:IBM Plex Mono,monospace;font-size:0.7rem;color:#00d68f;padding:0.3rem 0;">● {status}</div>', unsafe_allow_html=True)
 
 
-# ── Divider ───────────────────────────────────────────────────────────────────
-st.markdown("""
-<div class="price-divider">PLATFORM FEATURES</div>
-""", unsafe_allow_html=True)
-
-# ── Feature cards ─────────────────────────────────────────────────────────────
-c1, c2, c3, c4, c5 = st.columns(5)
-cards = [
-    (c1, "🔬", "Backtest",       "green", "Test 9 pre-built strategies on any stock. Full metrics: return, drawdown, win rate, Sharpe."),
-    (c2, "📊", "Indicators",     "gold",  "Single or combo indicator testing. Up to 3 indicators with AND/OR logic and custom conditions."),
-    (c3, "▶",  "Replay",         "red",   "Replay any chart bar by bar. Practice entries and exits with live P&L tracking."),
-    (c4, "🧠", "Analysis",       "blue",  "AI-powered fundamental analysis. Financials, risk, valuation, and personalized insights."),
-    (c5, "💬", "Assistant",      "green", "Your personal AI trading coach. Knows your backtest history and trading profile."),
-]
 for col, icon, title, color, desc in cards:
     with col:
         st.markdown(f"""
