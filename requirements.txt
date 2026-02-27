@@ -1,7 +1,7 @@
 streamlit
 yfinance
 pandas
-pandas_ta
-google-generativeai
+numpy
 plotly
+google-generativeai
 python-dotenv
