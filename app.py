@@ -383,34 +383,48 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-# ── Ticker tape ───────────────────────────────────────────────────────────────
-tape_items = [
-    ("AAPL", "189.43", "+1.23%", True),
-    ("TSLA", "238.71", "-2.14%", False),
-    ("SPY",  "521.09", "+0.87%", True),
-    ("NVDA", "875.32", "+3.41%", True),
-    ("MSFT", "415.28", "-0.32%", False),
-    ("AMZN", "192.54", "+1.05%", True),
-    ("BTC-USD", "67,420", "+4.21%", True),
-    ("META", "503.17", "-1.87%", False),
-    ("GOOGL","172.63", "+0.54%", True),
-    ("AMD",  "168.91", "+2.73%", True),
-]
+# ── Ticker tape — real last close prices (cached 1hr) ────────────────────────
+TAPE_TICKERS = ["AAPL", "TSLA", "SPY", "NVDA", "MSFT", "AMZN", "BTC-USD", "META", "GOOGL", "AMD"]
+
+@st.cache_data(ttl=3600)
+def get_tape_data(tickers):
+    """Fetch last close price and daily change for ticker tape."""
+    import yfinance as yf
+    items = []
+    for sym in tickers:
+        try:
+            hist = yf.Ticker(sym).history(period="2d")
+            if len(hist) >= 2:
+                prev  = float(hist["Close"].iloc[-2])
+                close = float(hist["Close"].iloc[-1])
+                chg   = ((close - prev) / prev) * 100
+                up    = chg >= 0
+                arrow = "▲" if up else "▼"
+                cls   = "ticker-up" if up else "ticker-down"
+                price_str = f"{close:,.2f}"
+                chg_str   = f"{chg:+.2f}%"
+                items.append((sym, price_str, chg_str, arrow, cls))
+        except Exception:
+            pass  # skip tickers that fail silently
+    return items
+
+with st.spinner("Loading market data..."):
+    tape_items = get_tape_data(TAPE_TICKERS)
 
 def tape_html(items):
     html = ""
-    for sym, price, chg, up in items:
-        cls = "ticker-up" if up else "ticker-down"
-        arrow = "▲" if up else "▼"
+    for sym, price, chg, arrow, cls in items:
         html += f'<span class="ticker-item"><span class="ticker-sym">{sym}</span><span class="{cls}">{price} {arrow}{chg}</span></span>'
     return html
 
-tape = tape_html(tape_items) * 2  # duplicate for seamless loop
-st.markdown(f"""
+if tape_items:
+    tape = tape_html(tape_items) * 2  # duplicate for seamless loop
+    st.markdown(f"""
 <div class="ticker-wrap">
     <div class="ticker-tape">{tape}</div>
 </div>
 """, unsafe_allow_html=True)
+
 
 # ── Hero ──────────────────────────────────────────────────────────────────────
 left, right = st.columns([3, 2])
