@@ -367,7 +367,7 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    st.page_link("app_preview.py",            label="🏠  Home")
+    st.page_link("app.py",            label="🏠  Home")
     st.page_link("pages/1_Backtest.py",       label="🔬  Backtest")
     st.page_link("pages/2_Indicator_Test.py", label="📊  Indicator Test")
     st.page_link("pages/3_Replay.py",         label="▶   Replay")
