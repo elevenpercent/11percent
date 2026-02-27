@@ -487,8 +487,8 @@ with right:
         </div>
         <div class="ohlc-row">
             <div class="ohlc-box">
-                <div class="ohlc-label">Pages</div>
-                <div class="ohlc-value" style="color:#4da6ff;">5</div>
+                <div class="ohlc-label">Stocks</div>
+                <div class="ohlc-value" style="color:#4da6ff;">Every Stock you know</div>
             </div>
             <div class="ohlc-box">
                 <div class="ohlc-label">Cost</div>
