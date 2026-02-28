@@ -3,167 +3,157 @@ import google.generativeai as genai
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from utils.styles import SHARED_CSS
-
 st.set_page_config(page_title="Assistant | 11%", page_icon="💬", layout="wide")
-st.markdown(SHARED_CSS, unsafe_allow_html=True)
+st.markdown("""
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;600;700&family=IBM+Plex+Sans:wght@300;400;600&display=swap');
+    :root {
+        --bg:#07090d; --surface:#0d1117; --border:#1c2333; --border2:#263045;
+        --green:#00d68f; --red:#ff4757; --text:#cdd5e0; --muted:#3a4558;
+        --grid:rgba(255,255,255,0.03);
+    }
+    html,body,[data-testid="stAppViewContainer"],[data-testid="stMain"],.main {
+        background-color:var(--bg)!important; color:var(--text)!important;
+        font-family:'IBM Plex Sans',sans-serif!important;
+    }
+    [data-testid="stMain"] {
+        background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px)!important;
+        background-size:48px 48px!important;
+    }
+    [data-testid="stSidebar"] { background-color:var(--surface)!important; border-right:1px solid var(--border)!important; }
+    [data-testid="stSidebarNav"] { display:none!important; }
+    h1 { font-family:'Bebas Neue',sans-serif!important; letter-spacing:0.06em; color:var(--text)!important; }
+    h2 { font-family:'Bebas Neue',sans-serif!important; letter-spacing:0.05em; color:var(--text)!important; }
+    h3 { font-family:'IBM Plex Mono',monospace!important; font-size:0.75rem!important; color:var(--green)!important; text-transform:uppercase; letter-spacing:0.15em; }
+    .ticker-wrap { width:100%; overflow:hidden; background:var(--surface); border-top:1px solid var(--border); border-bottom:1px solid var(--border); padding:0.45rem 0; margin-bottom:2rem; }
+    .ticker-tape { display:inline-flex; animation:ticker 30s linear infinite; white-space:nowrap; }
+    .ticker-item { font-family:'IBM Plex Mono',monospace; font-size:0.72rem; padding:0 2rem; letter-spacing:0.06em; }
+    .ticker-up { color:var(--green); }
+    .ticker-down { color:var(--red); }
+    .ticker-sym { color:var(--text); margin-right:0.4rem; }
+    @keyframes ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+    .hero { padding:2.5rem 0 2rem 0; }
+    .hero-eyebrow { font-family:'IBM Plex Mono',monospace; font-size:0.7rem; color:var(--green); text-transform:uppercase; letter-spacing:0.25em; margin-bottom:0.8rem; }
+    .hero-title { font-family:'Bebas Neue',sans-serif; font-size:5.5rem; line-height:0.92; letter-spacing:0.04em; margin:0; }
+    .hero-title .green { color:var(--green); }
+    .hero-title .red   { color:var(--red); }
+    .hero-subtitle { font-size:0.9rem; color:var(--muted); margin-top:1.2rem; max-width:480px; line-height:1.7; }
+    .chart-deco { display:flex; align-items:flex-end; gap:4px; height:80px; margin:1.5rem 0; }
+    .candle-body { width:14px; border-radius:2px; position:relative; flex-shrink:0; }
+    .candle-wick { width:2px; background:inherit; position:absolute; left:50%; transform:translateX(-50%); border-radius:1px; opacity:0.6; }
+    .candle-wick-top { bottom:100%; }
+    .candle-wick-bottom { top:100%; }
+    .ohlc-row { display:flex; gap:1px; margin:0.8rem 0; background:var(--border); border-radius:6px; overflow:hidden; }
+    .ohlc-box { flex:1; background:var(--surface); padding:0.8rem; text-align:center; }
+    .ohlc-label { font-family:'IBM Plex Mono',monospace; font-size:0.6rem; text-transform:uppercase; letter-spacing:0.15em; color:var(--muted); margin-bottom:0.3rem; }
+    .ohlc-value { font-family:'IBM Plex Mono',monospace; font-size:1rem; font-weight:600; }
+    .price-divider { display:flex; align-items:center; gap:1rem; margin:1.5rem 0; font-family:'IBM Plex Mono',monospace; font-size:0.65rem; color:var(--muted); }
+    .price-divider::before,.price-divider::after { content:''; flex:1; height:1px; background:var(--border); }
+    ::-webkit-scrollbar { width:4px; }
+    ::-webkit-scrollbar-track { background:var(--bg); }
+    ::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+    .stButton>button { background:transparent!important; color:var(--green)!important; border:1px solid var(--green)!important; border-radius:3px!important; font-family:'IBM Plex Mono',monospace!important; font-weight:600!important; font-size:0.78rem!important; letter-spacing:0.1em!important; padding:0.45rem 1.4rem!important; transition:all 0.15s!important; text-transform:uppercase!important; }
+    .stButton>button:hover { background:var(--green)!important; color:#000!important; }
+    hr { border-color:var(--border)!important; }
+    [data-testid="stSidebar"] a[data-testid="stPageLink-NavLink"] { font-family:'IBM Plex Mono',monospace!important; font-size:0.72rem!important; text-transform:uppercase!important; letter-spacing:0.1em!important; color:#3a4558!important; padding:0.45rem 0.3rem!important; border-bottom:1px solid #1c2333!important; border-radius:0!important; display:block!important; }
+    [data-testid="stSidebar"] a[data-testid="stPageLink-NavLink"]:hover { color:#00d68f!important; background:transparent!important; }
+    [data-testid="stSidebar"] a[aria-current="page"] { color:#00d68f!important; background:transparent!important; }
 
-# ── API setup ─────────────────────────────────────────────────────────────────
-try:
-    api_key = st.secrets["GEMINI_API_KEY"]
-except Exception:
-    api_key = os.getenv("GEMINI_API_KEY", "")
+    .metric-card { background:#0d1117; border:1px solid #1c2333; padding:1rem; border-radius:4px; text-align:center; }
+    .metric-val { font-family:'IBM Plex Mono',monospace; font-size:1.1rem; font-weight:700; }
+    .metric-lbl { font-family:'IBM Plex Mono',monospace; font-size:0.55rem; color:#3a4558; text-transform:uppercase; margin-top:0.3rem; }
+    .pos { color:#00d68f; } .neg { color:#ff4757; } .neu { color:#cdd5e0; }
+    .page-header { border-left:3px solid #00d68f; padding-left:1rem; margin-bottom:1.5rem; }
+    .page-header p { color:#3a4558; font-size:0.88rem; margin-top:0.2rem; }
+    .info-box { background:#071a0f; border:1px solid #0d3320; border-radius:6px; padding:0.8rem 1rem; font-size:0.82rem; color:#00d68f; font-family:'IBM Plex Mono',monospace; }
+    .warn-box { background:#1a0a08; border:1px solid #3a1008; border-radius:6px; padding:0.8rem 1rem; font-size:0.82rem; color:#ff4757; font-family:'IBM Plex Mono',monospace; }
+    .chat-user { background:#0d1117; border:1px solid #1c2333; border-radius:10px 10px 3px 10px; padding:1rem 1.2rem; margin:0.6rem 0; }
+    .chat-ai { background:#071a0f; border:1px solid #0d3320; border-radius:10px 10px 10px 3px; padding:1rem 1.2rem; margin:0.6rem 0; }
+    .chat-lbl { font-family:'IBM Plex Mono',monospace; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.12em; color:#3a4558; margin-bottom:0.4rem; }
+</style>
+""", unsafe_allow_html=True)
 
-if api_key:
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-2.5-flash")
-else:
-    model = None
+try:    api_key = st.secrets["GEMINI_API_KEY"]
+except: api_key = os.getenv("GEMINI_API_KEY", "")
+if api_key: genai.configure(api_key=api_key); model = genai.GenerativeModel("gemini-2.5-flash")
+else:        model = None
 
-# ── Session state ─────────────────────────────────────────────────────────────
-if "messages"         not in st.session_state: st.session_state.messages = []
-if "user_profile"     not in st.session_state: st.session_state.user_profile = {}
+if "messages"     not in st.session_state: st.session_state.messages = []
+if "user_profile" not in st.session_state: st.session_state.user_profile = {}
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown('<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.8rem;color:#f0b429;letter-spacing:0.1em;">11%</div>', unsafe_allow_html=True)
+    st.image("assets/logo.png", width=120)
+    st.markdown('<div style="padding-top:1rem;padding-bottom:0.5rem;border-top:1px solid #1c2333;"><div style="font-family:IBM Plex Mono,monospace;font-size:0.6rem;color:#3a4558;text-transform:uppercase;letter-spacing:0.18em;margin-bottom:0.5rem;">Navigation</div></div>', unsafe_allow_html=True)
+    st.page_link("app.py",                       label="🏠  Home")
+    st.page_link("pages/1_Backtest.py",          label="🔬  Backtest")
+    st.page_link("pages/2_Indicator_Test.py",    label="📊  Indicator Test")
+    st.page_link("pages/3_Replay.py",            label="▶   Replay")
+    st.page_link("pages/4_Analysis.py",          label="🧠  Analysis")
+    st.page_link("pages/5_Assistant.py",         label="💬  Assistant")
+    st.markdown('<div style="position:absolute;bottom:1.5rem;left:1rem;right:1rem;text-align:center;font-family:IBM Plex Mono,monospace;font-size:0.6rem;color:#3a4558;text-transform:uppercase;letter-spacing:0.1em;">Free · Open Source</div>', unsafe_allow_html=True)
     st.markdown("---")
-    st.markdown("### YOUR PROFILE")
-    st.caption("Help the AI personalise responses for you.")
-
-    experience = st.selectbox("Experience Level", ["Beginner", "Intermediate", "Advanced"])
-    style = st.selectbox("Trading Style", ["Day Trading", "Swing Trading", "Long-term Investing", "Not sure yet"])
-    risk = st.selectbox("Risk Tolerance", ["Low — capital preservation", "Medium — balanced", "High — aggressive growth"])
-    goals = st.text_input("Your goal", placeholder="e.g. Grow $10k over 2 years")
-
-    st.session_state.user_profile = {
-        "experience": experience, "style": style, "risk": risk, "goals": goals
-    }
-
+    st.markdown('<div style="font-family:IBM Plex Mono,monospace;font-size:0.6rem;color:#3a4558;text-transform:uppercase;letter-spacing:0.18em;margin-bottom:0.5rem;">Your Profile</div>', unsafe_allow_html=True)
+    st.caption("Help the AI personalise responses.")
+    experience = st.selectbox("Experience Level", ["Beginner","Intermediate","Advanced"])
+    style      = st.selectbox("Trading Style",    ["Day Trading","Swing Trading","Long-term Investing","Not sure yet"])
+    risk       = st.selectbox("Risk Tolerance",   ["Low — capital preservation","Medium — balanced","High — aggressive growth"])
+    goals      = st.text_input("Your goal", placeholder="e.g. Grow $10k over 2 years")
+    st.session_state.user_profile = {"experience":experience,"style":style,"risk":risk,"goals":goals}
     st.markdown("---")
     if st.button("🗑️  Clear Chat", use_container_width=True):
-        st.session_state.messages = []
-        st.rerun()
+        st.session_state.messages=[]; st.rerun()
 
-# ── Page header ───────────────────────────────────────────────────────────────
-st.markdown("""
-<div class="page-header">
-    <h1>AI ASSISTANT</h1>
-    <p>Your personal trading coach. Ask anything — strategies, analysis, results, or concepts.</p>
-</div>
-""", unsafe_allow_html=True)
+st.markdown('''<div class="page-header"><h1>AI ASSISTANT</h1><p>Your personal trading coach. Ask anything — strategies, analysis, results, or concepts.</p></div>''', unsafe_allow_html=True)
 
 if not api_key:
-    st.markdown("""
-    <div class="warn-box">
-        ⚠️ No Gemini API key found. Add GEMINI_API_KEY to your Streamlit Secrets to enable the assistant.
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown('<div class="warn-box">⚠️ No Gemini API key found. Add GEMINI_API_KEY to Streamlit Secrets.</div>', unsafe_allow_html=True)
     st.stop()
 
-# ── Context from other pages ──────────────────────────────────────────────────
-last_bt  = st.session_state.get("last_backtest")
-last_an  = st.session_state.get("last_analysis")
-
+last_bt = st.session_state.get("last_backtest")
+last_an = st.session_state.get("last_analysis")
 context_parts = []
 if last_bt:
-    m = last_bt["metrics"]
-    context_parts.append(
-        f"Last backtest: {last_bt['ticker']} with {last_bt['strategy']} — "
-        f"Return {m['total_return']:+.2f}%, Drawdown {m['max_drawdown']:.2f}%, "
-        f"Win Rate {m['win_rate']:.0f}%"
-    )
+    mm=last_bt["metrics"]
+    context_parts.append(f"Last backtest: {last_bt['ticker']} with {last_bt['strategy']} — Return {mm['total_return']:+.2f}%, Drawdown {mm['max_drawdown']:.2f}%, Win Rate {mm['win_rate']:.0f}%")
 if last_an:
     context_parts.append(f"Last analysis: {last_an['ticker']}")
-
 if context_parts:
-    st.markdown(f"""
-    <div class="info-box" style="margin-bottom:1rem;">
-        📎 Context available: {' &nbsp;|&nbsp; '.join(context_parts)}
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(f'<div class="info-box">📎 Context: {" &nbsp;|&nbsp; ".join(context_parts)}</div>', unsafe_allow_html=True)
 
-# ── Quick prompts ─────────────────────────────────────────────────────────────
-st.markdown("### QUICK QUESTIONS")
+st.markdown('<div class="price-divider">QUICK QUESTIONS</div>', unsafe_allow_html=True)
 qcols = st.columns(4)
-quick_prompts = [
-    ("Explain my backtest results", "Can you explain my most recent backtest results in simple terms?"),
-    ("Best strategy for beginners", "What trading strategy is best for a beginner to start with and why?"),
-    ("What is the Sharpe ratio?", "What is the Sharpe ratio and why does it matter in backtesting?"),
-    ("Recommend a strategy for me", "Based on my trading profile, what strategy would you recommend and why?"),
-]
-for col, (label, prompt) in zip(qcols, quick_prompts):
+quick = [("Explain my results","Can you explain my most recent backtest results in simple terms?"),("Best strategy for beginners","What trading strategy is best for a beginner to start with and why?"),("What is the Sharpe ratio?","What is the Sharpe ratio and why does it matter in backtesting?"),("Recommend a strategy","Based on my trading profile, what strategy would you recommend and why?")]
+for col,(label,prompt) in zip(qcols,quick):
     with col:
         if st.button(label, use_container_width=True):
-            st.session_state.messages.append({"role": "user", "content": prompt})
-            st.rerun()
+            st.session_state.messages.append({"role":"user","content":prompt}); st.rerun()
 
 st.markdown("---")
 
-# ── Build system prompt with full context ─────────────────────────────────────
 profile = st.session_state.user_profile
-
 SYSTEM = f"""You are the AI trading coach for 11%, a free trading education platform.
-You are a specialized financial and trading assistant. You are knowledgeable, direct, honest, and encouraging.
+USER PROFILE: Experience: {profile.get("experience","Unknown")} | Style: {profile.get("style","Unknown")} | Risk: {profile.get("risk","Unknown")} | Goals: {profile.get("goals","Not specified")}
+CONTEXT: {chr(10).join(context_parts) if context_parts else "No recent backtest or analysis."}
+RULES: Match complexity to experience level. NEVER give direct buy/sell stock recommendations. Always add disclaimers. Be honest about weaknesses. Keep responses focused and practical."""
 
-USER PROFILE:
-- Experience: {profile.get('experience','Unknown')}
-- Style: {profile.get('style','Unknown')}
-- Risk Tolerance: {profile.get('risk','Unknown')}
-- Goals: {profile.get('goals','Not specified')}
-
-YOUR CAPABILITIES:
-1. Explain backtest results in plain language
-2. Recommend personalised strategies based on the user's profile, style, and risk tolerance
-3. Evaluate strategies the user is considering (pros, cons, ideal conditions)
-4. Teach trading concepts clearly with real examples
-5. Help write custom indicator/strategy code in Python for the platform
-6. Provide educational financial analysis
-
-PLATFORM CONTEXT — if relevant, reference these:
-{chr(10).join(context_parts) if context_parts else 'No recent backtest or analysis available.'}
-
-RULES:
-- Always match the explanation complexity to the user's experience level
-- NEVER give direct buy/sell recommendations for specific stocks
-- Always add a brief disclaimer when discussing analysis or strategies
-- When recommending a strategy, explain WHY it suits their profile
-- Be honest — if a strategy has weaknesses, say so
-- Keep responses focused and practical, not overly long
-- When writing code, always add clear comments"""
-
-# ── Display chat history ──────────────────────────────────────────────────────
 for msg in st.session_state.messages:
-    if msg["role"] == "user":
-        st.markdown(f"""
-        <div class="chat-user">
-            <div class="chat-lbl">YOU</div>
-            {msg['content']}
-        </div>""", unsafe_allow_html=True)
+    if msg["role"]=="user":
+        st.markdown(f'<div class="chat-user"><div class="chat-lbl">YOU</div>{msg["content"]}</div>', unsafe_allow_html=True)
     else:
-        st.markdown(f"""
-        <div class="chat-ai">
-            <div class="chat-lbl" style="color:#4da6ff;">🤖 11% AI COACH</div>
-            {msg['content'].replace(chr(10), '<br>')}
-        </div>""", unsafe_allow_html=True)
+        st.markdown(f'<div class="chat-ai"><div class="chat-lbl" style="color:#00d68f;">🤖 11% AI COACH</div>{msg["content"].replace(chr(10),"<br>")}</div>', unsafe_allow_html=True)
 
-# ── Generate response if last message is from user ────────────────────────────
-if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
+if st.session_state.messages and st.session_state.messages[-1]["role"]=="user":
     with st.spinner("Thinking..."):
         try:
-            conversation = [{"role": "user", "parts": [SYSTEM + "\n\nBegin."]}]
+            conversation = [{"role":"user","parts":[SYSTEM+"\n\nBegin."]}]
             for msg in st.session_state.messages:
-                role = "user" if msg["role"] == "user" else "model"
-                conversation.append({"role": role, "parts": [msg["content"]]})
-
+                conversation.append({"role":"user" if msg["role"]=="user" else "model","parts":[msg["content"]]})
             response = model.generate_content(conversation)
-            st.session_state.messages.append({"role": "assistant", "content": response.text})
-            st.rerun()
+            st.session_state.messages.append({"role":"assistant","content":response.text}); st.rerun()
         except Exception as e:
             st.error(f"Gemini error: {e}")
 
-# ── Chat input ────────────────────────────────────────────────────────────────
 user_input = st.chat_input("Ask your trading coach anything...")
 if user_input:
-    st.session_state.messages.append({"role": "user", "content": user_input})
-    st.rerun()
+    st.session_state.messages.append({"role":"user","content":user_input}); st.rerun()
