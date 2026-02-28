@@ -29,8 +29,8 @@ def chart_candles(df: pd.DataFrame, trades: pd.DataFrame = None,
     fig.add_trace(go.Candlestick(
         x=df.index, open=df["Open"], high=df["High"], low=df["Low"], close=df["Close"],
         name="Price",
-        increasing_line_color="#00d68f", increasing_fillcolor="#00d68f22",
-        decreasing_line_color="#ff4757", decreasing_fillcolor="#ff475722",
+        increasing_line_color="#00d68f",
+        decreasing_line_color="#ff4757",
     ))
 
     COLORS = ["#4da6ff", "#f0b429", "#b388ff", "#ff9f43", "#00d68f"]
