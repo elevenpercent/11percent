@@ -9,13 +9,21 @@ from utils.styles import SHARED_CSS
 
 st.set_page_config(page_title="11% — Trading Platform", page_icon="💲", layout="wide", initial_sidebar_state="collapsed")
 
-# ── Header & Layout Fix ────────────────────────────────────────────────────────
-# This CSS hides the Streamlit top bar and adds padding to the top of the app
+# ── Global Layout Fixes ────────────────────────────────────────────────────────
 st.markdown("""
     <style>
-        [data-testid="stHeader"] {display: none;}
-        .block-container {padding-top: 2rem !important;}
-        .ticker-wrap {margin-top: 1rem;}
+        /* Hide the default Streamlit header bar completely */
+        header[data-testid="stHeader"] {
+            display: none !important;
+        }
+        /* Add significant padding to the top of the app content */
+        .block-container {
+            padding-top: 5rem !important;
+        }
+        /* Ensure the ticker tape doesn't hug the navbar */
+        .ticker-wrap {
+            margin-top: 2rem;
+        }
     </style>
 """, unsafe_allow_html=True)
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
@@ -35,8 +43,8 @@ def get_market_status(market_name):
     return "Closed", "#ff4757"
 
 # ── Navbar ─────────────────────────────────────────────────────────────────────
-# Using a relative container to ensure it stays below the (now hidden) header area
-st.markdown('<div class="nb" style="margin-top: 1rem; position: relative;"><div class="nb-brand"><span class="g">11</span><span class="r">%</span></div><div class="nb-links">', unsafe_allow_html=True)
+# margin-top handles spacing from the very top of the browser window
+st.markdown('<div class="nb" style="margin-top: 1rem;"><div class="nb-brand"><span class="g">11</span><span class="r">%</span></div><div class="nb-links">', unsafe_allow_html=True)
 _nav = st.columns([1,1,1,1,1,1,1])
 with _nav[0]: st.page_link("app.py",                    label="Home")
 with _nav[1]: st.page_link("pages/1_Backtest.py",       label="Backtest")
@@ -72,7 +80,7 @@ if tape:
 left, right = st.columns([3, 2])
 
 with left:
-    # 1. Main Title FIRST
+    # 1. BIG TITLE FIRST
     st.markdown("""
     <div style="padding:2.5rem 0 1rem 0;">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:5.8rem;line-height:0.88;letter-spacing:0.02em;margin-bottom:1.5rem;">
@@ -81,21 +89,21 @@ with left:
     </div>
     """, unsafe_allow_html=True)
 
-    # 2. Candlesticks SECOND (Spaced out)
+    # 2. CANDLESTICKS SECOND (Spaced out below the title)
     candles = [(28,38,"#ff4757"),(32,44,"#00d68f"),(36,28,"#ff4757"),(40,52,"#00d68f"),
                (44,60,"#00d68f"),(38,30,"#ff4757"),(48,62,"#00d68f"),(52,70,"#00d68f"),
                (46,38,"#ff4757"),(56,72,"#00d68f"),(60,78,"#00d68f"),(54,46,"#ff4757"),
                (62,80,"#00d68f"),(58,74,"#00d68f"),(64,82,"#00d68f")]
     
-    # Gap increased to 14px for more airiness
-    ch = '<div style="display:flex;align-items:flex-end;gap:14px;height:45px;margin-bottom:2rem;opacity:0.5;">'
+    # Gap increased to 15px for wider spacing; height and width adjusted for clarity
+    ch = '<div style="display:flex;align-items:flex-end;gap:15px;height:45px;margin-bottom:2rem;opacity:0.6;">'
     for lo, hi, col in candles:
         bh = max(8, abs(hi-lo)*0.6)
         ch += f'<div style="width:7px;height:{bh}px;background:{col};border-radius:1px;"></div>'
     ch += '</div>'
     st.markdown(ch, unsafe_allow_html=True)
 
-    # 3. Description
+    # 3. DESCRIPTION
     st.markdown("""
         <p style="font-size:0.95rem;color:#8892a4;max-width:460px;line-height:1.8;margin:0 0 2rem 0;">
             A free trading platform built for learners. Test strategies against real data,
@@ -127,12 +135,12 @@ with right:
 st.markdown('<div class="divider">What you can do</div>', unsafe_allow_html=True)
 
 features = [
-    ("📊","Backtest",       "Test any strategy against years of real market data.",        "pages/1_Backtest.py"),
-    ("🔬","Indicators",     "Build custom strategies from 9+ indicators.",                  "pages/2_Indicator_Test.py"),
-    ("▶", "Replay",          "Step through historical bars one at a time.",                "pages/3_Replay.py"),
-    ("🧠","Analysis",        "Fundamentals and AI-powered investment breakdown.",           "pages/4_Analysis.py"),
-    ("📅","Earnings",        "See how a stock reacted to every earnings report.",           "pages/6_Earnings.py"),
-    ("💬","AI Coach",        "Ask questions in plain English.",                             "pages/5_Assistant.py"),
+    ("📊","Backtest",       "Test any strategy against years of real market data.", "pages/1_Backtest.py"),
+    ("🔬","Indicators",     "Build custom strategies from 9+ indicators.",           "pages/2_Indicator_Test.py"),
+    ("▶", "Replay",          "Step through historical bars one at a time.",         "pages/3_Replay.py"),
+    ("🧠","Analysis",        "Fundamentals and AI-powered investment breakdown.",    "pages/4_Analysis.py"),
+    ("📅","Earnings",        "See how a stock reacted to every earnings report.",    "pages/6_Earnings.py"),
+    ("💬","AI Coach",        "Ask questions in plain English.",                      "pages/5_Assistant.py"),
 ]
 f_cols = st.columns(6)
 for col, (icon, title, desc, link) in zip(f_cols, features):
