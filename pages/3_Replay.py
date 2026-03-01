@@ -7,11 +7,6 @@ from utils.data import get_stock_data
 from utils.charts import chart_candles, chart_portfolio, chart_rsi, chart_macd, chart_bollinger, chart_supertrend
 from utils.indicators import sma, ema, bollinger_bands, supertrend, rsi, macd
 from utils.styles import SHARED_CSS
-
-if "password_correct" not in st.session_state or not st.session_state["password_correct"]:
-    st.markdown('<div style="text-align:center; padding-top:100px;"><h1>🔒 Access Denied</h1><p>Please log in on the Home page to access this tool.</p></div>', unsafe_allow_html=True)
-    st.page_link("app.py", label="← Back to Login", icon="🏠")
-    st.stop() # This prevents the rest of the page from loading
     
 st.set_page_config(page_title="Replay | 11%", layout="wide", initial_sidebar_state="collapsed")
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
