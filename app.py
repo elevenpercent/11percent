@@ -5,7 +5,7 @@ import pytz
 sys.path.insert(0, os.path.dirname(__file__))
 from utils.styles import SHARED_CSS
 
-st.set_page_config(page_title="11% — Trading Platform", page_icon="💲", layout="wide", initial_sidebar_state="opened")
+st.set_page_config(page_title="11% — Trading Platform", page_icon="💲", layout="wide", initial_sidebar_state="collapsed")
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
 
 def get_market_status(market_name):
