@@ -15,15 +15,16 @@ def get_market_status(market_name):
     if market_name == "Crypto":
         return "24/7", "#00d68f"
     if time_ny.weekday() >= 5:
-        return "CLOSED (WKND)", "#ff4757"
+        return "Closed (WKND)", "#ff4757"
     start = time_ny.replace(hour=9, minute=30, second=0, microsecond=0)
     end   = time_ny.replace(hour=16, minute=0,  second=0, microsecond=0)
     if start <= time_ny <= end:
-        return "OPEN", "#00d68f"
-    return "CLOSED", "#ff4757"
+        return "Open", "#00d68f"
+    return "Closed", "#ff4757"
 
 # ── Navbar ─────────────────────────────────────────────────────────────────────
-st.markdown('<div class="nb"><div class="nb-brand"><span class="g">11</span><span class="r">%</span></div><div class="nb-links">', unsafe_allow_html=True)
+# Change your first line to include style="margin-top: 20px;"
+st.markdown('<div class="nb" style="margin-top: 2rem;"><div class="nb-brand"><span class="g">11</span><span class="r">%</span></div><div class="nb-links">', unsafe_allow_html=True)
 _nav = st.columns([1,1,1,1,1,1,1])
 with _nav[0]: st.page_link("app.py",                    label="Home")
 with _nav[1]: st.page_link("pages/1_Backtest.py",       label="Backtest")
@@ -32,7 +33,7 @@ with _nav[3]: st.page_link("pages/3_Replay.py",         label="Replay")
 with _nav[4]: st.page_link("pages/4_Analysis.py",       label="Analysis")
 with _nav[5]: st.page_link("pages/6_Earnings.py",       label="Earnings")
 with _nav[6]: st.page_link("pages/5_Assistant.py",      label="Coach")
-st.markdown('</div><div class="nb-tag">FREE · OPEN SOURCE</div></div>', unsafe_allow_html=True)
+st.markdown('</div><div class="nb-tag">FREE · NO CARD REQUIRED</div></div>', unsafe_allow_html=True)
 
 # ── Ticker tape ────────────────────────────────────────────────────────────────
 TICKERS = ["AAPL","TSLA","SPY","NVDA","MSFT","AMZN","BTC-USD","META","GOOGL","AMD","NFLX","JPM","V","WMT","TSM"]
