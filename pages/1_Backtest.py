@@ -9,12 +9,6 @@ from utils.charts import chart_candles, chart_portfolio, chart_rsi, chart_macd, 
 from utils.indicators import rsi, macd, bollinger_bands, supertrend, sma, ema
 from utils.styles import SHARED_CSS
 
-# Check if the user is authenticated from the home page
-if "password_correct" not in st.session_state or not st.session_state["password_correct"]:
-    st.markdown('<div style="text-align:center; padding-top:100px;"><h1>🔒 Access Denied</h1><p>Please log in on the Home page to access this tool.</p></div>', unsafe_allow_html=True)
-    st.page_link("app.py", label="← Back to Login", icon="🏠")
-    st.stop() # This prevents the rest of the page from loading
-
 st.set_page_config(page_title="Backtest | 11%", layout="wide", initial_sidebar_state="collapsed")
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
 st.markdown('<div class="nb"><div class="nb-brand"><span class="g">11</span><span class="r">%</span></div><div class="nb-links">', unsafe_allow_html=True)
