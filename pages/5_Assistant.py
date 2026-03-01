@@ -9,13 +9,14 @@ st.markdown(SHARED_CSS, unsafe_allow_html=True)
 
 # ── Navbar ─────────────────────────────────────────────────────────────────────
 st.markdown('<div class="nb"><div class="nb-brand"><span class="g">11</span><span class="r">%</span></div><div class="nb-links">', unsafe_allow_html=True)
-_nav = st.columns([1,1,1,1,1,1])
+_nav = st.columns([1,1,1,1,1,1,1])
 with _nav[0]: st.page_link("app.py",                    label="Home")
 with _nav[1]: st.page_link("pages/1_Backtest.py",       label="Backtest")
 with _nav[2]: st.page_link("pages/2_Indicator_Test.py", label="Indicators")
 with _nav[3]: st.page_link("pages/3_Replay.py",         label="Replay")
 with _nav[4]: st.page_link("pages/4_Analysis.py",       label="Analysis")
-with _nav[5]: st.page_link("pages/5_Assistant.py",      label="Coach")
+with _nav[5]: st.page_link("pages/6_Earnings.py",       label="Earnings")
+with _nav[6]: st.page_link("pages/5_Assistant.py",      label="Coach")
 st.markdown('</div><div class="nb-tag">FREE · OPEN SOURCE</div></div>', unsafe_allow_html=True)
 
 # ── API setup ──────────────────────────────────────────────────────────────────
