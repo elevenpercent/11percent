@@ -5,4 +5,3 @@ numpy
 plotly
 google-generativeai
 python-dotenv
-streamlit-authenticator
