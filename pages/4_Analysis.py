@@ -6,6 +6,11 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from utils.data import get_stock_data, get_ticker_info, get_news
 from utils.styles import SHARED_CSS
 
+if "password_correct" not in st.session_state or not st.session_state["password_correct"]:
+    st.markdown('<div style="text-align:center; padding-top:100px;"><h1>🔒 Access Denied</h1><p>Please log in on the Home page to access this tool.</p></div>', unsafe_allow_html=True)
+    st.page_link("app.py", label="← Back to Login", icon="🏠")
+    st.stop() # This prevents the rest of the page from loading
+    
 st.set_page_config(page_title="Analysis | 11%", layout="wide", initial_sidebar_state="collapsed")
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
 st.markdown('<div class="nb"><div class="nb-brand"><span class="g">11</span><span class="r">%</span></div><div class="nb-links">', unsafe_allow_html=True)
