@@ -5,5 +5,3 @@ numpy
 plotly
 google-generativeai
 python-dotenv
-supabase
-gotrue
