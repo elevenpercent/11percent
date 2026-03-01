@@ -2,6 +2,8 @@ import streamlit as st
 import sys, os
 from datetime import datetime
 import pytz
+
+# Setup path and styles
 sys.path.insert(0, os.path.dirname(__file__))
 from utils.styles import SHARED_CSS
 
@@ -23,7 +25,8 @@ def get_market_status(market_name):
     return "Closed", "#ff4757"
 
 # ── Navbar ─────────────────────────────────────────────────────────────────────
-st.markdown('<div class="nb" style="margin-top: 2rem;"><div class="nb-brand"><span class="g">11</span><span class="r">%</span></div><div class="nb-links">', unsafe_allow_html=True)
+# Increased margin-top to 4rem and added padding to fix the "too close to top" issue
+st.markdown('<div class="nb" style="margin-top: 4rem; padding-top: 1rem;"><div class="nb-brand"><span class="g">11</span><span class="r">%</span></div><div class="nb-links">', unsafe_allow_html=True)
 _nav = st.columns([1,1,1,1,1,1,1])
 with _nav[0]: st.page_link("app.py",                    label="Home")
 with _nav[1]: st.page_link("pages/1_Backtest.py",       label="Backtest")
@@ -33,8 +36,6 @@ with _nav[4]: st.page_link("pages/4_Analysis.py",       label="Analysis")
 with _nav[5]: st.page_link("pages/6_Earnings.py",       label="Earnings")
 with _nav[6]: st.page_link("pages/5_Assistant.py",      label="Coach")
 st.markdown('</div><div class="nb-tag">FREE · NO CARD REQUIRED</div></div>', unsafe_allow_html=True)
-
-
 
 # ── Ticker tape ────────────────────────────────────────────────────────────────
 TICKERS = ["AAPL","TSLA","SPY","NVDA","MSFT","AMZN","BTC-USD","META","GOOGL","AMD","NFLX","JPM","V","WMT","TSM"]
@@ -61,27 +62,37 @@ if tape:
 left, right = st.columns([3, 2])
 
 with left:
+    # 1. Main Title
+    st.markdown("""
+    <div style="padding:2.5rem 0 0.5rem 0;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:5.8rem;line-height:0.88;letter-spacing:0.02em;margin-bottom:1.5rem;">
+            <span style="color:#00d68f;">BACK</span><br><span style="color:#ff4757;">TEST</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # 2. Candlesticks (Now below Title and spaced out)
     candles = [(28,38,"#ff4757"),(32,44,"#00d68f"),(36,28,"#ff4757"),(40,52,"#00d68f"),
                (44,60,"#00d68f"),(38,30,"#ff4757"),(48,62,"#00d68f"),(52,70,"#00d68f"),
                (46,38,"#ff4757"),(56,72,"#00d68f"),(60,78,"#00d68f"),(54,46,"#ff4757"),
                (62,80,"#00d68f"),(58,74,"#00d68f"),(64,82,"#00d68f")]
-    ch = '<div style="display:flex;align-items:flex-end;gap:3px;height:56px;margin-bottom:-0.2rem;opacity:0.45;">'
+    
+    # Gap increased to 12px for significant spacing; opacity slightly bumped for visibility
+    ch = '<div style="display:flex;align-items:flex-end;gap:12px;height:45px;margin-bottom:2rem;opacity:0.6;">'
     for lo, hi, col in candles:
-        bh = max(6, abs(hi-lo)*0.6)
-        ch += f'<div style="width:11px;height:{bh}px;background:{col};border-radius:1px;"></div>'
+        bh = max(8, abs(hi-lo)*0.6)
+        ch += f'<div style="width:8px;height:{bh}px;background:{col};border-radius:1px;"></div>'
     ch += '</div>'
-    st.markdown(f"""
-    <div style="padding:2.5rem 0 2rem 0;">
-        {ch}
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:5.8rem;line-height:0.88;letter-spacing:0.02em;margin-bottom:1.4rem;">
-            <span style="color:#00d68f;">BACK</span><br><span style="color:#ff4757;">TEST</span>
-        </div>
+    st.markdown(ch, unsafe_allow_html=True)
+
+    # 3. Description
+    st.markdown("""
         <p style="font-size:0.95rem;color:#8892a4;max-width:460px;line-height:1.8;margin:0 0 2rem 0;">
             A free trading platform built for learners. Test strategies against real data,
             study indicators, replay historical charts, and get AI-powered analysis.
         </p>
-    </div>
     """, unsafe_allow_html=True)
+    
     c1, c2 = st.columns(2)
     with c1: st.page_link("pages/1_Backtest.py",  label="Start Backtesting →")
     with c2: st.page_link("pages/5_Assistant.py", label="Ask AI Coach →")
@@ -108,10 +119,10 @@ st.markdown('<div class="divider">What you can do</div>', unsafe_allow_html=True
 features = [
     ("📊","Backtest",       "Test any strategy against years of real market data. Returns, drawdown, Sharpe, win rate, alpha.",        "pages/1_Backtest.py"),
     ("🔬","Indicators",     "Build custom strategies from 9+ indicators with AND/OR logic.",                                            "pages/2_Indicator_Test.py"),
-    ("▶", "Replay",         "Step through historical bars one at a time. Practice reading price action without knowing what's next.",   "pages/3_Replay.py"),
-    ("🧠","Analysis",       "Fundamentals, financials, valuation and AI-powered investment breakdown for any stock.",                   "pages/4_Analysis.py"),
-    ("📅","Earnings",       "See how a stock reacted to every earnings report — day-of move, pre-run, and post follow-through.",        "pages/6_Earnings.py"),
-    ("💬","AI Coach",       "Overwhelmed? Just ask. Plain English explanations of anything — strategies, results, concepts.",          "pages/5_Assistant.py"),
+    ("▶", "Replay",          "Step through historical bars one at a time. Practice reading price action without knowing what's next.",   "pages/3_Replay.py"),
+    ("🧠","Analysis",        "Fundamentals, financials, valuation and AI-powered investment breakdown for any stock.",                   "pages/4_Analysis.py"),
+    ("📅","Earnings",        "See how a stock reacted to every earnings report — day-of move, pre-run, and post follow-through.",        "pages/6_Earnings.py"),
+    ("💬","AI Coach",        "Overwhelmed? Just ask. Plain English explanations of anything — strategies, results, concepts.",           "pages/5_Assistant.py"),
 ]
 f_cols = st.columns(6)
 for col, (icon, title, desc, link) in zip(f_cols, features):
@@ -127,13 +138,13 @@ with sl:
     for name, tag, desc in [
         ("SMA Crossover",         "Trend",      "Classic trend-following. Fast MA crosses above slow MA → buy."),
         ("EMA Crossover",         "Trend",      "Like SMA but reacts faster to recent price changes."),
-        ("RSI",                   "Mean Rev.",  "Buys oversold conditions, sells overbought."),
-        ("MACD",                  "Momentum",   "Momentum crossover using MACD and signal line."),
-        ("Bollinger Bands",       "Mean Rev.",  "Buys lower band, sells upper band — mean reversion."),
-        ("SuperTrend",            "Trend",      "ATR-based dynamic support/resistance with clear direction."),
+        ("RSI",                    "Mean Rev.",  "Buys oversold conditions, sells overbought."),
+        ("MACD",                   "Momentum",   "Momentum crossover using MACD and signal line."),
+        ("Bollinger Bands",        "Mean Rev.",  "Buys lower band, sells upper band — mean reversion."),
+        ("SuperTrend",             "Trend",      "ATR-based dynamic support/resistance with clear direction."),
         ("RSI + Bollinger Bands", "Combo",      "RSI confirms BB signals to reduce false entries."),
         ("EMA + RSI Filter",      "Combo",      "EMA crossover with RSI filter to improve signal quality."),
-        ("MACD + SuperTrend",     "Combo",      "Dual confirmation: MACD momentum + SuperTrend direction."),
+        ("MACD + SuperTrend",      "Combo",      "Dual confirmation: MACD momentum + SuperTrend direction."),
     ]:
         tc = "#4da6ff" if tag=="Trend" else ("#b388ff" if tag=="Mean Rev." else ("#ff9f43" if tag=="Momentum" else "#00d68f"))
         st.markdown(f'<div class="row-item"><span class="tag" style="background:{tc}18;color:{tc};border:1px solid {tc}30;flex-shrink:0;">{tag}</span><div><div style="font-size:0.8rem;color:#e2e8f0;">{name}</div><div style="font-size:0.72rem;color:#3a4558;margin-top:0.1rem;">{desc}</div></div></div>', unsafe_allow_html=True)
@@ -194,9 +205,9 @@ with gr:
 # ── FAQ ────────────────────────────────────────────────────────────────────────
 st.markdown('<div class="divider" style="margin-top:2rem;">FAQ</div>', unsafe_allow_html=True)
 faqs = [
-    ("Is this real trading or simulated?",             "Simulated. No real money involved. Data from Yahoo Finance. For education and strategy research only."),
-    ("How accurate is the backtesting?",               "Indicative, not guaranteed. Assumes fills at closing price — no slippage, spread, commission, or tax. Real results differ."),
-    ("Do I need to know how to code?",                 "No. Everything is point-and-click. It's built in Python with Streamlit — open source if you want to extend it."),
+    ("Is this real trading or simulated?",               "Simulated. No real money involved. Data from Yahoo Finance. For education and strategy research only."),
+    ("How accurate is the backtesting?",                "Indicative, not guaranteed. Assumes fills at closing price — no slippage, spread, commission, or tax. Real results differ."),
+    ("Do I need to know how to code?",                  "No. Everything is point-and-click. It's built in Python with Streamlit — open source if you want to extend it."),
     ("Why does past performance not guarantee future?","Markets change. A strategy that worked in a bull market may fail in a bear market. Backtesting shows what happened, not what will happen."),
     ("How do I enable AI features?",                   "Add your Gemini API key to Streamlit Secrets as GEMINI_API_KEY. Free tier covers normal usage."),
 ]
