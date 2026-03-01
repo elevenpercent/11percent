@@ -1,5 +1,5 @@
 """
-Shared styles for 11% platform — dark terminal trading aesthetic.
+Shared styles for 11% platform - dark terminal trading aesthetic.
 """
 
 SHARED_CSS = """
