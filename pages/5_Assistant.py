@@ -15,12 +15,6 @@ with _nav[3]: st.page_link("pages/3_Replay.py",         label="Replay")
 with _nav[4]: st.page_link("pages/4_Analysis.py",       label="Analysis")
 with _nav[5]: st.page_link("pages/5_Assistant.py",      label="Assistant")
 st.markdown('</div><div class="nb-tag">FREE · OPEN SOURCE</div></div>', unsafe_allow_html=True)
-
-# Check if the user is authenticated from the home page
-if "password_correct" not in st.session_state or not st.session_state["password_correct"]:
-    st.markdown('<div style="text-align:center; padding-top:100px;"><h1>🔒 Access Denied</h1><p>Please log in on the Home page to access this tool.</p></div>', unsafe_allow_html=True)
-    st.page_link("app.py", label="← Back to Login", icon="🏠")
-    st.stop() # This prevents the rest of the page from loading
     
 try:    api_key = st.secrets["GEMINI_API_KEY"]
 except: api_key = os.getenv("GEMINI_API_KEY", "")
