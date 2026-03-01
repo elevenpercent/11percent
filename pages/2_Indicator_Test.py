@@ -6,7 +6,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from utils.data import get_stock_data
 from utils.strategies import run_backtest
 from utils.charts import chart_candles, chart_portfolio, chart_rsi, chart_stoch_rsi, chart_macd, chart_bollinger, chart_ichimoku
-from utils.indicators import sma, ema, wma, rsi, stoch_rsi, macd, bollinger_bands, supertrend, ichimoku, INDICATOR_INFO
+from utils.indicators import sma, ema, wma, rsi, stoch_rsi, macd, bollinger_bands, supertrend, ichimoku, cci, williams_r, donchian_channels, keltner_channels, hull_ma, parabolic_sar, INDICATOR_INFO
 from utils.styles import SHARED_CSS
 
 st.set_page_config(page_title="Indicators | 11%", layout="wide", initial_sidebar_state="collapsed")
@@ -14,13 +14,14 @@ st.markdown(SHARED_CSS, unsafe_allow_html=True)
 
 def navbar():
     st.markdown('<div class="nb"><div class="nb-brand"><span class="g">11</span><span class="r">%</span></div><div class="nb-links">', unsafe_allow_html=True)
-    c = st.columns([1,1,1,1,1,1])
+    c = st.columns([1,1,1,1,1,1,1])
     with c[0]: st.page_link("app.py",                    label="Home")
     with c[1]: st.page_link("pages/1_Backtest.py",       label="Backtest")
     with c[2]: st.page_link("pages/2_Indicator_Test.py", label="Indicators")
     with c[3]: st.page_link("pages/3_Replay.py",         label="Replay")
     with c[4]: st.page_link("pages/4_Analysis.py",       label="Analysis")
-    with c[5]: st.page_link("pages/5_Assistant.py",      label="Coach")
+    with c[5]: st.page_link("pages/6_Earnings.py",       label="Earnings")
+    with c[6]: st.page_link("pages/5_Assistant.py",      label="Coach")
     st.markdown('</div><div class="nb-tag">FREE · OPEN SOURCE</div></div>', unsafe_allow_html=True)
 navbar()
 
@@ -44,6 +45,12 @@ def compute_ind(name, df, params):
     elif name=="Bollinger Bands": return bollinger_bands(df["Close"], params["window"], params["num_std"])
     elif name=="SuperTrend":    return supertrend(df, params["window"], params["multiplier"])
     elif name=="Ichimoku":      return ichimoku(df, params["tenkan_window"], params["kijun_window"], params["senkou_b_window"])
+    elif name=="CCI":           return cci(df, params["window"])
+    elif name=="Williams %R":   return williams_r(df, params["window"])
+    elif name=="Donchian":      return donchian_channels(df, params["window"])
+    elif name=="Keltner":       return keltner_channels(df, params["ema_window"], params["atr_window"], params["multiplier"])
+    elif name=="Hull MA":       return hull_ma(df["Close"], params["window"])
+    elif name=="Parabolic SAR": return parabolic_sar(df, params["af_start"], params["af_max"])
 
 def gen_sigs(name, data, buy_c, sell_c, df, params):
     sig = pd.Series(0, index=df.index)
@@ -88,6 +95,36 @@ def gen_sigs(name, data, buy_c, sell_c, df, params):
         if buy_c=="Price above Cloud":           sig[df["Close"]>ct]=1
         if sell_c=="Tenkan crosses below Kijun": sig[(t<k_)&(t.shift()>=k_.shift())]=-1
         if sell_c=="Price below Cloud":          sig[df["Close"]<cb]=-1
+    elif name=="CCI":
+        if buy_c=="CCI crosses above -100": sig[(data>-100)&(data.shift()<=-100)]=1
+        if buy_c=="CCI below -100":         sig[data<-100]=1
+        if sell_c=="CCI crosses below 100": sig[(data<100)&(data.shift()>=100)]=-1
+        if sell_c=="CCI above 100":         sig[data>100]=-1
+    elif name=="Williams %R":
+        if buy_c=="%R below -80":            sig[data<-80]=1
+        if buy_c=="%R crosses above -80":    sig[(data>-80)&(data.shift()<=-80)]=1
+        if sell_c=="%R above -20":           sig[data>-20]=-1
+        if sell_c=="%R crosses below -20":   sig[(data<-20)&(data.shift()>=-20)]=-1
+    elif name=="Donchian":
+        if buy_c=="Price breaks upper channel":  sig[df["Close"]>=data["upper"]]=1
+        if buy_c=="Price above middle":          sig[df["Close"]>data["middle"]]=1
+        if sell_c=="Price breaks lower channel": sig[df["Close"]<=data["lower"]]=-1
+        if sell_c=="Price below middle":         sig[df["Close"]<data["middle"]]=-1
+    elif name=="Keltner":
+        if buy_c=="Price below lower band":  sig[df["Close"]<data["lower"]]=1
+        if buy_c=="Price above middle":      sig[df["Close"]>data["middle"]]=1
+        if sell_c=="Price above upper band": sig[df["Close"]>data["upper"]]=-1
+        if sell_c=="Price below middle":     sig[df["Close"]<data["middle"]]=-1
+    elif name=="Hull MA":
+        if buy_c=="Price crosses above HMA": sig[(df["Close"]>data)&(df["Close"].shift()<=data.shift())]=1
+        if buy_c=="HMA slope turns up":      sig[(data>data.shift())&(data.shift()<=data.shift(2))]=1
+        if sell_c=="Price crosses below HMA":sig[(df["Close"]<data)&(df["Close"].shift()>=data.shift())]=-1
+        if sell_c=="HMA slope turns down":   sig[(data<data.shift())&(data.shift()>=data.shift(2))]=-1
+    elif name=="Parabolic SAR":
+        if buy_c=="SAR turns bullish":      sig[(data["direction"]==1)&(data["direction"].shift()==-1)]=1
+        if buy_c=="Price above SAR":        sig[df["Close"]>data["sar"]]=1
+        if sell_c=="SAR turns bearish":     sig[(data["direction"]==-1)&(data["direction"].shift()==1)]=-1
+        if sell_c=="Price below SAR":       sig[df["Close"]<data["sar"]]=-1
     return sig
 
 COND = {
@@ -99,7 +136,13 @@ COND = {
     "WMA":            {"buy":["Price crosses above MA","Price above MA"],        "sell":["Price crosses below MA","Price below MA"]},
     "Bollinger Bands":{"buy":["Price below lower band","%B below 0"],           "sell":["Price above upper band","%B above 100"]},
     "SuperTrend":     {"buy":["Direction turns bullish","Price above SuperTrend"],"sell":["Direction turns bearish","Price below SuperTrend"]},
-    "Ichimoku":       {"buy":["Tenkan crosses above Kijun","Price above Cloud"], "sell":["Tenkan crosses below Kijun","Price below Cloud"]},
+    "Ichimoku":       {"buy":["Tenkan crosses above Kijun","Price above Cloud"],   "sell":["Tenkan crosses below Kijun","Price below Cloud"]},
+    "CCI":            {"buy":["CCI crosses above -100","CCI below -100"],         "sell":["CCI crosses below 100","CCI above 100"]},
+    "Williams %R":    {"buy":["%R below -80","%R crosses above -80"],             "sell":["%R above -20","%R crosses below -20"]},
+    "Donchian":       {"buy":["Price breaks upper channel","Price above middle"],  "sell":["Price breaks lower channel","Price below middle"]},
+    "Keltner":        {"buy":["Price below lower band","Price above middle"],      "sell":["Price above upper band","Price below middle"]},
+    "Hull MA":        {"buy":["Price crosses above HMA","HMA slope turns up"],     "sell":["Price crosses below HMA","HMA slope turns down"]},
+    "Parabolic SAR":  {"buy":["SAR turns bullish","Price above SAR"],              "sell":["SAR turns bearish","Price below SAR"]},
 }
 
 st.markdown('<div class="page-header"><h1>Indicator Lab</h1><p>Set your own buy/sell rules using any indicator — or combine up to 3 with AND/OR logic.</p></div>', unsafe_allow_html=True)
