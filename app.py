@@ -24,6 +24,7 @@ def get_market_status(market_name):
 
 # ── Navbar ─────────────────────────────────────────────────────────────────────
 # Change your first line to include style="margin-top: 20px;"
+style="margin-top: 20px;"
 st.markdown('<div class="nb" style="margin-top: 2rem;"><div class="nb-brand"><span class="g">11</span><span class="r">%</span></div><div class="nb-links">', unsafe_allow_html=True)
 _nav = st.columns([1,1,1,1,1,1,1])
 with _nav[0]: st.page_link("app.py",                    label="Home")
