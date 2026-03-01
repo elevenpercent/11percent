@@ -228,55 +228,32 @@ SHARED_CSS = """
 
 <script>
 (function() {
-    // Hide loader once Streamlit's main content is ready
     function hideLoader() {
         var loader = document.getElementById('page-loader');
         if (!loader) return;
         loader.classList.add('fade-out');
         setTimeout(function() {
-            if (loader.parentNode) loader.parentNode.removeChild(loader);
+            if (loader && loader.parentNode) loader.parentNode.removeChild(loader);
         }, 380);
     }
 
-    // Watch for Streamlit's main block to appear
-    function waitForApp() {
-        var el = document.querySelector('[data-testid="stMain"] .block-container');
-        if (el && el.children.length > 0) {
+    // Simple approach: hide after a short fixed delay
+    // This is reliable across all Streamlit versions
+    setTimeout(hideLoader, 800);
+
+    // Also try to detect when content appears for faster hide
+    var attempts = 0;
+    function tryEarly() {
+        attempts++;
+        var stApp = document.querySelector('[data-testid="stApp"]');
+        var hasContent = stApp && stApp.innerText && stApp.innerText.trim().length > 20;
+        if (hasContent) {
             hideLoader();
-        } else {
-            requestAnimationFrame(waitForApp);
+        } else if (attempts < 30) {
+            setTimeout(tryEarly, 100);
         }
     }
-
-    // Also intercept nav link clicks to show loader before navigation
-    function attachNavListeners() {
-        document.addEventListener('click', function(e) {
-            var link = e.target.closest('a[href]');
-            if (!link) return;
-            var href = link.getAttribute('href');
-            // Only intercept internal page links (not external)
-            if (href && !href.startsWith('http') && !href.startsWith('#') && !href.startsWith('mailto')) {
-                // Re-inject loader before navigation
-                var existing = document.getElementById('page-loader');
-                if (!existing) {
-                    var div = document.createElement('div');
-                    div.id = 'page-loader';
-                    div.innerHTML = '<div class="loader-brand"><span class="g">11</span><span class="r">%</span></div><div class="loader-bar-wrap"><div class="loader-bar"></div></div><div class="loader-label">Loading</div>';
-                    document.body.appendChild(div);
-                }
-            }
-        });
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            attachNavListeners();
-            waitForApp();
-        });
-    } else {
-        attachNavListeners();
-        waitForApp();
-    }
+    setTimeout(tryEarly, 200);
 })();
 </script>
 """
