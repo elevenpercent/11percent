@@ -4,123 +4,10 @@ import sys, os
 from datetime import date, timedelta
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from utils.data import get_stock_data, get_ticker_info, get_news
+from utils.styles import SHARED_CSS
 
 st.set_page_config(page_title="Analysis | 11%", page_icon="🧠", layout="wide", initial_sidebar_state="collapsed")
-st.markdown("""<style>
-    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;600;700&family=IBM+Plex+Sans:wght@300;400;600&display=swap');
-    :root {
-        --bg:#07090d; --surface:#0d1117; --border:#1c2333;
-        --green:#00d68f; --red:#ff4757; --text:#cdd5e0; --muted:#3a4558;
-        --grid:rgba(255,255,255,0.03);
-    }
-    /* ── Kill ALL Streamlit chrome ── */
-    header[data-testid="stHeader"] { display:none!important; }
-    [data-testid="stToolbar"] { display:none!important; }
-    [data-testid="stDecoration"] { display:none!important; }
-    [data-testid="stSidebar"] { display:none!important; }
-    [data-testid="stSidebarNav"] { display:none!important; }
-    [data-testid="collapsedControl"] { display:none!important; }
-    footer { display:none!important; }
-    #MainMenu { display:none!important; }
-    .stDeployButton { display:none!important; }
-    /* ── Layout ── */
-    html,body,[data-testid="stAppViewContainer"],[data-testid="stMain"],.main {
-        background-color:var(--bg)!important; color:var(--text)!important;
-        font-family:'IBM Plex Sans',sans-serif!important;
-    }
-    [data-testid="stMain"] {
-        background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px)!important;
-        background-size:48px 48px!important;
-        padding-top:0!important;
-    }
-    .block-container { padding-top:0!important; padding-left:2rem!important; padding-right:2rem!important; max-width:100%!important; }
-    /* ── Navbar ── */
-    .nb { background:#07090d; border-bottom:1px solid #1c2333; padding:0; margin:-1rem -2rem 2rem -2rem; display:flex; align-items:stretch; position:sticky; top:0; z-index:1000; }
-    .nb-brand { font-family:'Bebas Neue',sans-serif; font-size:1.7rem; letter-spacing:0.1em; color:var(--text); padding:0.6rem 1.6rem; border-right:1px solid #1c2333; display:flex; align-items:center; flex-shrink:0; }
-    .nb-brand .g { color:#00d68f; }
-    .nb-brand .r { color:#ff4757; }
-    .nb-links { display:flex; align-items:stretch; flex:1; }
-    .nb-tag { font-family:'IBM Plex Mono',monospace; font-size:0.58rem; color:#3a4558; letter-spacing:0.15em; padding:0.6rem 1.6rem; display:flex; align-items:center; border-left:1px solid #1c2333; }
-    /* Style the st.page_link elements inside the navbar */
-    .nb-links [data-testid="stPageLink"] { display:flex; align-items:stretch; }
-    .nb-links [data-testid="stPageLink-NavLink"] {
-        font-family:'IBM Plex Mono',monospace!important;
-        font-size:0.69rem!important;
-        font-weight:500!important;
-        text-transform:uppercase!important;
-        letter-spacing:0.12em!important;
-        color:#3a4558!important;
-        text-decoration:none!important;
-        padding:0 1.1rem!important;
-        border-radius:0!important;
-        border:none!important;
-        border-bottom:2px solid transparent!important;
-        background:transparent!important;
-        display:flex!important;
-        align-items:center!important;
-        height:100%!important;
-        transition:color 0.15s, border-color 0.15s!important;
-        white-space:nowrap!important;
-    }
-    .nb-links [data-testid="stPageLink-NavLink"]:hover {
-        color:#cdd5e0!important;
-        background:transparent!important;
-        text-decoration:none!important;
-        border-bottom:2px solid #3a4558!important;
-    }
-    .nb-links [data-testid="stPageLink-NavLink"][aria-current="page"] {
-        color:#00d68f!important;
-        border-bottom:2px solid #00d68f!important;
-    }
-    /* ── Typography ── */
-    h1 { font-family:'Bebas Neue',sans-serif!important; letter-spacing:0.06em; color:var(--text)!important; }
-    h2 { font-family:'Bebas Neue',sans-serif!important; }
-    h3 { font-family:'IBM Plex Mono',monospace!important; font-size:0.75rem!important; color:var(--green)!important; text-transform:uppercase; letter-spacing:0.15em; }
-    /* ── Inputs ── */
-    .stTextInput input, .stNumberInput input {
-        background:#0d1117!important; border:1px solid #1c2333!important;
-        color:#cdd5e0!important; font-family:'IBM Plex Mono',monospace!important;
-        font-size:0.85rem!important; border-radius:3px!important;
-    }
-    .stTextInput input:focus, .stNumberInput input:focus { border-color:#00d68f!important; box-shadow:none!important; }
-    div[data-baseweb="select"]>div { background:#0d1117!important; border:1px solid #1c2333!important; color:#cdd5e0!important; font-family:'IBM Plex Mono',monospace!important; border-radius:3px!important; }
-    .stDateInput input { background:#0d1117!important; border:1px solid #1c2333!important; color:#cdd5e0!important; font-family:'IBM Plex Mono',monospace!important; border-radius:3px!important; }
-    label { font-family:'IBM Plex Mono',monospace!important; font-size:0.68rem!important; color:#3a4558!important; text-transform:uppercase!important; letter-spacing:0.1em!important; }
-    /* ── Buttons ── */
-    .stButton>button { background:transparent!important; color:#00d68f!important; border:1px solid #00d68f!important; border-radius:3px!important; font-family:'IBM Plex Mono',monospace!important; font-weight:600!important; font-size:0.78rem!important; letter-spacing:0.1em!important; padding:0.45rem 1.4rem!important; transition:all 0.15s!important; text-transform:uppercase!important; }
-    .stButton>button:hover { background:#00d68f!important; color:#000!important; }
-    /* ── Cards ── */
-    .metric-card { background:#0d1117; border:1px solid #1c2333; padding:1rem; border-radius:4px; text-align:center; }
-    .metric-val { font-family:'IBM Plex Mono',monospace; font-size:1.1rem; font-weight:700; }
-    .metric-lbl { font-family:'IBM Plex Mono',monospace; font-size:0.55rem; color:#3a4558; text-transform:uppercase; margin-top:0.3rem; }
-    .pos{color:#00d68f;} .neg{color:#ff4757;} .neu{color:#cdd5e0;}
-    /* ── Config panel ── */
-    .config-panel { background:#0d1117; border:1px solid #1c2333; border-radius:6px; padding:1.4rem 1.4rem 0.4rem 1.4rem; margin-bottom:1.5rem; }
-    /* ── Dividers ── */
-    .price-divider { display:flex; align-items:center; gap:1rem; margin:1.5rem 0 1rem 0; font-family:'IBM Plex Mono',monospace; font-size:0.62rem; color:#3a4558; letter-spacing:0.12em; }
-    .price-divider::before,.price-divider::after { content:''; flex:1; height:1px; background:#1c2333; }
-    /* ── Page header ── */
-    .page-header { padding:1.5rem 0 1rem 0; border-bottom:1px solid #1c2333; margin-bottom:1.5rem; }
-    .page-header h1 { font-size:2.8rem!important; margin:0!important; }
-    .page-header p { color:#3a4558; font-size:0.85rem; margin:0.3rem 0 0 0; }
-    /* ── Boxes ── */
-    .info-box { background:#071a0f; border:1px solid #0d3320; border-radius:4px; padding:0.8rem 1rem; font-size:0.82rem; color:#00d68f; font-family:'IBM Plex Mono',monospace; }
-    .warn-box { background:#1a0a08; border:1px solid #3a1008; border-radius:4px; padding:0.8rem 1rem; font-size:0.82rem; color:#ff4757; font-family:'IBM Plex Mono',monospace; }
-    /* ── Chat ── */
-    .chat-user { background:#0d1117; border:1px solid #1c2333; border-radius:10px 10px 3px 10px; padding:1rem 1.2rem; margin:0.6rem 0; }
-    .chat-ai { background:#071a0f; border:1px solid #0d3320; border-radius:10px 10px 10px 3px; padding:1rem 1.2rem; margin:0.6rem 0; }
-    .chat-lbl { font-family:'IBM Plex Mono',monospace; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.12em; color:#3a4558; margin-bottom:0.4rem; }
-    /* ── Ticker ── */
-    .ticker-wrap { overflow:hidden; background:#0d1117; border-bottom:1px solid #1c2333; padding:0.4rem 0; margin:-2rem -2rem 2rem -2rem; }
-    .ticker-tape { display:inline-flex; animation:ticker 35s linear infinite; white-space:nowrap; }
-    .ticker-item { font-family:'IBM Plex Mono',monospace; font-size:0.68rem; padding:0 1.5rem; letter-spacing:0.05em; }
-    .t-up{color:#00d68f;} .t-dn{color:#ff4757;} .t-sym{color:#cdd5e0;margin-right:0.4rem;}
-    @keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-    /* ── Misc ── */
-    ::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:#07090d;} ::-webkit-scrollbar-thumb{background:#263045;border-radius:2px;}
-    hr{border-color:#1c2333!important;}
-    [data-testid="stExpander"]{background:#0d1117!important;border:1px solid #1c2333!important;border-radius:4px!important;}
-</style>""", unsafe_allow_html=True)
+st.markdown(SHARED_CSS, unsafe_allow_html=True)
 st.markdown('<div class="nb"><div class="nb-brand"><span class="g">11</span><span class="r">%</span></div><div class="nb-links">', unsafe_allow_html=True)
 _nav = st.columns([1,1,1,1,1,1])
 with _nav[0]: st.page_link("app.py",                    label="Home")
@@ -197,16 +84,81 @@ if analyze_btn:
         if last_bt and last_bt.get("ticker")==ticker:
             mm=last_bt["metrics"]
             bt_ctx=f"Backtest on this stock: {last_bt['strategy']} → Return {mm['total_return']:+.2f}%, Drawdown {mm['max_drawdown']:.2f}%, Win Rate {mm['win_rate']:.0f}%"
-        prompt=f"""Financial analysis AI on 11% platform. Sharp, honest, educational. NOT a financial advisor — include disclaimer.
-STOCK: {ticker} — {info.get("name","")} | SECTOR: {info.get("sector","N/A")}
-METRICS: Market Cap {fmt(info.get("market_cap"),"large")} | P/E {fmt(info.get("pe_ratio"),"ratio")} | Revenue {fmt(info.get("revenue"),"large")} | Margin {fmt(info.get("profit_margin"),"pct")} | ROE {fmt(info.get("roe"),"pct")} | Beta {fmt(info.get("beta"))}
+        prompt=f"""You are a financial analysis AI on 11%, a free trading education platform.
+Analyse this stock and respond ONLY with valid JSON in this exact structure — no markdown, no explanation outside the JSON:
+
+{{
+  "verdict": "Bull | Bear | Neutral",
+  "one_liner": "One sentence summary of the investment case.",
+  "sections": [
+    {{"title": "Business Overview", "body": "2-3 sentences about what the company does and its market position."}},
+    {{"title": "Financial Health", "body": "Comment on revenue, margins, ROE, debt/equity and what they indicate."}},
+    {{"title": "Valuation", "body": "Is the stock cheap or expensive? Reference P/E, forward P/E and compare to sector norms."}},
+    {{"title": "Growth Potential", "body": "What drives future growth? Products, markets, tailwinds."}},
+    {{"title": "Key Risks", "body": "Top 2-3 risks an investor must be aware of — be honest and direct."}},
+    {{"title": "Recent News Impact", "body": "How does recent news affect the outlook? If no news context, say so."}},
+    {{"title": "For Your Profile", "body": "Specific advice for this user based on their experience and goals."}}
+  ],
+  "bull_case": "One sentence on the best case scenario.",
+  "bear_case": "One sentence on the worst case scenario.",
+  "disclaimer": "One sentence standard disclaimer."
+}}
+
+STOCK: {ticker} — {info.get("name","")} | SECTOR: {info.get("sector","N/A")} | INDUSTRY: {info.get("industry","N/A")}
+FINANCIALS: Market Cap {fmt(info.get("market_cap"),"large")} | P/E {fmt(info.get("pe_ratio"),"ratio")} | Fwd P/E {fmt(info.get("fwd_pe"),"ratio")} | Revenue {fmt(info.get("revenue"),"large")} | Profit Margin {fmt(info.get("profit_margin"),"pct")} | ROE {fmt(info.get("roe"),"pct")} | Debt/Equity {fmt(info.get("debt_equity"),"ratio")} | Beta {fmt(info.get("beta"))} | 52W High {fmt(info.get("52w_high"))} | 52W Low {fmt(info.get("52w_low"))}
 {bt_ctx}
-USER: {user_context or "Not provided."} | FOCUS: {", ".join(focus_options)}
-Be honest about risks. End with a brief disclaimer."""
+USER PROFILE: {user_context or "Not provided."} | FOCUS: {", ".join(focus_options)}
+Respond with JSON only. No other text."""
+
         with st.spinner("Analysing..."):
             try:
-                r=model.generate_content(prompt)
-                st.markdown(f'<div class="chat-ai"><div class="chat-lbl" style="color:#00d68f;">AI Analysis — {ticker}</div>{r.text.replace(chr(10),"<br>")}</div>', unsafe_allow_html=True)
+                import json as _json
+                r = model.generate_content(prompt)
+                raw = r.text.strip()
+                # Strip markdown code fences if present
+                if raw.startswith("```"):
+                    raw = raw.split("\n", 1)[-1]
+                    raw = raw.rsplit("```", 1)[0]
+                try:
+                    data = _json.loads(raw)
+                    # ── Render structured output ──────────────────────────────
+                    verdict = data.get("verdict","Neutral")
+                    vcol = "#00d68f" if verdict=="Bull" else "#ff4757" if verdict=="Bear" else "#cdd5e0"
+                    st.markdown(f'''
+<div style="background:#0d1117;border:1px solid #1c2333;border-radius:6px;padding:1.5rem;margin-bottom:1rem;">
+  <div style="display:flex;align-items:center;gap:1.2rem;margin-bottom:0.8rem;">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:{vcol};letter-spacing:0.08em;">{verdict.upper()}</div>
+    <div style="font-size:0.88rem;color:#cdd5e0;line-height:1.6;">{data.get("one_liner","")}</div>
+  </div>
+  <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+    <div style="flex:1;min-width:200px;background:#071a0f;border:1px solid #0d3320;border-radius:4px;padding:0.7rem 1rem;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:0.58rem;color:#3a4558;text-transform:uppercase;letter-spacing:0.15em;margin-bottom:0.3rem;">Bull Case</div>
+      <div style="font-size:0.8rem;color:#00d68f;">{data.get("bull_case","")}</div>
+    </div>
+    <div style="flex:1;min-width:200px;background:#1a0a08;border:1px solid #3a1008;border-radius:4px;padding:0.7rem 1rem;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:0.58rem;color:#3a4558;text-transform:uppercase;letter-spacing:0.15em;margin-bottom:0.3rem;">Bear Case</div>
+      <div style="font-size:0.8rem;color:#ff4757;">{data.get("bear_case","")}</div>
+    </div>
+  </div>
+</div>''', unsafe_allow_html=True)
+
+                    # Sections in 2-col grid
+                    sections = data.get("sections", [])
+                    for i in range(0, len(sections), 2):
+                        c1, c2 = st.columns(2)
+                        for col, sec in zip([c1,c2], sections[i:i+2]):
+                            col.markdown(f'''
+<div style="background:#0d1117;border:1px solid #1c2333;border-radius:6px;padding:1.2rem;margin-bottom:0.8rem;height:100%;">
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:#00d68f;text-transform:uppercase;letter-spacing:0.15em;margin-bottom:0.6rem;">{sec["title"]}</div>
+  <div style="font-size:0.82rem;color:#8892a4;line-height:1.72;">{sec["body"]}</div>
+</div>''', unsafe_allow_html=True)
+
+                    st.markdown(f'<div style="font-family:IBM Plex Mono,monospace;font-size:0.65rem;color:#3a4558;margin-top:0.5rem;border-top:1px solid #1c2333;padding-top:0.8rem;">⚠ {data.get("disclaimer","Not financial advice.")}</div>', unsafe_allow_html=True)
+
+                except _json.JSONDecodeError:
+                    # Fallback to plain text if JSON parse fails
+                    st.markdown(f'<div class="chat-ai"><div class="chat-lbl" style="color:#00d68f;">AI Analysis — {ticker}</div>{r.text.replace(chr(10),"<br>")}</div>', unsafe_allow_html=True)
+
                 st.session_state["last_analysis"]={"ticker":ticker,"analysis":r.text,"info":info}
             except Exception as e: st.error(f"Gemini error: {e}")
 else:
