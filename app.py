@@ -8,6 +8,16 @@ sys.path.insert(0, os.path.dirname(__file__))
 from utils.styles import SHARED_CSS
 
 st.set_page_config(page_title="11% — Trading Platform", page_icon="💲", layout="wide", initial_sidebar_state="collapsed")
+
+# ── Header & Layout Fix ────────────────────────────────────────────────────────
+# This CSS hides the Streamlit top bar and adds padding to the top of the app
+st.markdown("""
+    <style>
+        [data-testid="stHeader"] {display: none;}
+        .block-container {padding-top: 2rem !important;}
+        .ticker-wrap {margin-top: 1rem;}
+    </style>
+""", unsafe_allow_html=True)
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
 
 def get_market_status(market_name):
@@ -25,8 +35,8 @@ def get_market_status(market_name):
     return "Closed", "#ff4757"
 
 # ── Navbar ─────────────────────────────────────────────────────────────────────
-# Pushed down significantly with 6rem margin to clear the Streamlit header
-st.markdown('<div class="nb" style="margin-top: 6rem; padding-top: 1.5rem; border-top: 1px solid #1a2235;"><div class="nb-brand"><span class="g">11</span><span class="r">%</span></div><div class="nb-links">', unsafe_allow_html=True)
+# Using a relative container to ensure it stays below the (now hidden) header area
+st.markdown('<div class="nb" style="margin-top: 1rem; position: relative;"><div class="nb-brand"><span class="g">11</span><span class="r">%</span></div><div class="nb-links">', unsafe_allow_html=True)
 _nav = st.columns([1,1,1,1,1,1,1])
 with _nav[0]: st.page_link("app.py",                    label="Home")
 with _nav[1]: st.page_link("pages/1_Backtest.py",       label="Backtest")
@@ -62,23 +72,23 @@ if tape:
 left, right = st.columns([3, 2])
 
 with left:
-    # 1. Main Title
+    # 1. Main Title FIRST
     st.markdown("""
-    <div style="padding:2.5rem 0 0.5rem 0;">
+    <div style="padding:2.5rem 0 1rem 0;">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:5.8rem;line-height:0.88;letter-spacing:0.02em;margin-bottom:1.5rem;">
             <span style="color:#00d68f;">BACK</span><br><span style="color:#ff4757;">TEST</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    # 2. Candlesticks (Below Title & Spaced out)
+    # 2. Candlesticks SECOND (Spaced out)
     candles = [(28,38,"#ff4757"),(32,44,"#00d68f"),(36,28,"#ff4757"),(40,52,"#00d68f"),
                (44,60,"#00d68f"),(38,30,"#ff4757"),(48,62,"#00d68f"),(52,70,"#00d68f"),
                (46,38,"#ff4757"),(56,72,"#00d68f"),(60,78,"#00d68f"),(54,46,"#ff4757"),
                (62,80,"#00d68f"),(58,74,"#00d68f"),(64,82,"#00d68f")]
     
-    # Gap increased to 15px for much wider spacing
-    ch = '<div style="display:flex;align-items:flex-end;gap:15px;height:45px;margin-bottom:2rem;opacity:0.6;">'
+    # Gap increased to 14px for more airiness
+    ch = '<div style="display:flex;align-items:flex-end;gap:14px;height:45px;margin-bottom:2rem;opacity:0.5;">'
     for lo, hi, col in candles:
         bh = max(8, abs(hi-lo)*0.6)
         ch += f'<div style="width:7px;height:{bh}px;background:{col};border-radius:1px;"></div>'
@@ -117,114 +127,27 @@ with right:
 st.markdown('<div class="divider">What you can do</div>', unsafe_allow_html=True)
 
 features = [
-    ("📊","Backtest",       "Test any strategy against years of real market data. Returns, drawdown, Sharpe, win rate, alpha.",        "pages/1_Backtest.py"),
-    ("🔬","Indicators",     "Build custom strategies from 9+ indicators with AND/OR logic.",                                            "pages/2_Indicator_Test.py"),
-    ("▶", "Replay",          "Step through historical bars one at a time. Practice reading price action without knowing what's next.",   "pages/3_Replay.py"),
-    ("🧠","Analysis",        "Fundamentals, financials, valuation and AI-powered investment breakdown for any stock.",                   "pages/4_Analysis.py"),
-    ("📅","Earnings",        "See how a stock reacted to every earnings report — day-of move, pre-run, and post follow-through.",        "pages/6_Earnings.py"),
-    ("💬","AI Coach",        "Overwhelmed? Just ask. Plain English explanations of anything — strategies, results, concepts.",           "pages/5_Assistant.py"),
+    ("📊","Backtest",       "Test any strategy against years of real market data.",        "pages/1_Backtest.py"),
+    ("🔬","Indicators",     "Build custom strategies from 9+ indicators.",                  "pages/2_Indicator_Test.py"),
+    ("▶", "Replay",          "Step through historical bars one at a time.",                "pages/3_Replay.py"),
+    ("🧠","Analysis",        "Fundamentals and AI-powered investment breakdown.",           "pages/4_Analysis.py"),
+    ("📅","Earnings",        "See how a stock reacted to every earnings report.",           "pages/6_Earnings.py"),
+    ("💬","AI Coach",        "Ask questions in plain English.",                             "pages/5_Assistant.py"),
 ]
 f_cols = st.columns(6)
 for col, (icon, title, desc, link) in zip(f_cols, features):
-    col.markdown(f'<div class="feat-card"><div class="feat-icon">{icon}</div><div class="feat-title">{title}</div><div class="feat-desc">{desc}</div></div>', unsafe_allow_html=True)
+    col.markdown(f'<div class="feat-card"><div class="feat-icon">{icon}</div><div class="feat-title">{title}</div><div class="feat-desc" style="font-size:0.75rem;">{desc}</div></div>', unsafe_allow_html=True)
     col.page_link(link, label="Open →")
-
-# ── Strategies & Indicators ────────────────────────────────────────────────────
-st.markdown('<div class="divider" style="margin-top:2.5rem;">Strategies & Indicators</div>', unsafe_allow_html=True)
-sl, sr = st.columns(2)
-
-with sl:
-    st.markdown('<div style="font-family:IBM Plex Mono,monospace;font-size:0.6rem;color:#3a4558;text-transform:uppercase;letter-spacing:0.15em;margin-bottom:0.8rem;">9 pre-built strategies</div>', unsafe_allow_html=True)
-    for name, tag, desc in [
-        ("SMA Crossover",         "Trend",      "Classic trend-following. Fast MA crosses above slow MA → buy."),
-        ("EMA Crossover",         "Trend",      "Like SMA but reacts faster to recent price changes."),
-        ("RSI",                    "Mean Rev.",  "Buys oversold conditions, sells overbought."),
-        ("MACD",                   "Momentum",   "Momentum crossover using MACD and signal line."),
-        ("Bollinger Bands",        "Mean Rev.",  "Buys lower band, sells upper band — mean reversion."),
-        ("SuperTrend",             "Trend",      "ATR-based dynamic support/resistance with clear direction."),
-        ("RSI + Bollinger Bands", "Combo",      "RSI confirms BB signals to reduce false entries."),
-        ("EMA + RSI Filter",      "Combo",      "EMA crossover with RSI filter to improve signal quality."),
-        ("MACD + SuperTrend",      "Combo",      "Dual confirmation: MACD momentum + SuperTrend direction."),
-    ]:
-        tc = "#4da6ff" if tag=="Trend" else ("#b388ff" if tag=="Mean Rev." else ("#ff9f43" if tag=="Momentum" else "#00d68f"))
-        st.markdown(f'<div class="row-item"><span class="tag" style="background:{tc}18;color:{tc};border:1px solid {tc}30;flex-shrink:0;">{tag}</span><div><div style="font-size:0.8rem;color:#e2e8f0;">{name}</div><div style="font-size:0.72rem;color:#3a4558;margin-top:0.1rem;">{desc}</div></div></div>', unsafe_allow_html=True)
-
-with sr:
-    st.markdown('<div style="font-family:IBM Plex Mono,monospace;font-size:0.6rem;color:#3a4558;text-transform:uppercase;letter-spacing:0.15em;margin-bottom:0.8rem;">9+ available indicators</div>', unsafe_allow_html=True)
-    for name, cat, desc in [
-        ("SMA / EMA / WMA",    "Trend",      "Moving averages — trend direction and dynamic support."),
-        ("RSI",                "Momentum",   "Relative Strength Index — momentum oscillator, 0–100."),
-        ("Stochastic RSI",     "Momentum",   "RSI of RSI — faster, more sensitive signals."),
-        ("MACD",               "Momentum",   "Trend + momentum via two EMA differences."),
-        ("Bollinger Bands",    "Volatility", "Volatility bands — expand in trends, contract in ranges."),
-        ("SuperTrend",         "Trend",      "ATR-based trend with clear buy/sell direction signal."),
-        ("Ichimoku Cloud",     "Trend",      "Japanese system: trend, momentum, support/resistance."),
-        ("VWAP",               "Volume",     "Volume Weighted Average Price — institutional benchmark."),
-        ("OBV",                "Volume",     "On Balance Volume — tracks buying/selling pressure."),
-    ]:
-        tc = "#4da6ff" if cat=="Trend" else ("#b388ff" if cat=="Momentum" else ("#ff9f43" if cat=="Volatility" else "#00d68f"))
-        st.markdown(f'<div class="row-item"><span class="tag" style="background:{tc}18;color:{tc};border:1px solid {tc}30;flex-shrink:0;">{cat}</span><div><div style="font-size:0.8rem;color:#e2e8f0;">{name}</div><div style="font-size:0.72rem;color:#3a4558;margin-top:0.1rem;">{desc}</div></div></div>', unsafe_allow_html=True)
-
-# ── How it works ───────────────────────────────────────────────────────────────
-st.markdown('<div class="divider" style="margin-top:2rem;">How it works</div>', unsafe_allow_html=True)
-hw_cols = st.columns(5)
-for col, num, title, desc in zip(hw_cols,
-    ["01","02","03","04","05"],
-    ["Pick a Stock","Choose a Strategy","Configure & Run","Read Results","Get AI Insight"],
-    ["Enter any ticker — stocks, ETFs, or crypto. Data pulled live from Yahoo Finance.",
-     "9 pre-built strategies or build your own with up to 3 indicators and custom conditions.",
-     "Set date range, capital, and parameters. Results in seconds.",
-     "Return, alpha, drawdown, Sharpe, win rate — and every individual trade.",
-     "Open AI Coach to get your results explained in plain English."]):
-    col.markdown(f'<div style="padding:1rem 0;"><div style="font-family:Bebas Neue,sans-serif;font-size:3rem;color:#1a2235;line-height:1;margin-bottom:0.4rem;">{num}</div><div style="font-family:IBM Plex Mono,monospace;font-size:0.68rem;color:#e2e8f0;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.35rem;">{title}</div><div style="font-size:0.8rem;color:#3a4558;line-height:1.65;">{desc}</div></div>', unsafe_allow_html=True)
-
-# ── Concepts glossary ──────────────────────────────────────────────────────────
-st.markdown('<div class="divider" style="margin-top:2rem;">Key Concepts</div>', unsafe_allow_html=True)
-gl, gr = st.columns(2)
-terms_l = [
-    ("Backtesting",   "Running a strategy against historical data to see how it would have performed."),
-    ("Drawdown",      "Peak-to-trough decline. Max drawdown = worst loss streak a strategy experienced."),
-    ("Sharpe Ratio",  "Risk-adjusted return. Above 1.0 is decent, above 2.0 is strong."),
-    ("Win Rate",      "% of trades that were profitable. High win rate ≠ profitable if losses are larger."),
-    ("Alpha",         "Return above buy & hold. Positive alpha means the strategy added real value."),
-]
-terms_r = [
-    ("Moving Average","Average of price over N periods. Smooths noise to show trend direction."),
-    ("RSI",           "Momentum on a 0–100 scale. Below 30 = oversold, above 70 = overbought."),
-    ("Support & Resistance","Price levels where buyers or sellers historically step in."),
-    ("Volume",        "Shares traded. Rising price + rising volume confirms a move."),
-    ("ATR",           "Average True Range — daily volatility. Used by SuperTrend and position sizing."),
-]
-with gl:
-    for t, d in terms_l:
-        gl.markdown(f'<div class="row-item"><div><div style="font-family:IBM Plex Mono,monospace;font-size:0.72rem;color:#00d68f;margin-bottom:0.2rem;">{t}</div><div style="font-size:0.8rem;color:#3a4558;line-height:1.65;">{d}</div></div></div>', unsafe_allow_html=True)
-with gr:
-    for t, d in terms_r:
-        gr.markdown(f'<div class="row-item"><div><div style="font-family:IBM Plex Mono,monospace;font-size:0.72rem;color:#00d68f;margin-bottom:0.2rem;">{t}</div><div style="font-size:0.8rem;color:#3a4558;line-height:1.65;">{d}</div></div></div>', unsafe_allow_html=True)
-
-# ── FAQ ────────────────────────────────────────────────────────────────────────
-st.markdown('<div class="divider" style="margin-top:2rem;">FAQ</div>', unsafe_allow_html=True)
-faqs = [
-    ("Is this real trading or simulated?",               "Simulated. No real money involved. Data from Yahoo Finance. For education and strategy research only."),
-    ("How accurate is the backtesting?",                "Indicative, not guaranteed. Assumes fills at closing price — no slippage, spread, commission, or tax. Real results differ."),
-    ("Do I need to know how to code?",                  "No. Everything is point-and-click. It's built in Python with Streamlit — open source if you want to extend it."),
-    ("Why does past performance not guarantee future?","Markets change. A strategy that worked in a bull market may fail in a bear market. Backtesting shows what happened, not what will happen."),
-    ("How do I enable AI features?",                   "Add your Gemini API key to Streamlit Secrets as GEMINI_API_KEY. Free tier covers normal usage."),
-]
-fq1, fq2 = st.columns(2)
-for i, (q, a) in enumerate(faqs):
-    with (fq1 if i % 2 == 0 else fq2).expander(q):
-        st.markdown(f'<div style="font-size:0.84rem;color:#8892a4;line-height:1.75;">{a}</div>', unsafe_allow_html=True)
 
 # ── Footer ─────────────────────────────────────────────────────────────────────
 st.markdown("""
-<div style="margin-top:3rem;padding:1.5rem 0;border-top:1px solid #1a2235;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
+<div style="margin-top:5rem;padding:2rem 0;border-top:1px solid #1a2235;display:flex;justify-content:space-between;align-items:center;">
     <div style="font-family:'IBM Plex Mono',monospace;font-size:0.65rem;color:#3a4558;">
         <span style="color:#00d68f;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;">11</span><span style="color:#ff4757;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;">%</span>
-        &nbsp;·&nbsp; Built by Rishi Gopinath &nbsp;·&nbsp; Free &nbsp;·&nbsp; Open Source
+        &nbsp;·&nbsp; Free &nbsp;·&nbsp; Open Source
     </div>
     <div style="font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:#1a2235;">
-        ⚠ Not financial advice · Educational use only · Past performance ≠ future results
+        ⚠ Not financial advice · Educational use only
     </div>
 </div>
 """, unsafe_allow_html=True)
