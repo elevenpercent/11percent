@@ -106,7 +106,7 @@ def strategy_sma_crossover(df, short=20, long=50):
 
 
 def strategy_ema_crossover(df, short=12, long=26):
-    """EMA crossover — faster than SMA version."""
+    """EMA crossover - faster than SMA version."""
     s = ema(df["Close"], short)
     l = ema(df["Close"], long)
     raw = pd.Series(0, index=df.index)
