@@ -5,7 +5,7 @@ import pytz
 sys.path.insert(0, os.path.dirname(__file__))
 from utils.styles import SHARED_CSS
 
-st.set_page_config(page_title="11% — Trading Platform", page_icon="💲", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="11% — Trading Platform", page_icon="💲", layout="wide", initial_sidebar_state="opened")
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
 
 def get_market_status(market_name):
@@ -23,8 +23,6 @@ def get_market_status(market_name):
     return "Closed", "#ff4757"
 
 # ── Navbar ─────────────────────────────────────────────────────────────────────
-# Change your first line to include style="margin-top: 20px;"
-style="margin-top: 200px;"
 st.markdown('<div class="nb" style="margin-top: 2rem;"><div class="nb-brand"><span class="g">11</span><span class="r">%</span></div><div class="nb-links">', unsafe_allow_html=True)
 _nav = st.columns([1,1,1,1,1,1,1])
 with _nav[0]: st.page_link("app.py",                    label="Home")
@@ -35,6 +33,8 @@ with _nav[4]: st.page_link("pages/4_Analysis.py",       label="Analysis")
 with _nav[5]: st.page_link("pages/6_Earnings.py",       label="Earnings")
 with _nav[6]: st.page_link("pages/5_Assistant.py",      label="Coach")
 st.markdown('</div><div class="nb-tag">FREE · NO CARD REQUIRED</div></div>', unsafe_allow_html=True)
+
+
 
 # ── Ticker tape ────────────────────────────────────────────────────────────────
 TICKERS = ["AAPL","TSLA","SPY","NVDA","MSFT","AMZN","BTC-USD","META","GOOGL","AMD","NFLX","JPM","V","WMT","TSM"]
