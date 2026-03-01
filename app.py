@@ -5,7 +5,7 @@ import pytz
 sys.path.insert(0, os.path.dirname(**file**))
 from utils.styles import SHARED_CSS
 
-st.set_page_config(page_title=“11% — Trading Platform”, page_icon=“💹”, layout=“wide”, initial_sidebar_state=“collapsed”)
+st.set_page_config(page_title="11% — Trading Platform", page_icon="💹", layout="wide", initial_sidebar_state="collapsed")
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
 
 # Inject extra homepage CSS + JS animations
