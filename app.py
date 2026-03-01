@@ -210,7 +210,7 @@ st.markdown("""
 <div style="margin-top:3rem;padding:1.5rem 0;border-top:1px solid #1a2235;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
     <div style="font-family:'IBM Plex Mono',monospace;font-size:0.65rem;color:#3a4558;">
         <span style="color:#00d68f;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;">11</span><span style="color:#ff4757;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;">%</span>
-        &nbsp;·&nbsp; Built by Rishi Gopinath &nbsp;·&nbsp; Free &nbsp;·&nbsp; Open Source
+        &nbsp;·&nbsp; Built by Jake Erning, Taught by Rishi Gopinath &nbsp;·&nbsp; Free &nbsp;·&nbsp; Open Source
     </div>
     <div style="font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:#1a2235;">
         ⚠ Not financial advice · Educational use only · Past performance ≠ future results
