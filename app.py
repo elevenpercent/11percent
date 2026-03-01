@@ -25,8 +25,8 @@ def get_market_status(market_name):
     return "Closed", "#ff4757"
 
 # ── Navbar ─────────────────────────────────────────────────────────────────────
-# Increased margin-top to 4rem and added padding to fix the "too close to top" issue
-st.markdown('<div class="nb" style="margin-top: 4rem; padding-top: 1rem;"><div class="nb-brand"><span class="g">11</span><span class="r">%</span></div><div class="nb-links">', unsafe_allow_html=True)
+# Pushed down significantly with 6rem margin to clear the Streamlit header
+st.markdown('<div class="nb" style="margin-top: 6rem; padding-top: 1.5rem; border-top: 1px solid #1a2235;"><div class="nb-brand"><span class="g">11</span><span class="r">%</span></div><div class="nb-links">', unsafe_allow_html=True)
 _nav = st.columns([1,1,1,1,1,1,1])
 with _nav[0]: st.page_link("app.py",                    label="Home")
 with _nav[1]: st.page_link("pages/1_Backtest.py",       label="Backtest")
@@ -71,17 +71,17 @@ with left:
     </div>
     """, unsafe_allow_html=True)
 
-    # 2. Candlesticks (Now below Title and spaced out)
+    # 2. Candlesticks (Below Title & Spaced out)
     candles = [(28,38,"#ff4757"),(32,44,"#00d68f"),(36,28,"#ff4757"),(40,52,"#00d68f"),
                (44,60,"#00d68f"),(38,30,"#ff4757"),(48,62,"#00d68f"),(52,70,"#00d68f"),
                (46,38,"#ff4757"),(56,72,"#00d68f"),(60,78,"#00d68f"),(54,46,"#ff4757"),
                (62,80,"#00d68f"),(58,74,"#00d68f"),(64,82,"#00d68f")]
     
-    # Gap increased to 12px for significant spacing; opacity slightly bumped for visibility
-    ch = '<div style="display:flex;align-items:flex-end;gap:12px;height:45px;margin-bottom:2rem;opacity:0.6;">'
+    # Gap increased to 15px for much wider spacing
+    ch = '<div style="display:flex;align-items:flex-end;gap:15px;height:45px;margin-bottom:2rem;opacity:0.6;">'
     for lo, hi, col in candles:
         bh = max(8, abs(hi-lo)*0.6)
-        ch += f'<div style="width:8px;height:{bh}px;background:{col};border-radius:1px;"></div>'
+        ch += f'<div style="width:7px;height:{bh}px;background:{col};border-radius:1px;"></div>'
     ch += '</div>'
     st.markdown(ch, unsafe_allow_html=True)
 
