@@ -26,14 +26,38 @@ navbar()
 def load_earnings_data(ticker: str):
     import yfinance as yf
     t = yf.Ticker(ticker)
+    cal = None
+    hist_earnings = None
+    price_hist = pd.DataFrame()
+    info = {}
+
+    # Load price history - try multiple approaches
+    try:
+        price_hist = t.history(period="5y", auto_adjust=True)
+        if isinstance(price_hist.columns, pd.MultiIndex):
+            price_hist.columns = price_hist.columns.get_level_values(0)
+        price_hist = price_hist[["Open","High","Low","Close","Volume"]].dropna()
+    except Exception:
+        pass
+
+    # Load info
+    try:
+        info = t.info or {}
+    except Exception:
+        info = {}
+
+    # Load earnings history - try multiple yfinance API paths
+    try:
+        hist_earnings = t.earnings_history
+    except Exception:
+        hist_earnings = None
+
     try:
         cal = t.calendar
-        hist_earnings = t.earnings_history
-        price_hist = t.history(period="5y")
-        info = t.info
-        return cal, hist_earnings, price_hist, info
-    except Exception as e:
-        return None, None, pd.DataFrame(), {}
+    except Exception:
+        cal = None
+
+    return cal, hist_earnings, price_hist, info
 
 def compute_reaction(price_df: pd.DataFrame, earnings_dates: list, window: int = 5):
     """For each earnings date, compute price change in window before/after."""
@@ -107,23 +131,43 @@ if price_df.empty:
     st.error("Could not load data. Check the ticker.")
     st.stop()
 
-# Extract earnings dates
+# Extract earnings dates - try multiple yfinance API paths
 earnings_dates = []
-try:
-    if hist_earnings is not None and not hist_earnings.empty:
-        if "Earnings Date" in hist_earnings.columns:
-            earnings_dates = [pd.Timestamp(d) for d in hist_earnings["Earnings Date"].dropna()]
-        else:
-            earnings_dates = [pd.Timestamp(d) for d in hist_earnings.index if pd.notna(d)]
-except: pass
 
+# Method 1: earnings_history dataframe
+try:
+    if hist_earnings is not None and not (hasattr(hist_earnings, "empty") and hist_earnings.empty):
+        df_eh = pd.DataFrame(hist_earnings) if not isinstance(hist_earnings, pd.DataFrame) else hist_earnings
+        if "Earnings Date" in df_eh.columns:
+            earnings_dates = [pd.Timestamp(d) for d in df_eh["Earnings Date"].dropna()]
+        elif not df_eh.index.empty:
+            earnings_dates = [pd.Timestamp(d) for d in df_eh.index if pd.notna(d)]
+except Exception:
+    pass
+
+# Method 2: earnings_dates property
 if not earnings_dates:
-    # Fallback: try to get from calendar
     try:
         import yfinance as yf
-        t = yf.Ticker(ticker)
-        earnings_dates = [pd.Timestamp(d) for d in t.earnings_dates.index[:20] if pd.notna(d)]
-    except: pass
+        t2 = yf.Ticker(ticker)
+        ed = t2.earnings_dates
+        if ed is not None and not ed.empty:
+            earnings_dates = [pd.Timestamp(d).tz_localize(None) if hasattr(pd.Timestamp(d), "tz") and pd.Timestamp(d).tz else pd.Timestamp(d)
+                              for d in ed.index[:30] if pd.notna(d)]
+    except Exception:
+        pass
+
+# Method 3: get_earnings_dates
+if not earnings_dates:
+    try:
+        import yfinance as yf
+        t2 = yf.Ticker(ticker)
+        ed = t2.get_earnings_dates(limit=20)
+        if ed is not None and not ed.empty:
+            earnings_dates = [pd.Timestamp(d).tz_localize(None) if hasattr(pd.Timestamp(d), "tz") and pd.Timestamp(d).tz else pd.Timestamp(d)
+                              for d in ed.index if pd.notna(d)]
+    except Exception:
+        pass
 
 if not earnings_dates:
     st.markdown('<div class="warn-box">Could not retrieve earnings dates for this ticker. Try a major US stock like AAPL, MSFT, or TSLA.</div>', unsafe_allow_html=True)
