@@ -242,7 +242,7 @@ SHARED_CSS = """
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
         border-bottom: 1px solid var(--border);
-        margin: -3.5rem -2.5rem 0 -2.5rem;
+        margin: -1rem -2.5rem 0 -1.5rem;
         display: flex;
         align-items: stretch;
         height: 52px;
