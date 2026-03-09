@@ -207,13 +207,13 @@ SHARED_CSS = """
         padding: 1rem;
         margin-bottom: 1rem;
     }
-    /* config-panel: only show border/bg when it has real visible content */
     .config-panel {
         background: var(--surface);
         border: 1px solid var(--border);
         border-radius: var(--radius);
         padding: 1.4rem 1.4rem 1rem 1.4rem;
         margin-bottom: 1.5rem;
+        min-height: 52px;
     }
 
     /* ── Dividers ── */
@@ -236,37 +236,21 @@ SHARED_CSS = """
         background: var(--border);
     }
 
-    /* ── Navbar — fixed height, proper spacing ── */
-.nb {
-    background: rgba(6,8,12,0.97);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border);
-    /* CHANGE: Changed -1.5rem to 0 to stop the "squish" at the top */
-    margin: 0 -2.5rem 0 -2.5rem; 
-    display: flex;
-    align-items: stretch;
-    /* CHANGE: Increased height slightly for better breathing room */
-    height: 64px; 
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    padding: 0;
-}
-
-.nb-links {
-    display: flex;
-    align-items: stretch;
-    flex: 1;
-    /* CHANGE: Ensure this matches the new .nb height */
-    height: 64px; 
-}
-
-/* Update this too so the bottom border of the active link stays aligned */
-.nb-links [data-testid="stPageLink-NavLink"] {
-    /* ... existing styles ... */
-    height: 64px !important; 
-}
+    /* ── Navbar — Corrected Alignment ── */
+    .nb {
+        background: rgba(6,8,12,0.97);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--border);
+        margin: 0 -2.5rem 0 -2.5rem; 
+        display: flex;
+        align-items: stretch;
+        height: 64px; 
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        padding: 0;
+    }
     .nb-brand {
         font-family: 'Bebas Neue', sans-serif;
         font-size: 1.6rem;
@@ -276,7 +260,7 @@ SHARED_CSS = """
         display: flex;
         align-items: center;
         flex-shrink: 0;
-        height: 52px;
+        height: 64px;
     }
     .nb-brand .g { color: var(--green); }
     .nb-brand .r { color: var(--red); }
@@ -284,7 +268,7 @@ SHARED_CSS = """
         display: flex;
         align-items: stretch;
         flex: 1;
-        height: 52px;
+        height: 64px;
     }
     .nb-tag {
         font-family: 'IBM Plex Mono', monospace;
@@ -297,9 +281,8 @@ SHARED_CSS = """
         border-left: 1px solid var(--border);
         text-transform: uppercase;
         white-space: nowrap;
-        height: 52px;
+        height: 64px;
     }
-    /* Nav link styling */
     .nb-links [data-testid="stPageLink-NavLink"] {
         font-family: 'IBM Plex Mono', monospace !important;
         font-size: 0.65rem !important;
@@ -315,7 +298,7 @@ SHARED_CSS = """
         background: transparent !important;
         display: flex !important;
         align-items: center !important;
-        height: 52px !important;
+        height: 64px !important;
         transition: color 0.15s, border-color 0.15s !important;
         white-space: nowrap !important;
     }
@@ -327,10 +310,9 @@ SHARED_CSS = """
         color: var(--green) !important;
         border-bottom-color: var(--green) !important;
     }
-    /* Remove gap between navbar link columns */
     .nb-links [data-testid="stHorizontalBlock"] {
         gap: 0 !important;
-        height: 52px !important;
+        height: 64px !important;
         align-items: stretch !important;
     }
     .nb-links [data-testid="column"] {
@@ -339,7 +321,7 @@ SHARED_CSS = """
         padding: 0 !important;
     }
 
-    /* ── Page header — generous spacing below navbar ── */
+    /* ── Page header ── */
     .page-header {
         padding: 3rem 0 2rem 0;
         margin-bottom: 0.5rem;
@@ -375,7 +357,6 @@ SHARED_CSS = """
         max-width: 560px;
         line-height: 1.75;
     }
-    /* Green accent rule */
     .page-header::after {
         content: '';
         display: block;
