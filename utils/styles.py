@@ -267,7 +267,7 @@ SHARED_CSS = """
     .nb-links {
         display: flex;
         align-items: stretch;
-        flex: 1;
+        flex: 50;
         height: 52px;
     }
     .nb-tag {
@@ -275,7 +275,7 @@ SHARED_CSS = """
         font-size: 0.52rem;
         color: var(--muted);
         letter-spacing: 0.2em;
-        padding: 0 2.8rem;
+        padding: 0 1.8rem;
         display: flex;
         align-items: center;
         border-left: 1px solid var(--border);
@@ -292,7 +292,7 @@ SHARED_CSS = """
         letter-spacing: 0.14em !important;
         color: var(--muted) !important;
         text-decoration: none !important;
-        padding: 0 2.1rem !important;
+        padding: 0 5.1rem !important;
         border-radius: 0 !important;
         border: none !important;
         border-bottom: 2px solid transparent !important;
@@ -313,14 +313,14 @@ SHARED_CSS = """
     }
     /* Remove gap between navbar link columns */
     .nb-links [data-testid="stHorizontalBlock"] {
-        gap: 1 !important;
+        gap: 0 !important;
         height: 52px !important;
         align-items: stretch !important;
     }
     .nb-links [data-testid="column"] {
         display: flex !important;
         align-items: stretch !important;
-        padding: 1 !important;
+        padding: 0 !important;
     }
 
     /* ── Page header — generous spacing below navbar ── */
