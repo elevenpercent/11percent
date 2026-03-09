@@ -254,12 +254,12 @@ with hero_r:
 # -- Features --
 st.markdown('<div class="divider">Platform</div>', unsafe_allow_html=True)
 features = [
-    ("[bar]",    "Backtest",   "Test any strategy on years of real data. Returns, alpha, drawdown, Sharpe, win rate.",         "pages/1_Backtest.py"),
-    ("[search]", "Indicators", "Build custom strategies from 15 indicators with AND/OR combo logic and instant backtesting.",  "pages/2_Indicator_Test.py"),
-    (">",        "Replay",     "Step through historical bars one at a time with 13+ overlays and 5 sub-charts. Trade live.",   "pages/3_Replay.py"),
-    ("[brain]",  "Analysis",   "Full fundamental + AI breakdown. Financials, valuation, risks, and a personalised verdict.",   "pages/4_Analysis.py"),
-    ("[cal]",    "Earnings",   "How did a stock react to every past earnings? Day-of move, pre-run, post follow-through.",     "pages/6_Earnings.py"),
-    ("[chat]",   "AI Coach",   "Ask anything in plain English. Your coach explains results, strategies, and concepts.",        "pages/5_Assistant.py"),
+    ("Backtest",   "Test any strategy on years of real data. Returns, alpha, drawdown, Sharpe, win rate.",         "pages/1_Backtest.py"),
+    ("Indicators", "Build custom strategies from 15 indicators with AND/OR combo logic and instant backtesting.",  "pages/2_Indicator_Test.py"),
+    ("Replay",     "Step through historical bars one at a time with 13+ overlays and 5 sub-charts. Trade live.",   "pages/3_Replay.py"),
+    ("Analysis",   "Full fundamental + AI breakdown. Financials, valuation, risks, and a personalised verdict.",   "pages/4_Analysis.py"),
+    ("Earnings",   "How did a stock react to every past earnings? Day-of move, pre-run, post follow-through.",     "pages/6_Earnings.py"),
+    ("AI Coach",   "Ask anything in plain English. Your coach explains results, strategies, and concepts.",        "pages/5_Assistant.py"),
 ]
 fc = st.columns(6)
 for col, (icon, title, desc, link) in zip(fc, features):
