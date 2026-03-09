@@ -310,7 +310,7 @@ if show_vol:
 # -- Chart layout --
 title_str = f"{st.session_state.replay_ticker}  *  {cd.strftime('%b %d, %Y')}  *  ${cp:,.2f}"
 fig.update_layout(
-    **{k: v for k, v in PLOTLY_THEME.items() if k not in ("xaxis","yaxis","margin")},
+    **{k: v for k, v in PLOTLY_THEME.items() if k not in ("xaxis","yaxis","margin","legend","font")},
     margin=dict(l=10, r=10, t=45, b=10),
     height=580 + len(sub_charts) * 140,
     xaxis_rangeslider_visible=False,
