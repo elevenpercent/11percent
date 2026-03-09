@@ -100,19 +100,20 @@ def compute_reaction(price_df: pd.DataFrame, earnings_dates: list, window: int =
 # -- Page header ----------------------------------------------------------------
 st.markdown("""
 <div class="page-header">
+    <div class="page-header-eyebrow">Historical Earnings Analysis</div>
     <h1>Earnings Tracker</h1>
-    <p>See how a stock historically reacted to each earnings announcement - before, on the day, and after.</p>
+    <p>See how any stock historically reacted to each earnings announcement — before, on the day, and after.</p>
 </div>
 """, unsafe_allow_html=True)
 
-# Setup
-st.markdown('<div class="config-panel">', unsafe_allow_html=True)
-e1, e2 = st.columns([1, 3])
+# Setup — no wrapper panel, just clean inline controls
+e1, e2, e3 = st.columns([1, 1, 3])
 with e1: ticker = st.text_input("Ticker", value="AAPL").upper().strip()
 with e2:
-    st.markdown('<div style="padding-top:1.8rem;font-size:0.82rem;color:#8892a4;line-height:1.6;">Pulls 5 years of earnings dates and measures the price reaction: how much the stock moved the day earnings dropped, the 5-day run up before, and the 5-day follow-through after.</div>', unsafe_allow_html=True)
-run_btn = st.button("Load Earnings", type="primary")
-st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("<div style='height:1.75rem'></div>", unsafe_allow_html=True)
+    run_btn = st.button("Load Earnings", type="primary", use_container_width=True)
+with e3:
+    st.markdown('<div style="padding-top:1.85rem;font-size:0.82rem;color:#8892a4;line-height:1.6;">Pulls 5 years of earnings dates and measures the price reaction on the day, the 5-day run-up before, and 5-day follow-through after.</div>', unsafe_allow_html=True)
 
 if not run_btn:
     st.markdown("""
