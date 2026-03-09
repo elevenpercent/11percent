@@ -131,41 +131,59 @@ if price_df.empty:
     st.error("Could not load data. Check the ticker.")
     st.stop()
 
-# Extract earnings dates - try multiple yfinance API paths
-earnings_dates = []
+# Extract earnings dates - try every yfinance API path
+def _strip_tz(ts):
+    t = pd.Timestamp(ts)
+    return t.tz_localize(None) if t.tzinfo is not None else t
 
-# Method 1: earnings_history dataframe
+earnings_dates = []
+import yfinance as yf
+t2 = yf.Ticker(ticker)
+
+# Method 1: earnings_history (older yfinance)
 try:
-    if hist_earnings is not None and not (hasattr(hist_earnings, "empty") and hist_earnings.empty):
+    if hist_earnings is not None:
         df_eh = pd.DataFrame(hist_earnings) if not isinstance(hist_earnings, pd.DataFrame) else hist_earnings
-        if "Earnings Date" in df_eh.columns:
-            earnings_dates = [pd.Timestamp(d) for d in df_eh["Earnings Date"].dropna()]
-        elif not df_eh.index.empty:
-            earnings_dates = [pd.Timestamp(d) for d in df_eh.index if pd.notna(d)]
+        if not df_eh.empty:
+            if "Earnings Date" in df_eh.columns:
+                earnings_dates = [_strip_tz(d) for d in df_eh["Earnings Date"].dropna()]
+            else:
+                earnings_dates = [_strip_tz(d) for d in df_eh.index if pd.notna(d)]
 except Exception:
     pass
 
-# Method 2: earnings_dates property
+# Method 2: earnings_dates property — filter to past dates only
 if not earnings_dates:
     try:
-        import yfinance as yf
-        t2 = yf.Ticker(ticker)
         ed = t2.earnings_dates
         if ed is not None and not ed.empty:
-            earnings_dates = [pd.Timestamp(d).tz_localize(None) if hasattr(pd.Timestamp(d), "tz") and pd.Timestamp(d).tz else pd.Timestamp(d)
-                              for d in ed.index[:30] if pd.notna(d)]
+            now = pd.Timestamp.now()
+            earnings_dates = [
+                _strip_tz(d) for d in ed.index
+                if pd.notna(d) and _strip_tz(d) < now
+            ][:20]
     except Exception:
         pass
 
-# Method 3: get_earnings_dates
+# Method 3: get_earnings_dates(limit=40)
 if not earnings_dates:
     try:
-        import yfinance as yf
-        t2 = yf.Ticker(ticker)
-        ed = t2.get_earnings_dates(limit=20)
+        ed = t2.get_earnings_dates(limit=40)
         if ed is not None and not ed.empty:
-            earnings_dates = [pd.Timestamp(d).tz_localize(None) if hasattr(pd.Timestamp(d), "tz") and pd.Timestamp(d).tz else pd.Timestamp(d)
-                              for d in ed.index if pd.notna(d)]
+            now = pd.Timestamp.now()
+            earnings_dates = [
+                _strip_tz(d) for d in ed.index
+                if pd.notna(d) and _strip_tz(d) < now
+            ][:20]
+    except Exception:
+        pass
+
+# Method 4: income_stmt quarterly index dates as last resort
+if not earnings_dates:
+    try:
+        qs = t2.quarterly_income_stmt
+        if qs is not None and not qs.empty:
+            earnings_dates = [_strip_tz(d) for d in qs.columns if pd.notna(d)][:16]
     except Exception:
         pass
 
