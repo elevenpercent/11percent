@@ -6,9 +6,9 @@ import numpy as np
 from utils.indicators import sma, ema, wma, rsi, stoch_rsi, macd, bollinger_bands, supertrend, ichimoku
 
 
-# ─────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------
 # CORE BACKTEST ENGINE
-# ─────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------
 
 def run_backtest(df: pd.DataFrame, signals: pd.Series, initial_capital: float = 10000.0) -> dict:
     """
@@ -88,10 +88,10 @@ def run_backtest(df: pd.DataFrame, signals: pd.Series, initial_capital: float = 
     }
 
 
-# ─────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------
 # PRE-BUILT STRATEGIES
 # Each returns a pd.Series of signals: 1 / -1 / 0
-# ─────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------
 
 def strategy_sma_crossover(df, short=20, long=50):
     """Golden/Death cross on SMA."""
