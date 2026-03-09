@@ -15,9 +15,9 @@ def _base_fig(**kwargs) -> go.Figure:
     return fig
 
 
-# ─────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------
 # CANDLESTICK + SIGNALS
-# ─────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------
 
 def chart_candles(df: pd.DataFrame, trades: pd.DataFrame = None,
                   overlays: dict = None, title: str = "") -> go.Figure:
@@ -63,9 +63,9 @@ def chart_candles(df: pd.DataFrame, trades: pd.DataFrame = None,
     return fig
 
 
-# ─────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------
 # PORTFOLIO vs BUY & HOLD
-# ─────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------
 
 def chart_portfolio(portfolio: pd.DataFrame, df: pd.DataFrame, initial_capital: float) -> go.Figure:
     bh = (df["Close"] / float(df["Close"].iloc[0])) * initial_capital
@@ -85,9 +85,9 @@ def chart_portfolio(portfolio: pd.DataFrame, df: pd.DataFrame, initial_capital: 
     return fig
 
 
-# ─────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------
 # RSI CHART
-# ─────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------
 
 def chart_rsi(rsi_series: pd.Series, oversold=30, overbought=70) -> go.Figure:
     fig = _base_fig()
@@ -105,9 +105,9 @@ def chart_rsi(rsi_series: pd.Series, oversold=30, overbought=70) -> go.Figure:
     return fig
 
 
-# ─────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------
 # STOCH RSI CHART
-# ─────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------
 
 def chart_stoch_rsi(k: pd.Series, d: pd.Series) -> go.Figure:
     fig = _base_fig()
@@ -119,9 +119,9 @@ def chart_stoch_rsi(k: pd.Series, d: pd.Series) -> go.Figure:
     return fig
 
 
-# ─────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------
 # MACD CHART
-# ─────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------
 
 def chart_macd(macd_line: pd.Series, signal_line: pd.Series, histogram: pd.Series) -> go.Figure:
     fig = _base_fig()
@@ -135,9 +135,9 @@ def chart_macd(macd_line: pd.Series, signal_line: pd.Series, histogram: pd.Serie
     return fig
 
 
-# ─────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------
 # BOLLINGER BANDS (overlay on price)
-# ─────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------
 
 def chart_bollinger(df: pd.DataFrame, bb: dict) -> go.Figure:
     fig = _base_fig()
@@ -157,9 +157,9 @@ def chart_bollinger(df: pd.DataFrame, bb: dict) -> go.Figure:
     return fig
 
 
-# ─────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------
 # SUPERTREND (overlay on price)
-# ─────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------
 
 def chart_supertrend(df: pd.DataFrame, st_data: dict) -> go.Figure:
     fig = _base_fig()
@@ -180,9 +180,9 @@ def chart_supertrend(df: pd.DataFrame, st_data: dict) -> go.Figure:
     return fig
 
 
-# ─────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------
 # ICHIMOKU
-# ─────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------
 
 def chart_ichimoku(df: pd.DataFrame, ichi: dict) -> go.Figure:
     fig = _base_fig()
@@ -206,13 +206,13 @@ def chart_ichimoku(df: pd.DataFrame, ichi: dict) -> go.Figure:
     return fig
 
 
-# ─────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------
 # REPLAY CHART (single candle reveal)
-# ─────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------
 
 def chart_replay(df_visible: pd.DataFrame, user_trades: list = None,
                  overlays: dict = None) -> go.Figure:
-    """Chart for the replay page — only shows candles up to current index."""
+    """Chart for the replay page - only shows candles up to current index."""
     fig = chart_candles(df_visible, overlays=overlays, title="Chart Replay")
 
     if user_trades:
