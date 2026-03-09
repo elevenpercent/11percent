@@ -292,7 +292,7 @@ SHARED_CSS = """
         letter-spacing: 0.14em !important;
         color: var(--muted) !important;
         text-decoration: none !important;
-        padding: 0 5.1rem !important;
+        padding: 0 1.1rem !important;
         border-radius: 0 !important;
         border: none !important;
         border-bottom: 2px solid transparent !important;
