@@ -26,12 +26,10 @@ def navbar():
 navbar()
 
 st.markdown("""
-<div class="page-header" style="margin-bottom:0.6rem;">
-  <h1 style="margin-bottom:0.15rem;">Market Simulator</h1>
-  <p style="margin:0;font-size:0.85rem;">
-    Bar-by-bar replay with live ticking price. Trade without page refresh.
-    Draw trendlines directly on the chart.
-  </p>
+<div class="page-header">
+    <div class="page-header-eyebrow">Day Trading Practice</div>
+    <h1>Market Simulator</h1>
+    <p>Bar-by-bar replay with a live ticking price. Buy and sell without knowing the future. Draw on the chart. Zero page refreshes.</p>
 </div>
 """, unsafe_allow_html=True)
 
