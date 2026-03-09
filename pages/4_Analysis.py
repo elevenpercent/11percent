@@ -19,7 +19,7 @@ def navbar():
     with c[4]: st.page_link("pages/4_Analysis.py",       label="Analysis")
     with c[5]: st.page_link("pages/6_Earnings.py",       label="Earnings")
     with c[6]: st.page_link("pages/5_Assistant.py",      label="Coach")
-    st.markdown('</div><div class="nb-tag">FREE · OPEN SOURCE</div></div>', unsafe_allow_html=True)
+    st.markdown('</div><div class="nb-tag">FREE * OPEN SOURCE</div></div>', unsafe_allow_html=True)
 navbar()
 
 try:    api_key = st.secrets["GEMINI_API_KEY"]
@@ -39,7 +39,7 @@ def fmt(val, t="num"):
     try: return f"{float(val):.2f}"
     except: return str(val)
 
-# ── Page header ────────────────────────────────────────────────────────────────
+# -- Page header ----------------------------------------------------------------
 st.markdown("""
 <div class="page-header">
     <h1>Stock Analysis</h1>
@@ -47,14 +47,14 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ── Search bar ─────────────────────────────────────────────────────────────────
+# -- Search bar -----------------------------------------------------------------
 st.markdown('<div class="config-panel">', unsafe_allow_html=True)
 s1, s2, s3 = st.columns([1, 2, 2])
 with s1: ticker = st.text_input("Ticker", value="AAPL", label_visibility="visible").upper().strip()
 with s2: focus_options = st.multiselect("AI Focus", ["Overall thesis","Financial health","Valuation","Growth drivers","Key risks","Recent news","Beginner-friendly"], default=["Overall thesis","Key risks"])
 with s3: user_context = st.text_input("Your context", placeholder="e.g. Long-term investor, 5-year horizon, moderate risk")
 analyze_btn = st.button("Analyse", type="primary")
-if not api_key: st.markdown('<div class="warn-box" style="margin-top:0.5rem;">No Gemini API key — metrics and charts load, AI section skipped.</div>', unsafe_allow_html=True)
+if not api_key: st.markdown('<div class="warn-box" style="margin-top:0.5rem;">No Gemini API key - metrics and charts load, AI section skipped.</div>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
 if not analyze_btn:
@@ -67,8 +67,8 @@ if not analyze_btn:
     """, unsafe_allow_html=True)
     st.stop()
 
-# ── Load data ──────────────────────────────────────────────────────────────────
-with st.spinner(f"Loading {ticker}…"):
+# -- Load data ------------------------------------------------------------------
+with st.spinner(f"Loading {ticker}?"):
     info = get_ticker_info(ticker)
     df   = get_stock_data(ticker, str(date.today()-timedelta(days=365)), str(date.today()))
     news = get_news(ticker)
@@ -78,12 +78,12 @@ if not info.get("name"): st.error(f"Could not find '{ticker}'. Check the symbol.
 cp = float(df["Close"].iloc[-1]) if not df.empty else 0
 pct_1y = (cp - float(df["Close"].iloc[0])) / float(df["Close"].iloc[0]) * 100 if not df.empty and float(df["Close"].iloc[0]) > 0 else 0
 
-# ── Company header ─────────────────────────────────────────────────────────────
+# -- Company header -------------------------------------------------------------
 st.markdown(f"""
 <div style="background:#0d1117;border:1px solid #1a2235;border-radius:10px;padding:1.4rem 1.8rem;margin:1rem 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
     <div>
         <div style="font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:0.05em;line-height:1;">{info.get('name',ticker)}</div>
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:0.65rem;color:#3a4558;margin-top:0.2rem;">{ticker} · {info.get('sector','N/A')} · {info.get('industry','N/A')}</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:0.65rem;color:#3a4558;margin-top:0.2rem;">{ticker} * {info.get('sector','N/A')} * {info.get('industry','N/A')}</div>
     </div>
     <div style="text-align:right;">
         <div style="font-family:'IBM Plex Mono',monospace;font-size:1.5rem;">${cp:,.2f}</div>
@@ -92,7 +92,7 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# ── Metrics ────────────────────────────────────────────────────────────────────
+# -- Metrics --------------------------------------------------------------------
 st.markdown('<div class="divider">Fundamentals</div>', unsafe_allow_html=True)
 pm = info.get("profit_margin") or 0
 roe_ = info.get("roe") or 0
@@ -120,7 +120,7 @@ for col, lbl, val, cls in [
 ]:
     col.markdown(f'<div class="metric-card" style="margin-top:0.6rem;"><div class="metric-val {cls}">{val}</div><div class="metric-lbl">{lbl}</div></div>', unsafe_allow_html=True)
 
-# ── Price chart ────────────────────────────────────────────────────────────────
+# -- Price chart ----------------------------------------------------------------
 if not df.empty:
     st.markdown('<div class="divider">1-Year Price</div>', unsafe_allow_html=True)
     import plotly.graph_objects as go
@@ -136,19 +136,19 @@ if not df.empty:
         legend=dict(bgcolor="#0d1117",bordercolor="#1a2235",borderwidth=1))
     st.plotly_chart(fig, use_container_width=True)
 
-# ── News & summary side by side ────────────────────────────────────────────────
+# -- News & summary side by side ------------------------------------------------
 nl, nr = st.columns([1, 1])
 with nl:
     if info.get("summary"):
         st.markdown('<div class="divider">About</div>', unsafe_allow_html=True)
-        st.markdown(f'<div style="font-size:0.83rem;color:#8892a4;line-height:1.75;">{info["summary"][:600]}{"…" if len(info.get("summary",""))>600 else ""}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="font-size:0.83rem;color:#8892a4;line-height:1.75;">{info["summary"][:600]}{"?" if len(info.get("summary",""))>600 else ""}</div>', unsafe_allow_html=True)
 with nr:
     if news:
         st.markdown('<div class="divider">Recent News</div>', unsafe_allow_html=True)
         for item in news[:5]:
             st.markdown(f'<div class="row-item"><div><a href="{item.get("link","#")}" target="_blank" style="color:#e2e8f0;text-decoration:none;font-size:0.82rem;line-height:1.5;">{item.get("title","")}</a><div style="font-family:IBM Plex Mono,monospace;font-size:0.6rem;color:#3a4558;margin-top:0.2rem;">{item.get("publisher","")}</div></div></div>', unsafe_allow_html=True)
 
-# ── AI Analysis ────────────────────────────────────────────────────────────────
+# -- AI Analysis ----------------------------------------------------------------
 st.markdown('<div class="divider">AI Analysis</div>', unsafe_allow_html=True)
 
 if not model:
@@ -157,10 +157,10 @@ else:
     last_bt = st.session_state.get("last_backtest"); bt_ctx = ""
     if last_bt and last_bt.get("ticker") == ticker:
         mm = last_bt["metrics"]
-        bt_ctx = f"Backtest: {last_bt['strategy']} → Return {mm['total_return']:+.2f}%, Drawdown {mm['max_drawdown']:.2f}%, Win Rate {mm['win_rate']:.0f}%"
+        bt_ctx = f"Backtest: {last_bt['strategy']} ? Return {mm['total_return']:+.2f}%, Drawdown {mm['max_drawdown']:.2f}%, Win Rate {mm['win_rate']:.0f}%"
 
     prompt = f"""You are a financial educator on 11%, a free trading education platform.
-Respond ONLY with valid JSON — no markdown fences, no text outside the JSON:
+Respond ONLY with valid JSON - no markdown fences, no text outside the JSON:
 {{
   "verdict": "Bullish|Bearish|Neutral",
   "confidence": "High|Medium|Low",
@@ -169,7 +169,7 @@ Respond ONLY with valid JSON — no markdown fences, no text outside the JSON:
   "bear_case": "One sentence worst case.",
   "sections": [
     {{"title": "Business Overview", "body": "2-3 sentences."}},
-    {{"title": "Financial Health", "body": "Revenue, margins, ROE, debt — what they indicate."}},
+    {{"title": "Financial Health", "body": "Revenue, margins, ROE, debt - what they indicate."}},
     {{"title": "Valuation", "body": "Cheap or expensive vs peers and history?"}},
     {{"title": "Growth Drivers", "body": "What could drive it higher?"}},
     {{"title": "Key Risks", "body": "Top 2-3 concrete risks. Be honest."}},
@@ -185,7 +185,7 @@ FINANCIALS: MarketCap {fmt(info.get('market_cap'),'large')} | P/E {fmt(info.get(
 INVESTOR: {user_context or "Not specified"} | FOCUS: {", ".join(focus_options)}
 Return JSON only."""
 
-    with st.spinner("Analysing…"):
+    with st.spinner("Analysing?"):
         try:
             r = model.generate_content(prompt)
             raw = r.text.strip()
@@ -228,7 +228,7 @@ Return JSON only."""
                             <div style="font-size:0.84rem;color:#8892a4;line-height:1.75;">{sec['body']}</div>
                         </div>""", unsafe_allow_html=True)
 
-                st.markdown(f'<div style="font-family:IBM Plex Mono,monospace;font-size:0.62rem;color:#3a4558;padding-top:0.8rem;border-top:1px solid #1a2235;">⚠ {data.get("disclaimer","Not financial advice.")}</div>', unsafe_allow_html=True)
+                st.markdown(f'<div style="font-family:IBM Plex Mono,monospace;font-size:0.62rem;color:#3a4558;padding-top:0.8rem;border-top:1px solid #1a2235;">(!) {data.get("disclaimer","Not financial advice.")}</div>', unsafe_allow_html=True)
 
             except json.JSONDecodeError:
                 st.markdown(f'<div class="chat-ai"><div class="chat-lbl" style="color:#00d68f;">AI Analysis</div>{r.text.replace(chr(10),"<br>")}</div>', unsafe_allow_html=True)
