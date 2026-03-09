@@ -41,8 +41,9 @@ STRAT_META = {
 # -- Page header ----------------------------------------------------------------
 st.markdown("""
 <div class="page-header">
+    <div class="page-header-eyebrow">Strategy Backtester</div>
     <h1>Backtest Lab</h1>
-    <p>Test any strategy against real historical data. See what worked and understand why.</p>
+    <p>Test any strategy against real historical data. Understand what worked, why it worked, and when it failed.</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -72,7 +73,7 @@ with st.container():
 # -- Parameters -----------------------------------------------------------------
 strategy_info = STRATEGY_REGISTRY[strategy_name]
 user_params = {}
-st.markdown('<div class="config-panel">', unsafe_allow_html=True)
+st.markdown('<div class="section-hdr"><div class="section-hdr-label">Strategy Parameters</div></div>', unsafe_allow_html=True)
 pc = st.columns(4)
 if strategy_name == "SMA Crossover":
     with pc[0]: user_params["short"] = st.slider("Short SMA", 5, 50, 20)
