@@ -19,7 +19,7 @@ def navbar():
     with c[4]: st.page_link("pages/4_Analysis.py",       label="Analysis")
     with c[5]: st.page_link("pages/6_Earnings.py",       label="Earnings")
     with c[6]: st.page_link("pages/5_Assistant.py",      label="Coach")
-    st.markdown('</div><div class="nb-tag">FREE · OPEN SOURCE</div></div>', unsafe_allow_html=True)
+    st.markdown('</div><div class="nb-tag">FREE * OPEN SOURCE</div></div>', unsafe_allow_html=True)
 navbar()
 
 @st.cache_data(ttl=3600)
@@ -73,11 +73,11 @@ def compute_reaction(price_df: pd.DataFrame, earnings_dates: list, window: int =
         })
     return results
 
-# ── Page header ────────────────────────────────────────────────────────────────
+# -- Page header ----------------------------------------------------------------
 st.markdown("""
 <div class="page-header">
     <h1>Earnings Tracker</h1>
-    <p>See how a stock historically reacted to each earnings announcement — before, on the day, and after.</p>
+    <p>See how a stock historically reacted to each earnings announcement - before, on the day, and after.</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -95,12 +95,12 @@ if not run_btn:
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:1rem;">
         <div class="panel-sm"><div style="font-family:'IBM Plex Mono',monospace;font-size:0.62rem;color:#00d68f;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.5rem;">Why this matters</div><div style="font-size:0.82rem;color:#8892a4;line-height:1.65;">Earnings are the single biggest driver of short-term price moves. Knowing how a stock historically reacts tells you the risk going into the next report.</div></div>
         <div class="panel-sm"><div style="font-family:'IBM Plex Mono',monospace;font-size:0.62rem;color:#00d68f;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.5rem;">What you'll see</div><div style="font-size:0.82rem;color:#8892a4;line-height:1.65;">Day-of move, 5-day pre-earnings run, 5-day post-earnings follow-through, average reactions, and whether the stock tends to gap up or down on earnings.</div></div>
-        <div class="panel-sm"><div style="font-family:'IBM Plex Mono',monospace;font-size:0.62rem;color:#00d68f;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.5rem;">The key insight</div><div style="font-size:0.82rem;color:#8892a4;line-height:1.65;">Markets price in expectations. A stock can beat earnings and still drop if expectations were too high. This tracker shows you the actual price history — not the headlines.</div></div>
+        <div class="panel-sm"><div style="font-family:'IBM Plex Mono',monospace;font-size:0.62rem;color:#00d68f;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.5rem;">The key insight</div><div style="font-size:0.82rem;color:#8892a4;line-height:1.65;">Markets price in expectations. A stock can beat earnings and still drop if expectations were too high. This tracker shows you the actual price history - not the headlines.</div></div>
     </div>
     """, unsafe_allow_html=True)
     st.stop()
 
-with st.spinner(f"Loading earnings data for {ticker}…"):
+with st.spinner(f"Loading earnings data for {ticker}?"):
     cal, hist_earnings, price_df, info = load_earnings_data(ticker)
 
 if price_df.empty:
@@ -132,10 +132,10 @@ if not earnings_dates:
 reactions = compute_reaction(price_df, earnings_dates[:20])
 
 if not reactions:
-    st.markdown('<div class="warn-box">Could not compute reactions — not enough price history.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="warn-box">Could not compute reactions - not enough price history.</div>', unsafe_allow_html=True)
     st.stop()
 
-# ── Summary stats ──────────────────────────────────────────────────────────────
+# -- Summary stats --------------------------------------------------------------
 cp = float(price_df["Close"].iloc[-1])
 name = info.get("longName") or info.get("shortName") or ticker
 
@@ -174,7 +174,7 @@ for col, lbl, val, fmt in [
     else: cls = "pos" if val>=0 else "neg"; d = f"{val:+.2f}%"
     col.markdown(f'<div class="metric-card"><div class="metric-val {cls}">{d}</div><div class="metric-lbl">{lbl}</div></div>', unsafe_allow_html=True)
 
-# ── Visual chart ───────────────────────────────────────────────────────────────
+# -- Visual chart ---------------------------------------------------------------
 st.markdown('<div class="divider">Day-of Reaction Per Earnings</div>', unsafe_allow_html=True)
 import plotly.graph_objects as go
 
@@ -196,11 +196,11 @@ fig.update_layout(
     xaxis=dict(gridcolor="#1a2235", linecolor="#1a2235", tickangle=-45),
     yaxis=dict(gridcolor="#1a2235", linecolor="#1a2235", ticksuffix="%"),
     margin=dict(l=10,r=10,t=30,b=60), height=320, showlegend=False,
-    title=dict(text=f"{ticker} — Earnings Day-of Price Move", font=dict(size=12,color="#8892a4"))
+    title=dict(text=f"{ticker} - Earnings Day-of Price Move", font=dict(size=12,color="#8892a4"))
 )
 st.plotly_chart(fig, use_container_width=True)
 
-# ── Pre vs Post scatter ────────────────────────────────────────────────────────
+# -- Pre vs Post scatter --------------------------------------------------------
 st.markdown('<div class="divider">Pre-Earnings Run vs Post-Earnings Follow-Through</div>', unsafe_allow_html=True)
 fig2 = go.Figure()
 fig2.add_trace(go.Scatter(
@@ -227,7 +227,7 @@ fig2.update_layout(
 )
 st.plotly_chart(fig2, use_container_width=True)
 
-# ── Detailed table ─────────────────────────────────────────────────────────────
+# -- Detailed table -------------------------------------------------------------
 st.markdown('<div class="divider">All Events</div>', unsafe_allow_html=True)
 table_data = []
 for r in reactions:
@@ -237,20 +237,20 @@ for r in reactions:
         "Day-of Move":   f"{r['day_of']:+.2f}%",
         "5d Pre-Run":    f"{r['5d_pre']:+.2f}%",
         "5d Follow":     f"{r['5d_follow']:+.2f}%",
-        "Reaction":      "Gap Up 🟢" if r["day_of"] > 2 else ("Gap Down 🔴" if r["day_of"] < -2 else "Flat ⬜"),
+        "Reaction":      "Gap Up [G]" if r["day_of"] > 2 else ("Gap Down [R]" if r["day_of"] < -2 else "Flat [W]"),
     })
 df_table = pd.DataFrame(table_data)
 st.dataframe(df_table, use_container_width=True, hide_index=True)
 
-# ── Key takeaway ───────────────────────────────────────────────────────────────
+# -- Key takeaway ---------------------------------------------------------------
 gap_up_count   = sum(1 for r in reactions if r["day_of"] > 2)
 gap_down_count = sum(1 for r in reactions if r["day_of"] < -2)
 st.markdown(f"""
 <div style="background:#0d1117;border:1px solid #1a2235;border-radius:8px;padding:1.2rem 1.5rem;margin-top:1rem;">
     <div style="font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:#3a4558;text-transform:uppercase;letter-spacing:0.15em;margin-bottom:0.6rem;">Pattern Summary</div>
     <div style="display:flex;gap:2rem;flex-wrap:wrap;font-size:0.84rem;color:#8892a4;line-height:1.7;">
-        <span>🟢 Gap ups (+2%): <strong style="color:#e2e8f0;">{gap_up_count}</strong></span>
-        <span>🔴 Gap downs (-2%): <strong style="color:#e2e8f0;">{gap_down_count}</strong></span>
+        <span>[G] Gap ups (+2%): <strong style="color:#e2e8f0;">{gap_up_count}</strong></span>
+        <span>[R] Gap downs (-2%): <strong style="color:#e2e8f0;">{gap_down_count}</strong></span>
         <span>Average reaction: <strong style="color:{'#00d68f' if avg_day_of>=0 else '#ff4757'};">{avg_day_of:+.2f}%</strong></span>
         <span>Stock tends to {'gap up' if avg_day_of > 0 else 'gap down'} on earnings.</span>
         <span>After a gap up, averages <strong style="color:{'#00d68f' if avg_follow>=0 else '#ff4757'};">{avg_follow:+.2f}%</strong> over the next 5 days.</span>
