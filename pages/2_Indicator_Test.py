@@ -5,7 +5,7 @@ from datetime import date, timedelta
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from utils.data import get_stock_data
 from utils.strategies import run_backtest
-from utils.charts import chart_candles, chart_portfolio, chart_rsi, chart_stoch_rsi, chart_macd, chart_bollinger, chart_ichimoku
+from utils.charts import chart_candles, chart_portfolio, chart_rsi, chart_stoch_rsi, chart_macd, chart_bollinger, chart_ichimoku, build_tv_chart, TV_CONFIG
 from utils.indicators import sma, ema, wma, rsi, stoch_rsi, macd, bollinger_bands, supertrend, ichimoku, cci, williams_r, donchian_channels, keltner_channels, hull_ma, parabolic_sar, INDICATOR_INFO
 from utils.styles import SHARED_CSS
 
@@ -243,22 +243,59 @@ for col,(val,lbl,fmt_) in zip(cols,[
     col.markdown(f'<div class="metric-card"><div class="metric-val {cls}">{d}</div><div class="metric-lbl">{lbl}</div></div>', unsafe_allow_html=True)
 
 st.markdown('<div class="divider">Charts</div>', unsafe_allow_html=True)
-overlays={}
+
+# Build overlays for price panel
+overlays = {}
 for c_ in comp:
-    if INDICATOR_INFO[c_["name"]]["overlay"]:
-        if c_["name"] in ["SMA","EMA","WMA"]: overlays[f"{c_['name']} {c_['params']['window']}"]=c_["data"]
-        elif c_["name"]=="SuperTrend":
-            overlays["ST Bull"]=c_["data"]["supertrend"].where(c_["data"]["direction"]==1)
-            overlays["ST Bear"]=c_["data"]["supertrend"].where(c_["data"]["direction"]==-1)
-st.plotly_chart(chart_candles(df,trades,overlays=overlays or None,title=f"{ticker} - Custom"),use_container_width=True)
+    n = c_["name"]
+    if INDICATOR_INFO[n]["overlay"]:
+        if n in ["SMA","EMA","WMA"]:
+            overlays[n + " " + str(c_["params"]["window"])] = c_["data"]
+        elif n == "SuperTrend":
+            overlays["ST Bull"] = c_["data"]["supertrend"].where(c_["data"]["direction"] == 1)
+            overlays["ST Bear"] = c_["data"]["supertrend"].where(c_["data"]["direction"] == -1)
+        elif n == "Hull MA":
+            overlays["Hull MA " + str(c_["params"]["window"])] = c_["data"]
+        elif n == "Parabolic SAR":
+            overlays["SAR Bull"] = c_["data"]["sar"].where(c_["data"]["direction"] == 1)
+            overlays["SAR Bear"] = c_["data"]["sar"].where(c_["data"]["direction"] == -1)
+        elif n in ["Bollinger Bands","Donchian","Keltner"]:
+            d = c_["data"]
+            overlays[n + " Hi"]  = d.get("upper", d.get("upper"))
+            overlays[n + " Mid"] = d.get("middle")
+            overlays[n + " Lo"]  = d.get("lower")
+        elif n == "Ichimoku":
+            d = c_["data"]
+            overlays["Tenkan"] = d.get("tenkan_sen")
+            overlays["Kijun"]  = d.get("kijun_sen")
+
+# Build sub-panels
+sub_panels = [{"type": "volume", "label": "Volume", "data": None}]
 for c_ in comp:
-    n=c_["name"]
-    if n=="RSI":             st.plotly_chart(chart_rsi(c_["data"],c_["params"].get("oversold",30),c_["params"].get("overbought",70)),use_container_width=True)
-    elif n=="Stoch RSI":     st.plotly_chart(chart_stoch_rsi(c_["data"]["k"],c_["data"]["d"]),use_container_width=True)
-    elif n=="MACD":          st.plotly_chart(chart_macd(c_["data"]["macd"],c_["data"]["signal"],c_["data"]["histogram"]),use_container_width=True)
-    elif n=="Bollinger Bands": st.plotly_chart(chart_bollinger(df,c_["data"]),use_container_width=True)
-    elif n=="Ichimoku":      st.plotly_chart(chart_ichimoku(df,c_["data"]),use_container_width=True)
-st.plotly_chart(chart_portfolio(port,df,float(capital)),use_container_width=True)
+    n = c_["name"]
+    if n == "RSI":
+        sub_panels.append({"type": "rsi", "label": "RSI", "data": c_["data"]})
+    elif n == "MACD":
+        sub_panels.append({"type": "macd", "label": "MACD", "data": c_["data"]})
+    elif n == "CCI":
+        sub_panels.append({"type": "cci", "label": "CCI", "data": c_["data"]})
+    elif n == "Williams %R":
+        sub_panels.append({"type": "wpr", "label": "%R", "data": c_["data"]})
+
+fig, cfg = build_tv_chart(df, title=ticker + " - Custom Strategy",
+                           overlays=overlays or None, sub_panels=sub_panels,
+                           trades=trades if not trades.empty else None)
+st.plotly_chart(fig, use_container_width=True, config=cfg)
+
+# Stoch RSI and Ichimoku still use dedicated charts
+for c_ in comp:
+    n = c_["name"]
+    if n == "Stoch RSI":
+        st.plotly_chart(chart_stoch_rsi(c_["data"]["k"], c_["data"]["d"]), use_container_width=True)
+    elif n == "Ichimoku":
+        st.plotly_chart(chart_ichimoku(df, c_["data"]), use_container_width=True)
+
+st.plotly_chart(chart_portfolio(port, df, float(capital)), use_container_width=True)
 
 if not trades.empty:
     with st.expander(f"Trade Log ({len(trades)} trades)"):
