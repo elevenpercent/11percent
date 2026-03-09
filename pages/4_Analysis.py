@@ -42,20 +42,19 @@ def fmt(val, t="num"):
 # -- Page header ----------------------------------------------------------------
 st.markdown("""
 <div class="page-header">
+    <div class="page-header-eyebrow">AI-Powered Research</div>
     <h1>Stock Analysis</h1>
-    <p>Fundamentals, financials, price history and AI-powered investment breakdown for any ticker.</p>
+    <p>Fundamentals, financials, price history and AI-powered investment breakdown — for any ticker, in seconds.</p>
 </div>
 """, unsafe_allow_html=True)
 
 # -- Search bar -----------------------------------------------------------------
-st.markdown('<div class="config-panel">', unsafe_allow_html=True)
 s1, s2, s3 = st.columns([1, 2, 2])
 with s1: ticker = st.text_input("Ticker", value="AAPL", label_visibility="visible").upper().strip()
 with s2: focus_options = st.multiselect("AI Focus", ["Overall thesis","Financial health","Valuation","Growth drivers","Key risks","Recent news","Beginner-friendly"], default=["Overall thesis","Key risks"])
 with s3: user_context = st.text_input("Your context", placeholder="e.g. Long-term investor, 5-year horizon, moderate risk")
 analyze_btn = st.button("Analyse", type="primary")
-if not api_key: st.markdown('<div class="warn-box" style="margin-top:0.5rem;">No Gemini API key - metrics and charts load, AI section skipped.</div>', unsafe_allow_html=True)
-st.markdown('</div>', unsafe_allow_html=True)
+if not api_key: st.markdown('<div class="warn-box" style="margin-top:0.5rem;">No Gemini API key — metrics and charts load, AI section skipped.</div>', unsafe_allow_html=True)
 
 if not analyze_btn:
     st.markdown("""
@@ -234,3 +233,4 @@ Return JSON only."""
                 st.markdown(f'<div class="chat-ai"><div class="chat-lbl" style="color:#00d68f;">AI Analysis</div>{r.text.replace(chr(10),"<br>")}</div>', unsafe_allow_html=True)
             st.session_state["last_analysis"] = {"ticker": ticker, "analysis": r.text, "info": info}
         except Exception as e: st.error(f"Gemini error: {e}")
+        
