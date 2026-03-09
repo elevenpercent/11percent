@@ -237,36 +237,20 @@ SHARED_CSS = """
     }
 
     /* ── Navbar — fixed height, proper spacing ── */
-.nb {
-    background: rgba(6,8,12,0.97);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border);
-    /* CHANGE: Changed -1.5rem to 0 to stop the "squish" at the top */
-    margin: 0 -2.5rem 0 -2.5rem; 
-    display: flex;
-    align-items: stretch;
-    /* CHANGE: Increased height slightly for better breathing room */
-    height: 64px; 
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    padding: 0;
-}
-
-.nb-links {
-    display: flex;
-    align-items: stretch;
-    flex: 1;
-    /* CHANGE: Ensure this matches the new .nb height */
-    height: 64px; 
-}
-
-/* Update this too so the bottom border of the active link stays aligned */
-.nb-links [data-testid="stPageLink-NavLink"] {
-    /* ... existing styles ... */
-    height: 64px !important; 
-}
+    .nb {
+        background: rgba(6,8,12,0.97);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--border);
+        margin: -1rem -2.5rem 0 -2.5rem;
+        display: flex;
+        align-items: stretch;
+        height: 52px;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        padding: 0;
+    }
     .nb-brand {
         font-family: 'Bebas Neue', sans-serif;
         font-size: 1.6rem;
