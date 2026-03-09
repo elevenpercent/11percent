@@ -44,12 +44,10 @@ if last_an:
 
 # -- Page header ----------------------------------------------------------------
 st.markdown("""
-<div style="padding:2rem 0 1.5rem 0;">
-    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem;">
-        <div style="width:36px;height:36px;background:linear-gradient(135deg,#00d68f22,#00d68f44);border:1px solid #00d68f44;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1rem;">?</div>
-        <h1 style="font-family:'Bebas Neue',sans-serif;font-size:2.5rem!important;letter-spacing:0.05em;margin:0!important;">AI Trading Coach</h1>
-    </div>
-    <p style="color:#8892a4;font-size:0.9rem;margin:0;max-width:560px;">Overwhelmed by data? Just ask. Your coach explains anything in plain English - from what a Sharpe ratio means to why your strategy lost money.</p>
+<div class="page-header">
+    <div class="page-header-eyebrow">Powered by Gemini</div>
+    <h1>AI Trading Coach</h1>
+    <p>Overwhelmed by data? Just ask. Your coach explains anything in plain English — from what a Sharpe ratio means to why your strategy lost money.</p>
 </div>
 """, unsafe_allow_html=True)
 
