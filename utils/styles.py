@@ -267,7 +267,7 @@ SHARED_CSS = """
     .nb-links {
         display: flex;
         align-items: stretch;
-        flex: 5;
+        flex: 50;
         height: 52px;
     }
     .nb-tag {
