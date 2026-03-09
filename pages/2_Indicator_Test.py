@@ -145,7 +145,13 @@ COND = {
     "Parabolic SAR":  {"buy":["SAR turns bullish","Price above SAR"],              "sell":["SAR turns bearish","Price below SAR"]},
 }
 
-st.markdown('<div class="page-header"><h1>Indicator Lab</h1><p>Set your own buy/sell rules using any indicator - or combine up to 3 with AND/OR logic.</p></div>', unsafe_allow_html=True)
+st.markdown("""
+<div class="page-header">
+    <div class="page-header-eyebrow">Custom Signal Builder</div>
+    <h1>Indicator Lab</h1>
+    <p>Set your own buy/sell rules using any indicator — or chain up to 3 with AND/OR logic to build a real strategy.</p>
+</div>
+""", unsafe_allow_html=True)
 
 # -- Setup ----------------------------------------------------------------------
 st.markdown('<div class="config-panel">', unsafe_allow_html=True)
