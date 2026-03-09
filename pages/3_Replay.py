@@ -80,7 +80,7 @@ DEFAULTS = {
     "replay_idx": 60, "replay_trades": [], "replay_cash": 10000.0,
     "replay_shares": 0.0, "replay_df": None, "replay_ticker": "",
     "replay_capital": 10000.0, "replay_avg_cost": 0.0,
-    "replay_autoplay": False, "replay_speed": 0.6,
+    "replay_autoplay": False, "replay_speed": 0.7,
     "replay_prev_idx": -1,
 }
 for k, v in DEFAULTS.items():
@@ -642,3 +642,4 @@ if st.session_state.replay_trades:
         log["price"]  = log["price"].apply(lambda x: "$" + f"{x:,.2f}")
         log["shares"] = log["shares"].apply(lambda x: f"{x:.2f}")
         st.dataframe(log.set_index("date"), use_container_width=True)
+    
