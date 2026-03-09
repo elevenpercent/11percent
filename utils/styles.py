@@ -207,6 +207,7 @@ SHARED_CSS = """
         padding: 1rem;
         margin-bottom: 1rem;
     }
+    /* config-panel: only show border/bg when it has real visible content */
     .config-panel {
         background: var(--surface);
         border: 1px solid var(--border);
@@ -235,31 +236,47 @@ SHARED_CSS = """
         background: var(--border);
     }
 
-    /* ── Navbar — Sleek 48px Height ── */
-    .nb {
-        background: rgba(6,8,12,0.98);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border-bottom: 1px solid var(--border);
-        margin: 0 -2.5rem 0 -2.5rem; 
-        display: flex;
-        align-items: stretch;
-        height: 48px; 
-        position: sticky;
-        top: 0;
-        z-index: 1000;
-        padding: 0;
-    }
+    /* ── Navbar — fixed height, proper spacing ── */
+.nb {
+    background: rgba(6,8,12,0.97);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    /* CHANGE: Changed -1.5rem to 0 to stop the "squish" at the top */
+    margin: 0 -2.5rem 0 -2.5rem; 
+    display: flex;
+    align-items: stretch;
+    /* CHANGE: Increased height slightly for better breathing room */
+    height: 64px; 
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    padding: 0;
+}
+
+.nb-links {
+    display: flex;
+    align-items: stretch;
+    flex: 1;
+    /* CHANGE: Ensure this matches the new .nb height */
+    height: 64px; 
+}
+
+/* Update this too so the bottom border of the active link stays aligned */
+.nb-links [data-testid="stPageLink-NavLink"] {
+    /* ... existing styles ... */
+    height: 64px !important; 
+}
     .nb-brand {
         font-family: 'Bebas Neue', sans-serif;
-        font-size: 1.3rem;
+        font-size: 1.6rem;
         letter-spacing: 0.12em;
-        padding: 0 1.5rem;
+        padding: 0 1.8rem;
         border-right: 1px solid var(--border);
         display: flex;
         align-items: center;
         flex-shrink: 0;
-        height: 48px;
+        height: 52px;
     }
     .nb-brand .g { color: var(--green); }
     .nb-brand .r { color: var(--red); }
@@ -267,39 +284,40 @@ SHARED_CSS = """
         display: flex;
         align-items: stretch;
         flex: 1;
-        height: 48px;
+        height: 52px;
     }
     .nb-tag {
         font-family: 'IBM Plex Mono', monospace;
-        font-size: 0.5rem;
+        font-size: 0.52rem;
         color: var(--muted);
         letter-spacing: 0.2em;
-        padding: 0 1.5rem;
+        padding: 0 1.8rem;
         display: flex;
         align-items: center;
         border-left: 1px solid var(--border);
         text-transform: uppercase;
         white-space: nowrap;
-        height: 48px;
+        height: 52px;
     }
-    /* Nav link styling with better internal gap */
+    /* Nav link styling */
     .nb-links [data-testid="stPageLink-NavLink"] {
         font-family: 'IBM Plex Mono', monospace !important;
-        font-size: 0.6rem !important;
+        font-size: 0.65rem !important;
         font-weight: 600 !important;
         text-transform: uppercase !important;
-        letter-spacing: 0.12em !important;
+        letter-spacing: 0.14em !important;
         color: var(--muted) !important;
         text-decoration: none !important;
-        padding: 0 1rem !important;
+        padding: 0 1.1rem !important;
         border-radius: 0 !important;
         border: none !important;
         border-bottom: 2px solid transparent !important;
         background: transparent !important;
         display: flex !important;
         align-items: center !important;
-        height: 48px !important;
+        height: 52px !important;
         transition: color 0.15s, border-color 0.15s !important;
+        white-space: nowrap !important;
     }
     .nb-links [data-testid="stPageLink-NavLink"]:hover {
         color: var(--text) !important;
@@ -309,10 +327,10 @@ SHARED_CSS = """
         color: var(--green) !important;
         border-bottom-color: var(--green) !important;
     }
-    /* Fixing the internal horizontal block alignment */
+    /* Remove gap between navbar link columns */
     .nb-links [data-testid="stHorizontalBlock"] {
         gap: 0 !important;
-        height: 48px !important;
+        height: 52px !important;
         align-items: stretch !important;
     }
     .nb-links [data-testid="column"] {
@@ -321,14 +339,12 @@ SHARED_CSS = """
         padding: 0 !important;
     }
 
-    /* ── Page header ── */
+    /* ── Page header — generous spacing below navbar ── */
     .page-header {
         padding: 3rem 0 2rem 0;
         margin-bottom: 0.5rem;
         position: relative;
     }
-    /* ... existing page header and other styles below ... */
-
     .page-header-eyebrow {
         font-family: 'IBM Plex Mono', monospace;
         font-size: 0.58rem;
@@ -359,6 +375,7 @@ SHARED_CSS = """
         max-width: 560px;
         line-height: 1.75;
     }
+    /* Green accent rule */
     .page-header::after {
         content: '';
         display: block;
@@ -369,6 +386,7 @@ SHARED_CSS = """
         border-radius: 2px;
     }
 
+    /* ── Status boxes ── */
     .info-box {
         background: var(--green-dim);
         border: 1px solid rgba(0,230,118,0.2);
@@ -390,6 +408,7 @@ SHARED_CSS = """
         line-height: 1.5;
     }
 
+    /* ── Chat bubbles ── */
     .chat-user {
         background: var(--surface2);
         border: 1px solid var(--border);
@@ -428,6 +447,7 @@ SHARED_CSS = """
         display: inline-block;
     }
 
+    /* ── Feature cards ── */
     .feat-card {
         background: var(--surface);
         border: 1px solid var(--border);
@@ -453,6 +473,7 @@ SHARED_CSS = """
     .feat-title { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.18em; color: var(--text); margin-bottom: 0.5rem; }
     .feat-desc  { font-size: 0.82rem; color: var(--text2); line-height: 1.6; }
 
+    /* ── Ticker tape ── */
     .ticker-wrap {
         overflow: hidden;
         background: var(--surface);
@@ -467,6 +488,7 @@ SHARED_CSS = """
     .t-sym { color: var(--text); margin-right: 0.5rem; font-weight: 600; }
     @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
+    /* ── Tags ── */
     .tag { display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 0.58rem; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.1em; }
     .tag-green  { background: var(--green-dim);      color: var(--green);  border: 1px solid rgba(0,230,118,0.2); }
     .tag-red    { background: var(--red-dim);         color: var(--red);    border: 1px solid rgba(255,61,87,0.2); }
@@ -474,13 +496,16 @@ SHARED_CSS = """
     .tag-purple { background: rgba(179,136,255,0.1); color: var(--purple); border: 1px solid rgba(179,136,255,0.2); }
     .tag-yellow { background: rgba(255,209,102,0.1); color: var(--yellow); border: 1px solid rgba(255,209,102,0.2); }
 
+    /* ── List rows ── */
     .row-item { padding: 0.6rem 0; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 0.6rem; }
     .row-item:last-child { border-bottom: none; }
     .empty-state { text-align: center; padding: 3rem 1rem; color: var(--muted); font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem; }
 
+    /* ── Progress bar ── */
     .progress-track { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; margin: 0.3rem 0; }
     .progress-fill  { height: 100%; background: linear-gradient(90deg, var(--green), var(--blue)); border-radius: 2px; transition: width 0.3s ease; }
 
+    /* ── Section header ── */
     .section-hdr {
         display: flex;
         align-items: center;
@@ -502,6 +527,7 @@ SHARED_CSS = """
         background: linear-gradient(90deg, var(--border), transparent);
     }
 
+    /* ── Stat strip ── */
     .stat-strip {
         display: flex;
         background: var(--surface);
@@ -520,10 +546,12 @@ SHARED_CSS = """
     .stat-val { font-family: 'IBM Plex Mono', monospace; font-size: 1rem; font-weight: 600; }
     .stat-lbl { font-family: 'IBM Plex Mono', monospace; font-size: 0.48rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.15em; margin-top: 2px; }
 
+    /* ── Scrollbar ── */
     ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: var(--bg); }
     ::-webkit-scrollbar-thumb { background: #2a3550; border-radius: 2px; }
 
+    /* ── Misc ── */
     hr { border-color: var(--border) !important; }
     [data-testid="stExpander"] {
         background: var(--surface) !important;
