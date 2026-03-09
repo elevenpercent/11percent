@@ -5,7 +5,7 @@ from datetime import date, timedelta
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from utils.data import get_stock_data, get_ticker_info
 from utils.strategies import STRATEGY_REGISTRY, run_backtest
-from utils.charts import chart_candles, chart_portfolio, chart_rsi, chart_macd, chart_bollinger, chart_supertrend
+from utils.charts import chart_candles, chart_portfolio, chart_rsi, chart_macd, chart_bollinger, chart_supertrend, build_tv_chart, TV_CONFIG
 from utils.indicators import rsi, macd, bollinger_bands, supertrend, sma, ema
 from utils.styles import SHARED_CSS
 
@@ -208,23 +208,38 @@ st.markdown(f"""
 
 # -- Charts ---------------------------------------------------------------------
 st.markdown('<div class="divider">Chart</div>', unsafe_allow_html=True)
+
+# Build overlays dict
 overlays = {}
 if strategy_name == "SMA Crossover":
-    overlays[f"SMA {user_params['short']}"] = sma(df["Close"], user_params["short"])
-    overlays[f"SMA {user_params['long']}"]  = sma(df["Close"], user_params["long"])
-elif strategy_name in ["EMA Crossover","EMA + RSI Filter"]:
-    overlays["Fast EMA"] = ema(df["Close"], user_params.get("ema_fast", user_params.get("short")))
-    overlays["Slow EMA"] = ema(df["Close"], user_params.get("ema_slow", user_params.get("long")))
+    overlays["SMA " + str(user_params["short"])] = sma(df["Close"], user_params["short"])
+    overlays["SMA " + str(user_params["long"])]  = sma(df["Close"], user_params["long"])
+elif strategy_name in ["EMA Crossover", "EMA + RSI Filter"]:
+    overlays["Fast EMA"] = ema(df["Close"], user_params.get("ema_fast", user_params.get("short", 12)))
+    overlays["Slow EMA"] = ema(df["Close"], user_params.get("ema_slow", user_params.get("long",  26)))
+elif strategy_name == "Bollinger Bands":
+    bb = bollinger_bands(df["Close"], user_params["window"], user_params["num_std"])
+    overlays["BB Upper"]  = bb["upper"]
+    overlays["BB Middle"] = bb["middle"]
+    overlays["BB Lower"]  = bb["lower"]
+elif strategy_name == "SuperTrend":
+    st_data = supertrend(df, user_params["window"], user_params["multiplier"])
+    overlays["ST Bull"] = st_data["supertrend"].where(st_data["direction"] == 1)
+    overlays["ST Bear"] = st_data["supertrend"].where(st_data["direction"] == -1)
 
-if   strategy_name == "Bollinger Bands": st.plotly_chart(chart_bollinger(df, bollinger_bands(df["Close"], user_params["window"], user_params["num_std"])), use_container_width=True)
-elif strategy_name == "SuperTrend":      st.plotly_chart(chart_supertrend(df, supertrend(df, user_params["window"], user_params["multiplier"])), use_container_width=True)
-else:                                    st.plotly_chart(chart_candles(df, trades, overlays=overlays or None, title=f"{ticker} - {strategy_name}"), use_container_width=True)
+# Build sub-panels
+sub_panels = [{"type": "volume", "label": "Volume", "data": None}]
+if strategy_name in ["RSI", "RSI + Bollinger Bands", "EMA + RSI Filter"]:
+    sub_panels.append({"type": "rsi", "label": "RSI",
+                        "data": rsi(df["Close"], user_params.get("rsi_window", user_params.get("window", 14)))})
+if strategy_name in ["MACD", "MACD + SuperTrend"]:
+    md = macd(df["Close"], user_params.get("fast", 12), user_params.get("slow", 26))
+    sub_panels.append({"type": "macd", "label": "MACD", "data": md})
 
-if strategy_name in ["RSI","RSI + Bollinger Bands","EMA + RSI Filter"]:
-    st.plotly_chart(chart_rsi(rsi(df["Close"], user_params.get("rsi_window", user_params.get("window",14))), user_params.get("oversold",30), user_params.get("overbought",70)), use_container_width=True)
-if strategy_name in ["MACD","MACD + SuperTrend"]:
-    md = macd(df["Close"], user_params.get("fast",12), user_params.get("slow",26))
-    st.plotly_chart(chart_macd(md["macd"], md["signal"], md["histogram"]), use_container_width=True)
+chart_title = ticker + " - " + strategy_name
+fig, cfg = build_tv_chart(df, title=chart_title, overlays=overlays or None,
+                           sub_panels=sub_panels, trades=trades if not trades.empty else None)
+st.plotly_chart(fig, use_container_width=True, config=cfg)
 
 st.plotly_chart(chart_portfolio(port, df, float(capital)), use_container_width=True)
 
