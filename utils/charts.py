@@ -88,9 +88,15 @@ def _style_axes(fig, n_rows=1):
         zeroline=False,
         showgrid=True,
     )
+    # Only pass row/col when the figure actually has subplot grid (make_subplots)
+    has_grid = getattr(fig, "_grid_ref", None) is not None
     for i in range(1, n_rows + 1):
-        fig.update_xaxes(**axis_style, row=i, col=1)
-        fig.update_yaxes(**axis_style, row=i, col=1)
+        if has_grid:
+            fig.update_xaxes(**axis_style, row=i, col=1)
+            fig.update_yaxes(**axis_style, row=i, col=1)
+        else:
+            fig.update_xaxes(**axis_style)
+            fig.update_yaxes(**axis_style)
     return fig
 
 
