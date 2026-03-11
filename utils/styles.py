@@ -163,11 +163,16 @@ SHARED_CSS = """
     .divider::before,.divider::after,.price-divider::before,.price-divider::after { content:''; flex:1; height:1px; background:var(--border); }
 
     /* ── Navbar ── */
+    /* Push the main block container flush to the top */
+    [data-testid="stMainBlocksContainer"] {
+        padding-top: 0 !important;
+        margin-top: 0 !important;
+    }
     .nb {
         background:rgba(6,8,12,0.97);
         backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
         border-bottom:1px solid var(--border);
-        margin:-3.5rem -2.5rem 0 -2.5rem;
+        margin: 0 -2.5rem 0 -2.5rem;
         display:flex; align-items:stretch;
         height:54px; position:sticky; top:0; z-index:1000; padding:0;
     }
