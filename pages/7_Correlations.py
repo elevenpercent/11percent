@@ -173,7 +173,8 @@ pairs.sort(key=lambda x: abs(x[2]), reverse=True)
 ins1, ins2 = st.columns(2)
 with ins1:
     st.markdown('<div style="font-family:IBM Plex Mono,monospace;font-size:0.58rem;color:#3a4558;text-transform:uppercase;letter-spacing:0.18em;margin-bottom:0.8rem;">Highest Correlation (move together)</div>', unsafe_allow_html=True)
-    for a, b, v in [(p for p in pairs if p[2] > 0)][:5] if any(p[2] > 0 for p in pairs) else []:
+    high_pairs = [p for p in pairs if p[2] > 0][:5]
+    for a, b, v in high_pairs:
         bar_w = int(abs(v) * 100)
         color = "#00e676" if v > 0 else "#ff3d57"
         st.markdown(f"""
