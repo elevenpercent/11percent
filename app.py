@@ -158,7 +158,7 @@ with hero_l:
 
     st.markdown('<div class="hero-ctas">', unsafe_allow_html=True)
     cta1, cta2, cta3 = st.columns(3)
-    with cta1: st.page_link("pages/1_Backtest.py",  label="Backtest ->")
+    with cta1: st.page_link("pages/1_Strategy_Lab.py",  label="Lab ->")
     with cta2: st.page_link("pages/3_Replay.py",    label="Replay ->")
     with cta3: st.page_link("pages/5_Assistant.py", label="AI Coach ->")
     st.markdown("</div>", unsafe_allow_html=True)
