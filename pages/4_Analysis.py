@@ -125,8 +125,8 @@ if not df.empty:
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=df.index, y=df["Close"], mode="lines", name="Price",
         line=dict(color="#00e676", width=2), fill="tozeroy", fillcolor="rgba(0,230,118,0.04)"))
-    fig.update_layout(**PLOTLY_THEME, height=280, xaxis_rangeslider_visible=False,
-                      margin=dict(l=10,r=10,t=20,b=10))
+    fig.update_layout(**PLOTLY_THEME, height=280, xaxis_rangeslider_visible=False)
+    fig.update_layout(margin=dict(l=10,r=10,t=20,b=10))
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar":False})
 
 # ── News ───────────────────────────────────────────────────────────────────────
