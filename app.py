@@ -3,7 +3,7 @@ import sys, os
 from datetime import datetime
 import pytz
 sys.path.insert(0, os.path.dirname(__file__))
-from utils.styles import SHARED_CSS
+from utils.styles import SHARED_CSS, LOGO_IMG
 
 st.set_page_config(page_title="11% - Trading Platform", page_icon="$", layout="wide", initial_sidebar_state="collapsed")
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
@@ -87,16 +87,8 @@ def market_row(label, status, color):
 
 
 # -- Navbar --
-st.markdown('<div class="nb"><div class="nb-brand"><span class="g">11</span><span class="r">%</span></div><div class="nb-links">', unsafe_allow_html=True)
-nc = st.columns([1,1,1,1,1,1,1])
-with nc[0]: st.page_link("app.py",                    label="Home")
-with nc[1]: st.page_link("pages/1_Backtest.py",       label="Backtest")
-with nc[2]: st.page_link("pages/2_Indicator_Test.py", label="Indicators")
-with nc[3]: st.page_link("pages/3_Replay.py",         label="Replay")
-with nc[4]: st.page_link("pages/4_Analysis.py",       label="Analysis")
-with nc[5]: st.page_link("pages/6_Earnings.py",       label="Earnings")
-with nc[6]: st.page_link("pages/5_Assistant.py",      label="Coach")
-st.markdown('<div></div><div class="nb-tag"><span class="live-dot"></span>LIVE DATA</div></div>', unsafe_allow_html=True)
+from utils.nav import navbar
+navbar()
 
 # -- Ticker tape --
 TICKERS = ["AAPL","TSLA","SPY","NVDA","MSFT","AMZN","BTC-USD","META","GOOGL","AMD","NFLX","JPM","V","WMT","TSM","QQQ","GLD","PLTR","COIN","SMCI"]
@@ -253,19 +245,19 @@ with hero_r:
 
 # -- Features --
 st.markdown('<div class="divider">Platform</div>', unsafe_allow_html=True)
-_features_icon  = ["[bar]",    "[search]",   ">",      "[brain]",   "[cal]",     "[chat]"]
-_features_title = ["Backtest", "Indicators", "Replay", "Analysis",  "Earnings",  "AI Coach"]
+_features_icon  = ["⚡", "▶", "🔍", "🐋", "〰", "🤖"]
+_features_title = ["Strategy Lab", "Replay", "Analysis", "Whale Tracker", "Monte Carlo", "AI Coach"]
 _features_desc  = [
-    "Test any strategy on years of real data. Returns, alpha, drawdown, Sharpe, win rate.",
-    "Build custom strategies from 15 indicators with AND/OR combo logic and instant backtesting.",
-    "Step through historical bars one at a time with 13+ overlays and 5 sub-charts. Trade live.",
+    "9 prebuilt strategies + custom signal builder with 15 indicators and AND/OR combo logic.",
+    "Step through bars one at a time with live ticking price. Trade without knowing the future.",
     "Full fundamental + AI breakdown. Financials, valuation, risks, and a personalised verdict.",
-    "How did a stock react to every past earnings? Day-of move, pre-run, post follow-through.",
-    "Ask anything in plain English. Your coach explains results, strategies, and concepts.",
+    "Flags unusual volume spikes across your watch list. Large orders often precede big moves.",
+    "1,000 random simulations showing where price could go. A probability cone, not a prediction.",
+    "Ask anything in plain English. Explains your results, strategies, and trading concepts.",
 ]
 _features_link  = [
-    "pages/1_Backtest.py", "pages/2_Indicator_Test.py", "pages/3_Replay.py",
-    "pages/4_Analysis.py", "pages/6_Earnings.py",       "pages/5_Assistant.py",
+    "pages/1_Strategy_Lab.py", "pages/3_Replay.py",       "pages/4_Analysis.py",
+    "pages/8_Whale_Tracker.py","pages/9_Monte_Carlo.py",  "pages/5_Assistant.py",
 ]
 fc = st.columns(6)
 for col, icon, title, desc, link in zip(fc, _features_icon, _features_title, _features_desc, _features_link):
