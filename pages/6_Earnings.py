@@ -5,21 +5,11 @@ import numpy as np
 from datetime import date, timedelta
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from utils.styles import SHARED_CSS
+from utils.nav import navbar
 
 st.set_page_config(page_title="Earnings | 11%", layout="wide", initial_sidebar_state="collapsed")
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
 
-def navbar():
-    st.markdown('<div class="nb"><div class="nb-brand"><span class="g">11</span><span class="r">%</span></div><div class="nb-links">', unsafe_allow_html=True)
-    c = st.columns([1,1,1,1,1,1,1])
-    with c[0]: st.page_link("app.py",                    label="Home")
-    with c[1]: st.page_link("pages/1_Backtest.py",       label="Backtest")
-    with c[2]: st.page_link("pages/2_Indicator_Test.py", label="Indicators")
-    with c[3]: st.page_link("pages/3_Replay.py",         label="Replay")
-    with c[4]: st.page_link("pages/4_Analysis.py",       label="Analysis")
-    with c[5]: st.page_link("pages/6_Earnings.py",       label="Earnings")
-    with c[6]: st.page_link("pages/5_Assistant.py",      label="Coach")
-    st.markdown('</div><div class="nb-tag">FREE * OPEN SOURCE</div></div>', unsafe_allow_html=True)
 navbar()
 
 @st.cache_data(ttl=3600)
