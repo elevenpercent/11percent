@@ -375,3 +375,50 @@ def chart_ichimoku(df, ichi):
     _style_axes(fig)
     fig.update_layout(xaxis_rangeslider_visible=False)
     return fig
+
+
+def chart_replay(df, trades=None, overlays=None, title=""):
+    """Candlestick chart for the replay page — same style as build_tv_chart but simpler."""
+    fig = go.Figure()
+
+    # Candlesticks
+    fig.add_trace(go.Candlestick(
+        x=df.index,
+        open=df["Open"], high=df["High"], low=df["Low"], close=df["Close"],
+        name="Price",
+        increasing=dict(line=dict(color=_GREEN, width=1), fillcolor=_GREEN),
+        decreasing=dict(line=dict(color=_RED,   width=1), fillcolor=_RED),
+    ))
+
+    # Overlays
+    overlay_colors = [_BLUE, _YELLOW, _PURPLE, "#ff9f43", "#00d68f"]
+    if overlays:
+        for i, (name, series) in enumerate(overlays.items()):
+            if series is None: continue
+            color = _RED if "Bear" in name or "Low" in name else (_GREEN if "Bull" in name else overlay_colors[i % len(overlay_colors)])
+            mode  = "markers" if "SAR" in name else "lines"
+            marker = dict(symbol="circle", size=4, color=color) if mode == "markers" else None
+            line_  = dict(color=color, width=1.5) if mode == "lines" else None
+            fig.add_trace(go.Scatter(x=series.index, y=series, mode=mode, name=name,
+                                     line=line_, marker=marker))
+
+    # Trade markers
+    if trades:
+        for t in trades:
+            is_buy = t["action"] == "BUY"
+            fig.add_trace(go.Scatter(
+                x=[t["date"]], y=[t["price"]],
+                mode="markers+text",
+                marker=dict(symbol="triangle-up" if is_buy else "triangle-down",
+                            size=14, color=_GREEN if is_buy else _RED,
+                            line=dict(color="#000", width=1)),
+                text=[f"{'B' if is_buy else 'S'} ${t['price']:.2f}"],
+                textposition="top center" if is_buy else "bottom center",
+                textfont=dict(size=9, color=_GREEN if is_buy else _RED),
+                name=t["action"], showlegend=False,
+            ))
+
+    _theme(fig, height=480, title=title or "Chart Replay")
+    _style_axes(fig)
+    fig.update_layout(xaxis_rangeslider_visible=False)
+    return fig
