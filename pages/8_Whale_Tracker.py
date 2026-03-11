@@ -166,14 +166,14 @@ with feed_col:
     # Terminal feed
     if not alerts:
         st.markdown(f"""
-        <div class="terminal-feed">
-            <div class="terminal-hdr">
-                <div style="width:8px;height:8px;border-radius:50%;background:#ff3d57;"></div>
-                <div style="width:8px;height:8px;border-radius:50%;background:#ffd166;"></div>
-                <div style="width:8px;height:8px;border-radius:50%;background:#00e676;"></div>
+        <div style="background:#030508;border:1px solid #1a2235;border-radius:10px;overflow:hidden;">
+            <div style="background:#08100d;border-bottom:1px solid #1a2235;padding:0.5rem 1rem;display:flex;align-items:center;gap:0.5rem;font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:#3a4a5e;">
+                <div style="width:8px;height:8px;border-radius:50%;background:#ff3d57;flex-shrink:0;"></div>
+                <div style="width:8px;height:8px;border-radius:50%;background:#ffd166;flex-shrink:0;"></div>
+                <div style="width:8px;height:8px;border-radius:50%;background:#00e676;flex-shrink:0;"></div>
                 <span style="margin-left:0.5rem;">WHALE ALERT FEED</span>
             </div>
-            <div style="text-align:center;padding:3rem 1rem;color:#3a4558;font-size:0.8rem;">
+            <div style="text-align:center;padding:3rem 1rem;color:#3a4558;font-size:0.8rem;font-family:'IBM Plex Mono',monospace;">
                 No anomalies detected above {std_thresh:.1f}σ in the last {lookback}.<br>
                 Try lowering the threshold or extending the lookback period.
             </div>
@@ -187,37 +187,40 @@ with feed_col:
             z_color   = "#b388ff" if a["z"] >= 3 else ("#ffd166" if a["z"] >= 2 else "#8896ab")
             alert_tag = ""
             if a["z"] >= 3.5:
-                alert_tag = '<span style="background:rgba(179,136,255,0.2);color:#b388ff;border:1px solid rgba(179,136,255,0.3);padding:1px 7px;border-radius:3px;font-size:0.56rem;margin-left:6px;letter-spacing:0.1em;">WHALE</span>'
+                alert_tag = '<span style="background:rgba(179,136,255,0.2);color:#b388ff;border:1px solid rgba(179,136,255,0.3);padding:1px 6px;border-radius:3px;font-size:0.52rem;margin-left:5px;">WHALE</span>'
             elif a["z"] >= 2.5:
-                alert_tag = '<span style="background:rgba(255,209,102,0.1);color:#ffd166;border:1px solid rgba(255,209,102,0.25);padding:1px 7px;border-radius:3px;font-size:0.56rem;margin-left:6px;letter-spacing:0.1em;">LARGE</span>'
+                alert_tag = '<span style="background:rgba(255,209,102,0.1);color:#ffd166;border:1px solid rgba(255,209,102,0.25);padding:1px 6px;border-radius:3px;font-size:0.52rem;margin-left:5px;">LARGE</span>'
 
             vol_fmt  = f"{a['volume']/1e6:.1f}M" if a["volume"] >= 1e6 else f"{a['volume']/1e3:.0f}K"
             avg_fmt  = f"{a['avg_vol']/1e6:.1f}M" if a["avg_vol"] >= 1e6 else f"{a['avg_vol']/1e3:.0f}K"
             date_str = a["date"].strftime("%Y-%m-%d") if hasattr(a["date"], "strftime") else str(a["date"])[:10]
 
             rows_html += f"""
-            <div class="whale-row" style="border-bottom:1px solid #0d1117;padding:0.55rem 0.2rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+            <div style="border-bottom:1px solid #0d1117;padding:0.55rem 0.2rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace;">
                 <span style="color:#3a4558;font-size:0.6rem;flex-shrink:0;width:80px;">{date_str}</span>
-                <span style="color:#eef2f7;font-weight:700;font-size:0.85rem;flex-shrink:0;width:60px;">{a['ticker']}{alert_tag}</span>
-                <span style="flex:1;min-width:120px;">
+                <span style="color:#eef2f7;font-weight:700;font-size:0.82rem;flex-shrink:0;width:70px;">{a['ticker']}{alert_tag}</span>
+                <span style="flex:1;min-width:120px;font-size:0.75rem;">
                     <span style="color:{z_color};font-weight:700;">{a['mult']:.1f}×</span>
-                    <span style="color:#3a4558;"> avg vol  </span>
+                    <span style="color:#3a4558;"> avg vol &nbsp;</span>
                     <span style="color:#8896ab;">{vol_fmt} vs {avg_fmt}</span>
                 </span>
-                <span style="color:{pct_color};font-size:0.82rem;flex-shrink:0;">{pct_arrow} {abs(a['pct']):.2f}%</span>
-                <span style="color:#3a4558;flex-shrink:0;font-size:0.72rem;">${a['price']:,.2f}</span>
-                <span style="color:{z_color};flex-shrink:0;font-size:0.68rem;">{a['z']:.1f}σ</span>
+                <span style="color:{pct_color};font-size:0.8rem;flex-shrink:0;min-width:64px;text-align:right;">{pct_arrow} {abs(a['pct']):.2f}%</span>
+                <span style="color:#8896ab;flex-shrink:0;font-size:0.72rem;min-width:64px;text-align:right;">${a['price']:,.2f}</span>
+                <span style="color:{z_color};flex-shrink:0;font-size:0.65rem;min-width:36px;text-align:right;">{a['z']:.1f}σ</span>
             </div>"""
 
         st.markdown(f"""
-        <div class="terminal-feed">
-            <div class="terminal-hdr">
-                <div style="width:8px;height:8px;border-radius:50%;background:#ff3d57;"></div>
-                <div style="width:8px;height:8px;border-radius:50%;background:#ffd166;"></div>
-                <div style="width:8px;height:8px;border-radius:50%;background:#00e676;"></div>
+        <div style="background:#030508;border:1px solid #1a2235;border-radius:10px;overflow:hidden;max-height:560px;overflow-y:auto;">
+            <div style="background:#08100d;border-bottom:1px solid #1a2235;padding:0.5rem 1rem;display:flex;align-items:center;gap:0.5rem;font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:#3a4a5e;position:sticky;top:0;z-index:10;">
+                <div style="width:8px;height:8px;border-radius:50%;background:#ff3d57;flex-shrink:0;"></div>
+                <div style="width:8px;height:8px;border-radius:50%;background:#ffd166;flex-shrink:0;"></div>
+                <div style="width:8px;height:8px;border-radius:50%;background:#00e676;flex-shrink:0;"></div>
                 <span style="margin-left:0.5rem;">WHALE ALERT FEED — {len(alerts)} events detected</span>
+                <span style="margin-left:auto;color:#3a4558;">DATE &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TICKER &nbsp;&nbsp; VOLUME SPIKE &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CHANGE &nbsp;&nbsp;&nbsp; PRICE &nbsp;&nbsp;&nbsp;&nbsp; Z</span>
             </div>
+            <div style="padding:0 0.8rem;">
             {rows_html}
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
