@@ -8,21 +8,10 @@ from datetime import date, timedelta
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from utils.data import get_stock_data
 from utils.styles import SHARED_CSS
+from utils.nav import navbar
 
 st.set_page_config(page_title="Replay | 11%", layout="wide", initial_sidebar_state="collapsed")
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
-
-def navbar():
-    st.markdown('<div class="nb"><div class="nb-brand"><span class="g">11</span><span class="r">%</span></div><div class="nb-links">', unsafe_allow_html=True)
-    c = st.columns([1,1,1,1,1,1,1])
-    with c[0]: st.page_link("app.py",                    label="Home")
-    with c[1]: st.page_link("pages/1_Backtest.py",       label="Backtest")
-    with c[2]: st.page_link("pages/2_Indicator_Test.py", label="Indicators")
-    with c[3]: st.page_link("pages/3_Replay.py",         label="Replay")
-    with c[4]: st.page_link("pages/4_Analysis.py",       label="Analysis")
-    with c[5]: st.page_link("pages/6_Earnings.py",       label="Earnings")
-    with c[6]: st.page_link("pages/5_Assistant.py",      label="Coach")
-    st.markdown('</div><div class="nb-tag">FREE * OPEN SOURCE</div></div>', unsafe_allow_html=True)
 navbar()
 
 st.markdown("""
@@ -435,8 +424,8 @@ let drawStart   = null;
 let currentDraw = null;
 
 // Chart view state
-let viewStart = 0;    // index of first visible candle
-let viewCount = 80;   // number of candles visible
+let viewStart = 0;
+let viewCount = 80;
 let isDragging = false;
 let dragStartX = 0;
 let dragStartView = 0;
@@ -566,15 +555,14 @@ function getTickPrice(idx) {
   const c = CANDLES[idx];
   const t = Math.min(1, tickPhase);
   const base = c.o + (c.c - c.o) * t;
-  // deterministic noise based on idx+phase bucket
   const seed = idx * 137 + Math.floor(tickPhase * 20);
   const noise = (Math.sin(seed*9301+49297) + Math.cos(seed*233+41)) * 0.5 * Math.abs(c.h-c.l) * 0.06;
   return Math.max(c.l, Math.min(c.h, base + noise));
 }
 
 // ── Chart geometry
-const YPAD = 12;  // px padding top/bottom of price panel
-const XPAD_R = 72; // right margin for price axis labels
+const YPAD = 12;
+const XPAD_R = 72;
 
 function getSubPanels() {
   const panels = [];
@@ -595,7 +583,6 @@ function getPanelRects() {
   return rects;
 }
 
-// ── Map price → Y in a rect
 function priceToY(price, minP, maxP, rect) {
   return rect.y + YPAD + (1-(price-minP)/(maxP-minP)) * (rect.h-2*YPAD);
 }
@@ -604,7 +591,6 @@ function xToTime(x, rect) {
   return viewStart + Math.floor((x - rect.x) / candleW);
 }
 
-// ── Main draw function
 function drawChart() {
   if (!mc.width || !mc.height) return;
   const W = mc.width, H = mc.height;
@@ -621,33 +607,27 @@ function drawChart() {
   const candleW = R.w / viewCount;
   const bodyW   = Math.max(1, candleW * 0.6);
 
-  // Live price
   const liveP = getTickPrice(curIdx);
 
-  // Price range
   let minP = Infinity, maxP = -Infinity;
   visCandles.forEach(c => { minP=Math.min(minP,c.l); maxP=Math.max(maxP,c.h); });
-  // include live candle adjusted high
   maxP = Math.max(maxP, liveP);
   minP = Math.min(minP, liveP);
   const pad = (maxP-minP)*0.08;
   minP -= pad; maxP += pad;
   if (minP===maxP) { minP-=1; maxP+=1; }
 
-  // ── Grid lines
   mctx.strokeStyle = C.grid; mctx.lineWidth = 0.5;
   for (let i=0;i<=5;i++) {
     const y = R.y + i*(R.h/5);
     mctx.beginPath(); mctx.moveTo(0,y); mctx.lineTo(W,y); mctx.stroke();
   }
-  // Vertical grid
   const gridStep = Math.max(1, Math.round(viewCount/8));
   for (let i=0;i<viewCount;i+=gridStep) {
     const x = R.x + (i+0.5)*candleW;
     mctx.beginPath(); mctx.moveTo(x,0); mctx.lineTo(x,R.h); mctx.stroke();
   }
 
-  // ── Price axis labels
   mctx.fillStyle = C.dim; mctx.font = "9px 'IBM Plex Mono'"; mctx.textAlign = "left";
   for (let i=0;i<=5;i++) {
     const p = maxP - i*(maxP-minP)/5;
@@ -655,16 +635,14 @@ function drawChart() {
     mctx.fillText("$"+p.toFixed(2), R.w+4, y+3);
   }
 
-  // ── X axis date labels
   mctx.fillStyle = C.dim; mctx.textAlign = "center";
   for (let i=0;i<visCandles.length;i+=gridStep) {
     const c = visCandles[i];
     const x = R.x + (i+0.5)*candleW;
-    const d = c.t.slice(5); // MM-DD
+    const d = c.t.slice(5);
     mctx.fillText(d, x, R.y+R.h-2);
   }
 
-  // ── Indicator overlays (before candles so candles draw on top)
   function drawLine(values, color, dash=[], width=1.5) {
     mctx.save();
     mctx.strokeStyle = color; mctx.lineWidth = width;
@@ -700,7 +678,6 @@ function drawChart() {
     drawLine(bbS.map(b=>b.u), C.blue, [2,2], 1);
     drawLine(bbS.map(b=>b.m), C.blue, [], 0.8);
     drawLine(bbS.map(b=>b.l), C.blue, [2,2], 1);
-    // fill
     mctx.save(); mctx.fillStyle="rgba(77,166,255,0.04)";
     mctx.beginPath(); let s2=false;
     bbS.forEach((b,i)=>{ if(!b.u) return; const x=R.x+(i+0.5)*candleW,y=priceToY(b.u,minP,maxP,R); if(!s2){mctx.moveTo(x,y);s2=true;}else mctx.lineTo(x,y); });
@@ -711,7 +688,6 @@ function drawChart() {
   if (document.getElementById("ov-st").checked) {
     const stS = PRE.st.st.slice(sliceFrom,sliceTo);
     const dirS= PRE.st.dir.slice(sliceFrom,sliceTo);
-    // Bull segments
     mctx.save(); mctx.strokeStyle=C.green; mctx.lineWidth=2; mctx.beginPath(); let s3=false;
     stS.forEach((v,i)=>{ if(v==null||dirS[i]!==1){s3=false;return;} const x=R.x+(i+0.5)*candleW,y=priceToY(v,minP,maxP,R); if(!s3){mctx.moveTo(x,y);s3=true;}else mctx.lineTo(x,y); });
     mctx.stroke();
@@ -720,7 +696,6 @@ function drawChart() {
     mctx.stroke(); mctx.restore();
   }
 
-  // ── Candles
   visCandles.forEach((c, i) => {
     const realIdx = vs+i;
     const isLive  = realIdx===curIdx;
@@ -732,7 +707,6 @@ function drawChart() {
     const col     = up ? C.green : C.red;
     const x       = R.x+(i+0.5)*candleW;
 
-    // Wick
     mctx.strokeStyle = isLive ? col+"cc" : col;
     mctx.lineWidth = 1;
     mctx.beginPath();
@@ -740,14 +714,12 @@ function drawChart() {
     mctx.lineTo(x, priceToY(lo, minP, maxP, R));
     mctx.stroke();
 
-    // Body
     const y1 = priceToY(Math.max(op,price), minP, maxP, R);
     const y2 = priceToY(Math.min(op,price), minP, maxP, R);
     const bh = Math.max(1, y2-y1);
     const bx = x - bodyW/2;
 
     if (isLive) {
-      // Live candle: glowing fill
       const grad = mctx.createLinearGradient(bx,y1,bx,y2);
       grad.addColorStop(0, col+"99");
       grad.addColorStop(1, col+"44");
@@ -763,19 +735,16 @@ function drawChart() {
     if (isLive) mctx.strokeRect(bx, y1, bodyW, bh);
   });
 
-  // ── Live price line
   const liveY = priceToY(liveP, minP, maxP, R);
   const liveCol = liveP >= CANDLES[curIdx].o ? C.green : C.red;
   mctx.save();
   mctx.strokeStyle = liveCol; mctx.lineWidth = 1; mctx.setLineDash([4,3]);
   mctx.beginPath(); mctx.moveTo(0,liveY); mctx.lineTo(R.w,liveY); mctx.stroke();
   mctx.restore();
-  // Price tag on right
   mctx.fillStyle = liveCol; mctx.fillRect(R.w, liveY-9, XPAD_R, 18);
   mctx.fillStyle = "#000"; mctx.font="bold 10px 'IBM Plex Mono'"; mctx.textAlign="left";
   mctx.fillText("$"+liveP.toFixed(2), R.w+3, liveY+4);
 
-  // ── Trade markers
   trades.forEach(tr => {
     const trIdx = CANDLES.findIndex(c=>c.t===tr.date);
     if (trIdx<vs||trIdx>=vs+visCandles.length) return;
@@ -786,16 +755,13 @@ function drawChart() {
     mctx.save();
     mctx.fillStyle = isBuy ? C.green : C.red;
     mctx.strokeStyle = "#000"; mctx.lineWidth=1;
-    // Circle
     mctx.beginPath(); mctx.arc(x,y,9,0,Math.PI*2);
     mctx.fill(); mctx.stroke();
-    // Letter
     mctx.fillStyle="#000"; mctx.font="bold 9px 'IBM Plex Mono'"; mctx.textAlign="center";
     mctx.fillText(isBuy?"B":"S", x, y+3);
     mctx.restore();
   });
 
-  // ── Sub-chart panels
   const subs = getSubPanels();
   subs.forEach(sub => {
     const SR = rects[sub];
@@ -820,13 +786,10 @@ function drawChart() {
 
     if (sub==="rsi") {
       const rsiS = PRE.rsi.slice(sliceFrom,sliceTo);
-      const minR=0, maxR=100;
-      // zones
       mctx.fillStyle="rgba(255,61,87,0.05)";
       mctx.fillRect(0, SR.y, W, (1-70/100)*SR.h);
       mctx.fillStyle="rgba(0,230,118,0.05)";
       mctx.fillRect(0, SR.y+(1-30/100)*SR.h, W, 30/100*SR.h);
-      // lines
       [70,30].forEach(lvl=>{
         const y=SR.y+(1-lvl/100)*SR.h;
         mctx.strokeStyle=lvl===70?C.red+"66":C.green+"66"; mctx.lineWidth=0.7; mctx.setLineDash([2,2]);
@@ -842,7 +805,6 @@ function drawChart() {
       mctx.stroke(); mctx.restore();
       mctx.fillStyle=C.dim; mctx.font="9px 'IBM Plex Mono'"; mctx.textAlign="left";
       mctx.fillText("RSI", 4, SR.y+11);
-      // current RSI value
       const lastRsi = rsiS.filter(v=>v!=null).pop();
       if (lastRsi!=null) {
         mctx.fillStyle=C.yellow; mctx.textAlign="right";
@@ -860,10 +822,8 @@ function drawChart() {
       const minM=Math.min(...allV), maxM=Math.max(...allV);
       const toY2=(v)=>SR.y+(1-(v-minM)/(maxM-minM))*(SR.h-4)+2;
       const zero=toY2(0);
-      // zero line
       mctx.strokeStyle=C.dim; mctx.lineWidth=0.5;
       mctx.beginPath(); mctx.moveTo(0,zero); mctx.lineTo(SR.w,zero); mctx.stroke();
-      // histogram bars
       histS.forEach((v,i)=>{
         if(v==null) return;
         const x=SR.x+(i+0.5)*candleW;
@@ -871,7 +831,6 @@ function drawChart() {
         mctx.fillStyle=(v>=0?C.green:C.red)+"88";
         mctx.fillRect(x-bodyW/2, Math.min(y,zero), bodyW, Math.max(1,h2));
       });
-      // lines
       mctx.save(); mctx.strokeStyle=C.blue; mctx.lineWidth=1.4; mctx.beginPath(); let sm=false;
       lineS.forEach((v,i)=>{ if(!v){sm=false;return;} const x=SR.x+(i+0.5)*candleW,y=toY2(v); if(!sm){mctx.moveTo(x,y);sm=true;}else mctx.lineTo(x,y); });
       mctx.stroke();
@@ -883,15 +842,12 @@ function drawChart() {
     }
   });
 
-  // ── User drawings
   drawUserShapes(mctx, R, minP, maxP, candleW, vs, rects);
 
-  // ── Separator line between panels
   mctx.strokeStyle=C.border; mctx.lineWidth=1; mctx.setLineDash([]);
   mctx.strokeRect(0,0,R.w,R.h);
 }
 
-// ── User shape drawing
 function drawUserShapes(ctx, R, minP, maxP, candleW, vs, rects) {
   [...drawings, ...(currentDraw?[currentDraw]:[])].forEach(d => {
     ctx.save();
@@ -901,12 +857,8 @@ function drawUserShapes(ctx, R, minP, maxP, candleW, vs, rects) {
       const x1=R.x+(d.x1-vs+0.5)*candleW;
       const y1=priceToY(d.p1, minP, maxP, R);
       let x2,y2;
-      if (d.type==="hline") {
-        x2=R.w; y2=y1;
-      } else {
-        x2=R.x+(d.x2-vs+0.5)*candleW;
-        y2=priceToY(d.p2, minP, maxP, R);
-      }
+      if (d.type==="hline") { x2=R.w; y2=y1; }
+      else { x2=R.x+(d.x2-vs+0.5)*candleW; y2=priceToY(d.p2, minP, maxP, R); }
       ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
     } else if (d.type==="rect") {
       const x1=R.x+(d.x1-vs+0.5)*candleW;
@@ -920,36 +872,29 @@ function drawUserShapes(ctx, R, minP, maxP, candleW, vs, rects) {
   });
 }
 
-// ── Y to price (inverse)
 function yToPrice(y, minP, maxP, rect) {
   return maxP - ((y-rect.y-YPAD)/(rect.h-2*YPAD)) * (maxP-minP);
 }
 
-// ── Canvas mouse events
 cc.addEventListener("mousedown", e=>{
   const {x,y}=relXY(e);
   const rects=getPanelRects();
   const R=rects.main;
-
   if (activeTool==="none") {
     isDragging=true; dragStartX=x; dragStartView=viewStart;
-    cc.style.cursor="grabbing";
-    return;
+    cc.style.cursor="grabbing"; return;
   }
   const visEnd=Math.min(curIdx+1,CANDLES.length);
   const vs=Math.max(0,visEnd-viewCount);
   const candleW=R.w/viewCount;
   const candleIdx=vs+Math.floor((x-R.x)/candleW);
   const price=yToPrice(y,getPriceRange().min,getPriceRange().max,R);
-
-  drawStart={x:candleIdx, p:price};
-  currentDraw=null;
+  drawStart={x:candleIdx, p:price}; currentDraw=null;
 });
 
 cc.addEventListener("mousemove", e=>{
   const {x,y}=relXY(e);
   drawCrosshair(x,y);
-
   if (isDragging && activeTool==="none") {
     const dx=x-dragStartX;
     const rects=getPanelRects();
@@ -959,7 +904,6 @@ cc.addEventListener("mousemove", e=>{
     viewStart=Math.max(0,Math.min(dragStartView+shift, visEnd-viewCount));
     drawChart(); return;
   }
-
   if (!drawStart) return;
   const rects=getPanelRects(); const R=rects.main;
   const visEnd=Math.min(curIdx+1,CANDLES.length);
@@ -968,7 +912,6 @@ cc.addEventListener("mousemove", e=>{
   const {min:minP,max:maxP}=getPriceRange();
   const candleIdx=vs+Math.floor((x-R.x)/candleW);
   const price=yToPrice(y,minP,maxP,R);
-
   if (activeTool==="line")       currentDraw={type:"line", x1:drawStart.x, p1:drawStart.p, x2:candleIdx, p2:price};
   else if (activeTool==="hline") currentDraw={type:"hline",x1:drawStart.x, p1:drawStart.p};
   else if (activeTool==="rect")  currentDraw={type:"rect", x1:drawStart.x, p1:drawStart.p, x2:candleIdx, p2:price};
@@ -981,7 +924,6 @@ cc.addEventListener("mouseup", e=>{
   drawStart=null; drawChart();
 });
 
-// Wheel to zoom
 cc.addEventListener("wheel", e=>{
   e.preventDefault();
   viewCount=Math.max(20,Math.min(200, viewCount+Math.sign(e.deltaY)*5));
@@ -993,7 +935,6 @@ function relXY(e) {
   return {x:e.clientX-r.left, y:e.clientY-r.top};
 }
 
-// ── Crosshair
 function drawCrosshair(x,y) {
   cctx.clearRect(0,0,cc.width,cc.height);
   const rects=getPanelRects(); const R=rects.main;
@@ -1004,19 +945,16 @@ function drawCrosshair(x,y) {
   const candleW=R.w/viewCount;
   const ci=vs+Math.floor((x-R.x)/candleW);
   const date=ci>=0&&ci<CANDLES.length?CANDLES[ci].t:"";
-
   cctx.save();
   cctx.strokeStyle="rgba(255,255,255,0.12)"; cctx.lineWidth=0.8; cctx.setLineDash([3,3]);
   cctx.beginPath(); cctx.moveTo(x,0); cctx.lineTo(x,cc.height); cctx.stroke();
   if (y<R.h) {
     cctx.beginPath(); cctx.moveTo(0,y); cctx.lineTo(R.w,y); cctx.stroke();
-    // Price label
     cctx.setLineDash([]);
     cctx.fillStyle="#1a2438"; cctx.fillRect(R.w,y-9,XPAD_R,18);
     cctx.fillStyle=C.white; cctx.font="9px 'IBM Plex Mono'"; cctx.textAlign="left";
     cctx.fillText("$"+price.toFixed(2), R.w+3, y+3);
   }
-  // Date label at bottom
   if (date) {
     cctx.setLineDash([]);
     const tw=60; cctx.fillStyle="#1a2438"; cctx.fillRect(x-tw/2,R.h-14,tw,14);
@@ -1026,7 +964,6 @@ function drawCrosshair(x,y) {
   cctx.restore();
 }
 
-// ── Price range helper (cached per frame)
 let _priceRangeCache = null;
 function getPriceRange() {
   if (_priceRangeCache) return _priceRangeCache;
@@ -1043,7 +980,6 @@ function getPriceRange() {
   return _priceRangeCache;
 }
 
-// ── Update HUD
 function updateHUD() {
   _priceRangeCache=null;
   const liveP=getTickPrice(curIdx);
@@ -1069,11 +1005,9 @@ function updateHUD() {
   document.getElementById("m-shares").textContent=shares.toFixed(2);
   document.getElementById("m-date").textContent=c.t.slice(5);
 
-  // Progress
   const pct=(curIdx+1)/CANDLES.length*100;
   document.getElementById("progress-fill").style.width=pct+"%";
 
-  // Trade panel
   const maxQ=cash/liveP;
   document.getElementById("buy-value").textContent="$"+(parseFloat(document.getElementById("buy-qty").value||1)*liveP).toFixed(2);
   document.getElementById("buy-maxq").textContent=maxQ.toFixed(1)+" sh";
@@ -1084,7 +1018,6 @@ function updateHUD() {
   spEl.textContent=(spnl>=0?"+":"")+f2(spnl);
   spEl.style.color=spnl>=0?C.green:C.red;
 
-  // Position
   document.getElementById("pos-sh").textContent=shares.toFixed(2);
   document.getElementById("pos-ac").textContent=avgCost>0?"$"+avgCost.toFixed(2):"N/A";
   const urEl2=document.getElementById("pos-ur");
@@ -1095,7 +1028,6 @@ function updateHUD() {
   retEl2.textContent=(pp>=0?"+":"")+pp.toFixed(2)+"%";
   retEl2.className="pos-val "+(pp>=0?"g":"r");
 
-  // Ticker tape
   updateTape(liveP);
 }
 
@@ -1122,20 +1054,15 @@ function updateTape(liveP) {
   `).join("");
 }
 
-// ── Speed mapping
 const SPEED_MAP=[3.0,2.0,1.5,1.0,0.7,0.5,0.3,0.2,0.12,0.07];
 function getSpeed() { return SPEED_MAP[document.getElementById("speed-range").value-1]||0.7; }
 document.getElementById("speed-range").addEventListener("input",()=>{
   document.getElementById("speed-lbl").textContent=getSpeed().toFixed(2)+"s";
 });
 
-// ── Autoplay
 function advanceBar() {
-  if (curIdx < CANDLES.length-1) {
-    curIdx++; tickPhase=0.05;
-  } else {
-    stopPlay();
-  }
+  if (curIdx < CANDLES.length-1) { curIdx++; tickPhase=0.05; }
+  else { stopPlay(); }
 }
 
 function startPlay() {
@@ -1157,29 +1084,24 @@ function stopPlay() {
 }
 document.getElementById("play-btn").addEventListener("click",()=>{ playing?stopPlay():startPlay(); });
 
-// ── Step buttons
 document.getElementById("btn-back1").addEventListener("click",()=>{ if(curIdx>0){curIdx--;tickPhase=0.5;updateHUD();drawChart();} });
 document.getElementById("btn-back5").addEventListener("click",()=>{ curIdx=Math.max(0,curIdx-5);tickPhase=0.5;updateHUD();drawChart(); });
 document.getElementById("btn-fwd1").addEventListener("click",()=>{ if(curIdx<CANDLES.length-1){curIdx++;tickPhase=0.5;updateHUD();drawChart();} });
 document.getElementById("btn-fwd5").addEventListener("click",()=>{ curIdx=Math.min(CANDLES.length-1,curIdx+5);tickPhase=0.5;updateHUD();drawChart(); });
 
-// ── Drawing tools
 ["tool-none","tool-line","tool-hline","tool-rect"].forEach(id=>{
   document.getElementById(id).addEventListener("click",()=>{
     activeTool=id.replace("tool-","");
     document.querySelectorAll(".draw-btn").forEach(b=>b.classList.remove("active"));
     document.getElementById(id).classList.add("active");
-    cc.style.cursor=activeTool==="none"?"crosshair":"crosshair";
   });
 });
 document.getElementById("clear-draw").addEventListener("click",()=>{ drawings=[]; currentDraw=null; drawChart(); });
 
-// ── Indicator checkboxes
 document.querySelectorAll("input[type=checkbox]").forEach(cb=>{
   cb.addEventListener("change",()=>drawChart());
 });
 
-// ── Buy/Sell
 function toast(msg, type) {
   const el=document.createElement("div");
   el.className="toast "+type; el.textContent=msg;
@@ -1239,7 +1161,6 @@ document.getElementById("reset-btn").addEventListener("click",()=>{
   updateHUD(); drawChart();
 });
 
-// ── Boot
 resize();
 updateHUD();
 drawChart();
@@ -1248,7 +1169,6 @@ drawChart();
 </html>
 """
 
-# Inject config
 html_out = HTML.replace("__CONFIG__", config_json)
 
 import streamlit.components.v1 as components
