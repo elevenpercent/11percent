@@ -146,7 +146,7 @@ section[data-testid="stMain"] > div { overflow: visible !important; }
     top: calc(100% + 8px);
     left: 50%;
     transform: translateX(-50%);
-    min-width: 185px;
+    min-width: 220px;
     background: #0d1117;
     border: 1px solid #1a2235;
     border-top: 2px solid #00e676;
@@ -244,13 +244,30 @@ section[data-testid="stMain"] > div { overflow: visible !important; }
         '<a class="ep-pill" href="/Replay" target="_self">Replay</a>'
         '<a class="ep-pill" href="/Analysis" target="_self">Analysis</a>'
         '<a class="ep-pill" href="/Assistant" target="_self">AI Coach</a>'
+        # Research dropdown
+        '<div class="ep-tools-wrap">'
+        '<button class="ep-tools-btn">Research <span class="ep-arrow">&#9660;</span></button>'
+        '<div class="ep-dropdown">'
+        '<a class="ep-drop-link" href="/Earnings" target="_self">📅 Earnings</a>'
+        '<a class="ep-drop-link" href="/Correlations" target="_self">🔗 Correlations</a>'
+        '<a class="ep-drop-link" href="/Whale_Tracker" target="_self">🐳 Whale Tracker</a>'
+        '<a class="ep-drop-link" href="/Monte_Carlo" target="_self">🎲 Monte Carlo</a>'
+        '<a class="ep-drop-link" href="/Economic_Calendar" target="_self">🏛️ Econ Calendar</a>'
+        '<a class="ep-drop-link" href="/Market_Heatmap" target="_self">🌡️ Heatmap</a>'
+        '<a class="ep-drop-link" href="/Sector_Rotation" target="_self">🔄 Sector Rotation</a>'
+        '<a class="ep-drop-link" href="/Screener" target="_self">🔍 Screener</a>'
+        '<a class="ep-drop-link" href="/Pattern_Recognition" target="_self">📐 Patterns</a>'
+        '</div>'
+        '</div>'
+        # Tools dropdown
         '<div class="ep-tools-wrap">'
         '<button class="ep-tools-btn">Tools <span class="ep-arrow">&#9660;</span></button>'
         '<div class="ep-dropdown">'
-        '<a class="ep-drop-link" href="/Earnings" target="_self">Earnings</a>'
-        '<a class="ep-drop-link" href="/Correlations" target="_self">Correlations</a>'
-        '<a class="ep-drop-link" href="/Whale_Tracker" target="_self">Whale Tracker</a>'
-        '<a class="ep-drop-link" href="/Monte_Carlo" target="_self">Monte Carlo</a>'
+        '<a class="ep-drop-link" href="/Risk_Calculator" target="_self">⚖️ Risk Calculator</a>'
+        '<a class="ep-drop-link" href="/Options_Chain" target="_self">📊 Options Chain</a>'
+        '<a class="ep-drop-link" href="/Portfolio_Tracker" target="_self">💼 Portfolio</a>'
+        '<a class="ep-drop-link" href="/Trade_Journal" target="_self">📓 Trade Journal</a>'
+        '<a class="ep-drop-link" href="/Trade_Stats" target="_self">📈 Trade Stats</a>'
         '</div>'
         '</div>'
         '</div>'
