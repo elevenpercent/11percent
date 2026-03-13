@@ -37,20 +37,10 @@ st.markdown("""
 }
 .t-sym{color:#3a4a5e;font-weight:600} .t-up{color:#00e676} .t-dn{color:#ff3d57}
 /* Screen card */
-.screen-card { background:#0c1018; border:1px solid #1a2235; border-radius:12px; overflow:hidden; position:relative; }
-.screen-card::after {
-    content:''; position:absolute; left:0;right:0;height:60px;
-    background:linear-gradient(180deg,rgba(0,230,118,0.03),transparent);
-    animation:scanline 3s linear infinite; pointer-events:none;
+.screen-card {
+    background:#0c1018; border:1px solid #1a2235;
+    border-radius:12px; overflow:hidden; position:relative;
 }
-.screen-header {
-    background:#08100d; border-bottom:1px solid #1a2235; padding:0.5rem 1rem;
-    display:flex; align-items:center; gap:0.4rem;
-    font-family:'IBM Plex Mono',monospace; font-size:0.6rem; color:#3a4a5e;
-}
-.dot-red{width:10px;height:10px;border-radius:50%;background:#ff3d57}
-.dot-yel{width:10px;height:10px;border-radius:50%;background:#ffd166}
-.dot-grn{width:10px;height:10px;border-radius:50%;background:#00e676}
 /* Step cards */
 .step-num { font-family:'Bebas Neue',sans-serif; font-size:4rem; color:#1a2235; line-height:1; margin-bottom:0.3rem; transition:color 0.3s; }
 .step-card:hover .step-num { color:#2a3550; }
@@ -85,7 +75,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ── Navbar (single call) ──────────────────────────────────────────────────────
 navbar()
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -100,7 +89,8 @@ def get_market_status(name):
 def mkt_row(label, status, color):
     dot = "&#9679;" if status != "CLOSED" else "&#9675;"
     return (
-        f'<div style="display:flex;justify-content:space-between;align-items:center;padding:0.45rem 1rem;border-top:1px solid #1a2235;">'
+        f'<div style="display:flex;justify-content:space-between;align-items:center;'
+        f'padding:0.45rem 1rem;border-top:1px solid #1a2235;">'
         f'<span style="font-family:IBM Plex Mono,monospace;font-size:0.7rem;color:#8896ab;">{label}</span>'
         f'<span style="font-family:IBM Plex Mono,monospace;font-size:0.65rem;color:{color};">{dot} {status}</span>'
         f'</div>'
@@ -180,19 +170,6 @@ with hero_r:
     cme_s,cme_c,_   = get_market_status("CME")
     cry_s,cry_c,_   = get_market_status("Crypto")
 
-    sp_pts = [40,45,42,50,48,55,52,58,54,62,60,65,63,70,68,75,72,78,76,82]
-    sw,sh = 280,60
-    sp_max,sp_min = max(sp_pts),min(sp_pts); sp_range = sp_max-sp_min+1
-    pts = " ".join(f"{(i/(len(sp_pts)-1))*sw:.1f},{sh-((p-sp_min)/sp_range*sh*0.85+sh*0.07):.1f}" for i,p in enumerate(sp_pts))
-    sparkline = (
-        f'<svg width="{sw}" height="{sh}" style="overflow:visible;">'
-        '<defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">'
-        '<stop offset="0%" stop-color="#00e676" stop-opacity="0.3"/>'
-        '<stop offset="100%" stop-color="#00e676" stop-opacity="0"/>'
-        '</linearGradient></defs>'
-        f'<polyline points="{pts}" fill="none" stroke="#00e676" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>'
-        f'<polygon points="{pts} {sw},{sh} 0,{sh}" fill="url(#sg)"/></svg>'
-    )
     stats_html = "".join(
         f'<div style="background:#0c1018;border:1px solid #1a2235;border-radius:8px;padding:1rem;text-align:center;">'
         f'<div style="font-family:\'Bebas Neue\',sans-serif;font-size:2.2rem;color:#00e676;line-height:1;">{v}</div>'
@@ -200,24 +177,60 @@ with hero_r:
         f'text-transform:uppercase;letter-spacing:0.15em;margin-top:0.2rem;">{l}</div></div>'
         for v,l in [("15","Indicators"),("9","Strategies"),("8","Pages"),("$0","Forever Free")]
     )
+
+    # TradingView mini chart widget for hero
+    tv_hero = """
+<div class="screen-card" style="margin-bottom:1rem;animation:fadeUp 0.6s 0.2s ease both;opacity:0;">
+  <div class="screen-header">
+    <div class="dot-red"></div><div class="dot-yel"></div><div class="dot-grn"></div>
+    <span style="margin-left:0.5rem;">LIVE CHART · TRADINGVIEW</span>
+  </div>
+  <div style="height:280px;">
+    <div class="tradingview-widget-container" style="height:100%;width:100%;">
+      <div id="tv_hero_chart" style="height:100%;width:100%;"></div>
+      <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+      <script type="text/javascript">
+      new TradingView.widget({
+        "autosize": true,
+        "symbol": "NASDAQ:AAPL",
+        "interval": "D",
+        "timezone": "America/New_York",
+        "theme": "dark",
+        "style": "1",
+        "locale": "en",
+        "toolbar_bg": "#0c1018",
+        "enable_publishing": false,
+        "hide_side_toolbar": true,
+        "hide_top_toolbar": false,
+        "withdateranges": false,
+        "allow_symbol_change": true,
+        "save_image": false,
+        "container_id": "tv_hero_chart",
+        "backgroundColor": "rgba(12,16,24,1)",
+        "gridColor": "rgba(26,34,53,0.4)",
+        "overrides": {
+          "mainSeriesProperties.candleStyle.upColor": "#00e676",
+          "mainSeriesProperties.candleStyle.downColor": "#ff3d57",
+          "mainSeriesProperties.candleStyle.borderUpColor": "#00e676",
+          "mainSeriesProperties.candleStyle.borderDownColor": "#ff3d57",
+          "mainSeriesProperties.candleStyle.wickUpColor": "#00e676",
+          "mainSeriesProperties.candleStyle.wickDownColor": "#ff3d57",
+          "paneProperties.background": "#0c1018",
+          "paneProperties.backgroundType": "solid",
+          "paneProperties.vertGridProperties.color": "#1a2235",
+          "paneProperties.horzGridProperties.color": "#1a2235",
+          "scalesProperties.textColor": "#3a4a5e",
+          "scalesProperties.lineColor": "#1a2235"
+        }
+      });
+      </script>
+    </div>
+  </div>
+</div>
+"""
     st.markdown(
         '<div style="padding:2rem 0 1rem 0;" class="stat-grid">'
-        '<div class="screen-card" style="margin-bottom:1rem;animation:fadeUp 0.6s 0.2s ease both;opacity:0;">'
-        '<div class="screen-header">'
-        '<div class="dot-red"></div><div class="dot-yel"></div><div class="dot-grn"></div>'
-        '<span style="margin-left:0.5rem;">AAPL · LIVE CHART PREVIEW</span></div>'
-        '<div style="padding:1rem 1.2rem;">'
-        '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.6rem;">'
-        '<div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:2rem;color:#eef2f7;line-height:1;">AAPL</div>'
-        '<div style="font-family:\'IBM Plex Mono\',monospace;font-size:0.6rem;color:#3a4a5e;">Apple Inc. · NASDAQ</div></div>'
-        '<div style="text-align:right;">'
-        '<div style="font-family:\'IBM Plex Mono\',monospace;font-size:1.1rem;color:#eef2f7;">$195.40</div>'
-        '<div style="font-family:\'IBM Plex Mono\',monospace;font-size:0.68rem;color:#00e676;">▲ +2.34%</div>'
-        '</div></div>' + sparkline +
-        '<div style="display:flex;justify-content:space-between;margin-top:0.6rem;'
-        'font-family:\'IBM Plex Mono\',monospace;font-size:0.6rem;color:#3a4a5e;">'
-        '<span>+18.4% YTD</span><span>Vol 78.2M</span><span>P/E 29.1x</span><span>52W: $164–$199</span>'
-        '</div></div></div>'
+        + tv_hero +
         f'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem;'
         f'animation:fadeUp 0.6s 0.3s ease both;opacity:0;">{stats_html}</div>'
         '<div style="background:#0c1018;border:1px solid #1a2235;border-radius:8px;overflow:hidden;'
@@ -295,7 +308,6 @@ for col,(num,title,desc) in zip(st.columns(5), [
 # ── Strategies + Concepts ─────────────────────────────────────────────────────
 st.markdown('<div class="divider" style="margin-top:2rem;">Strategies + Concepts</div>', unsafe_allow_html=True)
 sc_l, sc_r = st.columns(2)
-
 with sc_l:
     rows = "".join(
         f'<div class="strat-row">'
@@ -320,15 +332,15 @@ with sc_r:
     rows = "".join(
         f'<div class="concept-row"><span class="concept-term">{t}</span><span class="concept-def">{d}</span></div>'
         for t,d in [
-            ("Backtesting",         "Running a strategy on historical data to see what would have happened."),
-            ("Max Drawdown",        "Worst peak-to-trough loss. Tells you the pain to expect in bad runs."),
-            ("Sharpe Ratio",        "Return divided by volatility. Above 1.0 is decent, above 2.0 is strong."),
-            ("Alpha",               "Return above buy-and-hold. Positive means you actually added value."),
-            ("Win Rate",            "% of trades that were profitable. Meaningless without avg win/loss size."),
-            ("ATR",                 "Average True Range — how far a stock typically moves per day."),
-            ("Support/Resistance",  "Levels where price historically reverses. Foundation of technical analysis."),
-            ("Volume",              "Shares traded. Rising price + rising volume confirms a trend."),
-            ("Mean Reversion",      "Tendency of price to return to its historical average after extremes."),
+            ("Backtesting",        "Running a strategy on historical data to see what would have happened."),
+            ("Max Drawdown",       "Worst peak-to-trough loss. Tells you the pain to expect in bad runs."),
+            ("Sharpe Ratio",       "Return divided by volatility. Above 1.0 is decent, above 2.0 is strong."),
+            ("Alpha",              "Return above buy-and-hold. Positive means you actually added value."),
+            ("Win Rate",           "% of trades that were profitable. Meaningless without avg win/loss size."),
+            ("ATR",                "Average True Range — how far a stock typically moves per day."),
+            ("Support/Resistance", "Levels where price historically reverses. Foundation of technical analysis."),
+            ("Volume",             "Shares traded. Rising price + rising volume confirms a trend."),
+            ("Mean Reversion",     "Tendency of price to return to its historical average after extremes."),
         ]
     )
     st.markdown('<div class="sc-card"><div class="sc-card-hdr">Key Concepts Explained</div>' + rows + '</div>', unsafe_allow_html=True)
@@ -336,15 +348,14 @@ with sc_r:
 # ── FAQ ───────────────────────────────────────────────────────────────────────
 st.markdown('<div class="divider" style="margin-top:2rem;">FAQ</div>', unsafe_allow_html=True)
 fqa, fqb = st.columns(2)
-faqs = [
+for i,(q,a) in enumerate([
     ("Is this real trading?",                      "No — fully simulated. No real money. Data from Yahoo Finance. For education only."),
     ("How accurate is the backtest?",              "Indicative, not guaranteed. Assumes closing-price fills with no slippage, spread, or tax."),
     ("Do I need to code?",                         "No. Everything is point-and-click. Open source Python/Streamlit if you want to extend it."),
     ("How do I enable AI?",                        "Add your Gemini API key to Streamlit Secrets as GEMINI_API_KEY. Free tier is enough."),
     ("Why can't past performance predict future?", "Markets change. A strategy that crushed a bull market may fail in a bear market."),
     ("What data does it use?",                     "Yahoo Finance via yfinance — years of daily OHLCV for stocks, ETFs, and crypto."),
-]
-for i,(q,a) in enumerate(faqs):
+]):
     with (fqa if i%2==0 else fqb).expander(q):
         st.markdown(f'<div style="font-size:0.84rem;color:#8896ab;line-height:1.75;padding:0.2rem 0;">{a}</div>', unsafe_allow_html=True)
 
