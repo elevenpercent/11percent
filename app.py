@@ -54,7 +54,7 @@ st.markdown("""
 .hero-wrap h1 {
     font-family:'Bebas Neue',sans-serif;
     font-size:clamp(3rem,7vw,6rem); letter-spacing:0.03em;
-    line-height:0.90; color:#eef2f7; margin:0 0 1rem;
+    line-height:1; color:#eef2f7; margin:0 0 1rem;
 }
 .hero-wrap h1 em { color:#00e676; font-style:normal; }
 .hero-sub { font-size:0.95rem; color:#8896ab; max-width:580px; line-height:1.7; margin-bottom:2rem; }
