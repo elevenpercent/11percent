@@ -5,6 +5,7 @@ import pytz
 sys.path.insert(0, os.path.dirname(__file__))
 from utils.styles import SHARED_CSS, LOGO_IMG
 from utils.nav import navbar
+from utils.session_persist import restore_session
 
 st.set_page_config(page_title="11% · Trade Smarter", page_icon="$", layout="wide", initial_sidebar_state="collapsed")
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
@@ -55,6 +56,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+restore_session()
 navbar()
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
