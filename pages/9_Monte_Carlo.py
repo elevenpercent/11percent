@@ -1,252 +1,156 @@
 import streamlit as st
-import sys, os
-import pandas as pd
-import numpy as np
+import sys, os, pandas as pd, numpy as np
 from datetime import date, timedelta
+import yfinance as yf, plotly.graph_objects as go
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from utils.styles import SHARED_CSS
-from utils.nav import navbar
+from utils.styles import SHARED_CSS, PLOTLY_THEME; from utils.nav import navbar
 
 st.set_page_config(page_title="Monte Carlo | 11%", layout="wide", initial_sidebar_state="collapsed")
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
+st.markdown("""<style>
+.ph{background:linear-gradient(135deg,#0c1018,#0d1420);border:1px solid #1a2235;border-radius:16px;padding:2.5rem 3rem;margin-bottom:2rem;position:relative;overflow:hidden}
+.ph::before{content:'';position:absolute;bottom:-40px;right:-60px;width:200px;height:200px;background:radial-gradient(circle,rgba(77,166,255,0.07),transparent 70%);pointer-events:none}
+.ph h1{font-family:'Bebas Neue',sans-serif;font-size:3.5rem;letter-spacing:0.05em;line-height:1;margin:0 0 0.5rem 0}
+.ph p{font-family:'IBM Plex Mono',monospace;font-size:0.75rem;color:#8896ab;line-height:1.8;margin:0}
+.ph-ey{font-family:'IBM Plex Mono',monospace;font-size:0.55rem;text-transform:uppercase;letter-spacing:0.3em;color:#3a4a5e;margin-bottom:0.5rem}
+.sec-t{font-family:'IBM Plex Mono',monospace;font-size:0.55rem;text-transform:uppercase;letter-spacing:0.25em;color:#3a4a5e;padding:1.2rem 0 0.8rem;border-top:1px solid #0d1117}
+.bm{background:#0c1018;border:1px solid #1a2235;border-radius:12px;padding:1.5rem 1.8rem;transition:border-color 0.2s}
+.bm:hover{border-color:#2a3550}
+.bm-v{font-family:'Bebas Neue',sans-serif;font-size:2.4rem;letter-spacing:0.04em;line-height:1}
+.bm-l{font-family:'IBM Plex Mono',monospace;font-size:0.5rem;text-transform:uppercase;letter-spacing:0.22em;color:#3a4a5e;margin-top:0.35rem}
+.bm-s{font-family:'IBM Plex Mono',monospace;font-size:0.62rem;color:#8896ab;margin-top:0.15rem}
+.explain-card{background:#0c1018;border:1px solid #1a2235;border-radius:12px;padding:1.4rem 1.6rem}
+.explain-title{font-family:'IBM Plex Mono',monospace;font-size:0.55rem;text-transform:uppercase;letter-spacing:0.2em;color:#4da6ff;margin-bottom:0.6rem}
+.explain-body{font-family:'IBM Plex Mono',monospace;font-size:0.7rem;color:#8896ab;line-height:1.8}
+</style>""", unsafe_allow_html=True)
 navbar()
 
-st.markdown("""
-<div class="page-header">
-    <div class="page-header-eyebrow">Probabilistic Modelling <span class="beta-badge">Beta</span></div>
-    <h1>Monte Carlo Projection</h1>
-    <p>1,000 random simulations of where the price <em>could</em> go — based on current volatility. Not a prediction. A probability cone.</p>
-</div>
-""", unsafe_allow_html=True)
+st.markdown("""<div class="ph"><div class="ph-ey">Probabilistic Modelling</div><h1>Monte Carlo Simulation</h1>
+<p>Run 1,000 random paths of where the price could go — based on real historical volatility. Not a prediction. A probability cone. Understand the range of outcomes before you hold through a move.</p></div>""", unsafe_allow_html=True)
 
-# ── Controls ───────────────────────────────────────────────────────────────────
-m1, m2, m3, m4, m5 = st.columns([1.5, 1, 1, 1, 1])
-with m1: ticker   = st.text_input("Ticker", value="AAPL", key="mc_ticker").upper().strip()
-with m2: horizon  = st.selectbox("Forecast", ["30 days","60 days","90 days","180 days","1 year"], index=2, key="mc_horizon")
-with m3: n_sims   = st.selectbox("Simulations", [500, 1000, 2000], index=1, key="mc_sims")
-with m4: hist_per = st.selectbox("Volatility basis", ["3 months","6 months","1 year","2 years"], index=2, key="mc_hist")
-with m5:
-    st.markdown("<div style='height:1.75rem'></div>", unsafe_allow_html=True)
-    run_btn = st.button("Run Simulation", type="primary", key="mc_run")
+m1, m2, m3, m4 = st.columns([2, 1.5, 1.5, 1.5])
+with m1: ticker   = st.text_input("Ticker", value="AAPL", placeholder="AAPL, TSLA, BTC-USD").upper().strip()
+with m2: horizon  = st.selectbox("Forecast Horizon", ["30 days","60 days","90 days","180 days","1 year"], index=2)
+with m3: n_sims   = st.selectbox("Simulations", [500, 1000, 2000], index=1)
+with m4: hist_per = st.selectbox("Volatility Basis", ["3 months","6 months","1 year","2 years"], index=2)
+
+run_btn = st.button("Run Simulation", type="primary")
 
 if not run_btn:
-    st.markdown("""
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:1.5rem;">
-        <div class="panel-sm">
-            <div style="font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:#4da6ff;text-transform:uppercase;letter-spacing:0.14em;margin-bottom:0.5rem;">The math</div>
-            <div style="font-size:0.82rem;color:#8896ab;line-height:1.65;">Each path uses Geometric Brownian Motion: S(t+1) = S(t) × exp((μ − σ²/2)Δt + σ√Δt × Z) where Z is a random draw from a normal distribution.</div>
-        </div>
-        <div class="panel-sm">
-            <div style="font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:#4da6ff;text-transform:uppercase;letter-spacing:0.14em;margin-bottom:0.5rem;">What the cone means</div>
-            <div style="font-size:0.82rem;color:#8896ab;line-height:1.65;">The shaded bands show where 50%, 80%, and 95% of all simulated paths end up. Wide cone = high volatility = high uncertainty.</div>
-        </div>
-        <div class="panel-sm">
-            <div style="font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:#4da6ff;text-transform:uppercase;letter-spacing:0.14em;margin-bottom:0.5rem;">Important caveat</div>
-            <div style="font-size:0.82rem;color:#8896ab;line-height:1.65;">This assumes log-normal returns and constant volatility — both simplifications. Real markets have fat tails, regime changes, and black swans not captured here.</div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown('<div class="sec-t">How This Works</div>', unsafe_allow_html=True)
+    e1, e2, e3 = st.columns(3)
+    for col, (title, color, body) in zip([e1,e2,e3], [
+        ("The Math", "#4da6ff", "Each path uses Geometric Brownian Motion: S(t+1) = S(t) x exp((mu - sigma^2/2) x dt + sigma x sqrt(dt) x Z) where Z is a standard normal random draw. 1,000 independent paths are simulated from today's price."),
+        ("Reading the Cone", "#00e676", "The dark band = 50% of paths. Medium band = 80%. Outer band = 95%. If the cone is very wide, volatility is high and outcomes are uncertain. If narrow, the stock is stable and moves are predictable."),
+        ("Important Caveat", "#ffd166", "This assumes constant volatility and log-normal returns — both simplifications. Real markets have fat tails, regime shifts, and black swan events not captured here. Use this to understand the range of outcomes, not as a forecast."),
+    ]):
+        col.markdown(f'<div class="explain-card"><div class="explain-title" style="color:{color}">{title}</div><div class="explain-body">{body}</div></div>', unsafe_allow_html=True)
     st.stop()
 
-# ── Fetch historical data ──────────────────────────────────────────────────────
 hist_days = {"3 months":90,"6 months":180,"1 year":365,"2 years":730}[hist_per]
 fore_days = {"30 days":30,"60 days":60,"90 days":90,"180 days":180,"1 year":252}[horizon]
 
-import yfinance as yf
-with st.spinner(f"Fetching {ticker} history…"):
+with st.spinner(f"Fetching {ticker} data and running {n_sims:,} simulations..."):
     try:
         df = yf.download(ticker, start=str(date.today()-timedelta(days=hist_days+10)),
                          end=str(date.today()), progress=False, auto_adjust=True)
         if isinstance(df.columns, pd.MultiIndex):
             df.columns = df.columns.get_level_values(0)
-        df = df.dropna()
-    except Exception as e:
-        st.error(f"Could not fetch {ticker}: {e}"); st.stop()
+        if df.empty or len(df) < 20: st.error("Not enough data."); st.stop()
 
-if df.empty or len(df) < 20:
-    st.error(f"Not enough data for {ticker}."); st.stop()
+        close = df["Close"].squeeze()
+        log_returns = np.log(close/close.shift(1)).dropna()
+        mu    = log_returns.mean()
+        sigma = log_returns.std()
+        S0    = float(close.iloc[-1])
 
-closes  = df["Close"].astype(float)
-log_ret = np.log(closes / closes.shift(1)).dropna()
+        np.random.seed(42)
+        dt = 1
+        paths = np.zeros((fore_days, n_sims))
+        paths[0] = S0
+        for t in range(1, fore_days):
+            Z = np.random.standard_normal(n_sims)
+            paths[t] = paths[t-1] * np.exp((mu - 0.5*sigma**2)*dt + sigma*np.sqrt(dt)*Z)
 
-# Parameters
-mu    = float(log_ret.mean())         # daily drift
-sigma = float(log_ret.std())          # daily volatility
-S0    = float(closes.iloc[-1])        # last known price
-dt    = 1.0                            # 1 trading day
+        pct_5  = np.percentile(paths, 5,  axis=1)
+        pct_10 = np.percentile(paths, 10, axis=1)
+        pct_25 = np.percentile(paths, 25, axis=1)
+        pct_50 = np.percentile(paths, 50, axis=1)
+        pct_75 = np.percentile(paths, 75, axis=1)
+        pct_90 = np.percentile(paths, 90, axis=1)
+        pct_95 = np.percentile(paths, 95, axis=1)
 
-# ── Monte Carlo simulation ─────────────────────────────────────────────────────
-np.random.seed(42)
-with st.spinner(f"Running {n_sims:,} simulations…"):
-    Z       = np.random.standard_normal((fore_days, n_sims))
-    drift   = (mu - 0.5 * sigma**2) * dt
-    diffuse = sigma * np.sqrt(dt) * Z
-    daily   = np.exp(drift + diffuse)
+        final_prices  = paths[-1]
+        prob_up       = (final_prices > S0).mean() * 100
+        prob_up_10    = (final_prices > S0*1.1).mean() * 100
+        prob_down_10  = (final_prices < S0*0.9).mean() * 100
+        expected_ret  = (pct_50[-1]/S0 - 1) * 100
+        annualized_vol = sigma * np.sqrt(252) * 100
 
-    paths = np.zeros((fore_days + 1, n_sims))
-    paths[0] = S0
-    for t in range(1, fore_days + 1):
-        paths[t] = paths[t-1] * daily[t-1]
+    except Exception as e: st.error(f"Error: {e}"); st.stop()
 
-# ── Statistics ─────────────────────────────────────────────────────────────────
-final_prices = paths[-1]
-p5   = np.percentile(final_prices, 5)
-p10  = np.percentile(final_prices, 10)
-p25  = np.percentile(final_prices, 25)
-p50  = np.percentile(final_prices, 50)   # median
-p75  = np.percentile(final_prices, 75)
-p90  = np.percentile(final_prices, 90)
-p95  = np.percentile(final_prices, 95)
+# Metrics
+st.markdown('<div class="sec-t">Simulation Summary</div>', unsafe_allow_html=True)
+r1 = st.columns(4)
+r2 = st.columns(4)
+for col,(v,l,s,c) in zip(r1,[
+    (f"${S0:.2f}", "Current Price", ticker, "#eef2f7"),
+    (f"{annualized_vol:.1f}%", "Annualised Vol", f"based on {hist_per}", "#ffd166"),
+    (f"{prob_up:.0f}%", "Prob Price Up", f"at {fore_days} days", "#00e676"),
+    (f"{expected_ret:+.1f}%", "Median Return", f"in {fore_days} days", "#00e676" if expected_ret>=0 else "#ff3d57"),
+]): col.markdown(f'<div class="bm"><div class="bm-v" style="color:{c}">{v}</div><div class="bm-l">{l}</div><div class="bm-s">{s}</div></div>', unsafe_allow_html=True)
+for col,(v,l,s,c) in zip(r2,[
+    (f"${pct_5[-1]:.2f}", "5th Percentile", "worst 5% of paths", "#ff3d57"),
+    (f"${pct_25[-1]:.2f}", "25th Percentile", "lower quartile", "#ff9f43"),
+    (f"${pct_75[-1]:.2f}", "75th Percentile", "upper quartile", "#4da6ff"),
+    (f"${pct_95[-1]:.2f}", "95th Percentile", "best 5% of paths", "#00e676"),
+]): col.markdown(f'<div class="bm"><div class="bm-v" style="color:{c}">{v}</div><div class="bm-l">{l}</div><div class="bm-s">{s}</div></div>', unsafe_allow_html=True)
 
-prob_up   = float(np.mean(final_prices > S0) * 100)
-prob_10up = float(np.mean(final_prices > S0 * 1.10) * 100)
-prob_20up = float(np.mean(final_prices > S0 * 1.20) * 100)
-prob_10dn = float(np.mean(final_prices < S0 * 0.90) * 100)
-prob_20dn = float(np.mean(final_prices < S0 * 0.80) * 100)
-ann_vol   = sigma * np.sqrt(252) * 100
-
-# ── Stat strip ─────────────────────────────────────────────────────────────────
-st.markdown(f"""
-<div class="stat-strip" style="margin-top:1rem;">
-    <div class="stat-cell"><div class="stat-val neu">${S0:,.2f}</div><div class="stat-lbl">Current Price</div></div>
-    <div class="stat-cell"><div class="stat-val neu">${p50:,.2f}</div><div class="stat-lbl">Median Target ({horizon})</div></div>
-    <div class="stat-cell"><div class="stat-val {'pos' if prob_up>=50 else 'neg'}">{prob_up:.1f}%</div><div class="stat-lbl">Prob Higher</div></div>
-    <div class="stat-cell"><div class="stat-val neu">{ann_vol:.1f}%</div><div class="stat-lbl">Ann. Volatility</div></div>
-    <div class="stat-cell"><div class="stat-val neu">{n_sims:,}</div><div class="stat-lbl">Simulations</div></div>
-</div>
-""", unsafe_allow_html=True)
-
-# ── Plotly chart ───────────────────────────────────────────────────────────────
-import plotly.graph_objects as go
-
+# Monte Carlo cone chart
+x_days = list(range(fore_days))
 fig = go.Figure()
 
-# Historical prices
-hist_x = list(range(-len(closes), 0))
-fig.add_trace(go.Scatter(
-    x=hist_x, y=closes.values,
-    mode="lines", name="Historical",
-    line=dict(color="#8896ab", width=1.5),
-))
-
-# Forecast x axis
-fore_x = list(range(0, fore_days + 1))
+# Sample 80 individual paths for visual texture
+sample_n = min(80, n_sims)
+for i in range(sample_n):
+    fig.add_scatter(x=x_days, y=paths[:,i],
+                   mode="lines", line=dict(color="rgba(77,166,255,0.04)", width=0.8),
+                   showlegend=False, hoverinfo="skip")
 
 # Cone bands
-pcts = [(2.5, 97.5, "rgba(77,166,255,0.06)", "95% range"),
-        (10,  90,   "rgba(77,166,255,0.09)", "80% range"),
-        (25,  75,   "rgba(77,166,255,0.14)", "50% range")]
-
-for lo, hi, color, name in pcts:
-    lo_band = np.percentile(paths, lo, axis=1)
-    hi_band = np.percentile(paths, hi, axis=1)
-    fig.add_trace(go.Scatter(
-        x=fore_x + fore_x[::-1],
-        y=list(hi_band) + list(lo_band[::-1]),
-        fill="toself", fillcolor=color,
-        line=dict(width=0), name=name, hoverinfo="skip",
-    ))
-
-# Sample paths (faint)
-sample_idx = np.random.choice(n_sims, min(80, n_sims), replace=False)
-for i in sample_idx:
-    fig.add_trace(go.Scatter(
-        x=fore_x, y=paths[:, i],
-        mode="lines", line=dict(color="rgba(77,166,255,0.06)", width=0.5),
-        showlegend=False, hoverinfo="skip",
-    ))
+fig.add_scatter(x=x_days+x_days[::-1], y=list(pct_5)+list(pct_95)[::-1],
+               fill="toself", fillcolor="rgba(0,230,118,0.04)",
+               line=dict(color="rgba(0,0,0,0)"), name="5–95%", showlegend=True)
+fig.add_scatter(x=x_days+x_days[::-1], y=list(pct_10)+list(pct_90)[::-1],
+               fill="toself", fillcolor="rgba(0,230,118,0.07)",
+               line=dict(color="rgba(0,0,0,0)"), name="10–90%", showlegend=True)
+fig.add_scatter(x=x_days+x_days[::-1], y=list(pct_25)+list(pct_75)[::-1],
+               fill="toself", fillcolor="rgba(0,230,118,0.12)",
+               line=dict(color="rgba(0,0,0,0)"), name="25–75%", showlegend=True)
 
 # Median path
-fig.add_trace(go.Scatter(
-    x=fore_x, y=np.percentile(paths, 50, axis=1),
-    mode="lines", name="Median path",
-    line=dict(color="#4da6ff", width=2, dash="dot"),
-))
-
-# Percentile boundary lines
-for pct_val, label, color in [(p5,"5th %ile","#ff3d57"),(p95,"95th %ile","#00e676")]:
-    fig.add_hline(y=pct_val, line_dash="dot", line_color=color, line_width=1,
-                  annotation_text=f"{label}: ${pct_val:,.2f}", annotation_position="right",
-                  annotation_font_color=color, annotation_font_size=10)
+fig.add_scatter(x=x_days, y=pct_50, line=dict(color="#00e676", width=2.5),
+               name="Median (50th pct)", showlegend=True)
 
 # Current price line
-fig.add_hline(y=S0, line_dash="dash", line_color="#ffd166", line_width=1,
-              annotation_text=f"Now: ${S0:,.2f}", annotation_position="right",
-              annotation_font_color="#ffd166", annotation_font_size=10)
+fig.add_hline(y=S0, line_dash="dash", line_color="#ffd166",
+              annotation_text=f"Today ${S0:.2f}", annotation_font_size=11)
 
-# Divider at day 0
-fig.add_vline(x=0, line_dash="solid", line_color="#2a3550", line_width=1)
+fig.update_layout(**PLOTLY_THEME, height=460,
+                  title=f"{ticker} — {n_sims:,} Simulations over {fore_days} Days",
+                  xaxis_title="Days from Today", yaxis_title="Price ($)",
+                  legend=dict(font=dict(family="IBM Plex Mono", size=10)))
+st.plotly_chart(fig, use_container_width=True)
 
-fig.update_layout(
-    title=dict(text=f"{ticker} — Monte Carlo ({n_sims:,} paths, {horizon})", font=dict(size=13, color="#8896ab")),
-    paper_bgcolor="#06080c", plot_bgcolor="#06080c",
-    font=dict(family="IBM Plex Mono", color="#8896ab", size=11),
-    xaxis=dict(gridcolor="#1a2235", linecolor="#1a2235", zeroline=False,
-               title="Days (negative = historical, positive = simulated)"),
-    yaxis=dict(gridcolor="#1a2235", linecolor="#1a2235", zeroline=False,
-               title="Price ($)", tickformat="$,.0f"),
-    legend=dict(bgcolor="#0c1018", bordercolor="#1a2235", borderwidth=1),
-    margin=dict(l=20, r=120, t=50, b=40),
-    height=520,
-)
-
-st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
-
-# ── Probability table ──────────────────────────────────────────────────────────
-prob_col, dist_col = st.columns(2)
-
-with prob_col:
-    st.markdown('<div class="section-hdr"><div class="section-hdr-label">Probability Outcomes</div></div>', unsafe_allow_html=True)
-    scenarios = [
-        (f"Price above ${S0*1.20:,.0f} (+20%)", prob_20up, "#00e676"),
-        (f"Price above ${S0*1.10:,.0f} (+10%)", prob_10up, "#00b856"),
-        (f"Price above current ${S0:,.0f}",       prob_up,   "#8896ab"),
-        (f"Price below ${S0*0.90:,.0f} (−10%)", prob_10dn, "#ff9f43"),
-        (f"Price below ${S0*0.80:,.0f} (−20%)", prob_20dn, "#ff3d57"),
-    ]
-    for label, prob, color in scenarios:
-        bar_w = int(prob)
-        st.markdown(f"""
-        <div style="margin-bottom:0.8rem;">
-            <div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:0.74rem;margin-bottom:4px;">
-                <span style="color:#8896ab;">{label}</span>
-                <span style="color:{color};font-weight:700;">{prob:.1f}%</span>
-            </div>
-            <div class="progress-track"><div class="progress-fill" style="width:{bar_w}%;background:{color};"></div></div>
-        </div>
-        """, unsafe_allow_html=True)
-
-with dist_col:
-    st.markdown('<div class="section-hdr"><div class="section-hdr-label">Price Distribution at End of Period</div></div>', unsafe_allow_html=True)
-
-    buckets = [
-        ("5th %ile (bear case)",  p5,  "#ff3d57"),
-        ("10th %ile",             p10, "#ff9f43"),
-        ("25th %ile",             p25, "#ffd166"),
-        ("Median (50th %ile)",    p50, "#8896ab"),
-        ("75th %ile",             p75, "#4da6ff"),
-        ("90th %ile",             p90, "#00b856"),
-        ("95th %ile (bull case)", p95, "#00e676"),
-    ]
-    for label, price, color in buckets:
-        chg = (price - S0) / S0 * 100
-        chg_color = "#00e676" if chg >= 0 else "#ff3d57"
-        st.markdown(f"""
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:0.45rem 0;border-bottom:1px solid #0d1117;font-family:'IBM Plex Mono',monospace;font-size:0.74rem;">
-            <span style="color:{color};">◆</span>
-            <span style="color:#8896ab;flex:1;margin:0 0.8rem;">{label}</span>
-            <span style="color:#eef2f7;font-weight:600;">${price:,.2f}</span>
-            <span style="color:{chg_color};margin-left:0.8rem;min-width:60px;text-align:right;">{chg:+.1f}%</span>
-        </div>
-        """, unsafe_allow_html=True)
-
-# ── Methodology note ──────────────────────────────────────────────────────────
-st.markdown(f"""
-<div style="margin-top:1.5rem;padding:1rem;background:#0a0d0f;border:1px solid #1a2235;border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:#3a4558;line-height:1.8;">
-    <span style="color:#4da6ff;">Model:</span> Geometric Brownian Motion &nbsp;·&nbsp;
-    <span style="color:#4da6ff;">μ (daily drift):</span> {mu*100:.4f}% &nbsp;·&nbsp;
-    <span style="color:#4da6ff;">σ (daily vol):</span> {sigma*100:.3f}% ({ann_vol:.1f}% annualised) &nbsp;·&nbsp;
-    <span style="color:#4da6ff;">Based on:</span> {len(log_ret)} trading days of {ticker} &nbsp;·&nbsp;
-    <span style="color:#ff3d57;">Not financial advice.</span>
-</div>
-""", unsafe_allow_html=True)
+# Final price distribution
+st.markdown('<div class="sec-t">Final Price Distribution</div>', unsafe_allow_html=True)
+fig2 = go.Figure()
+fig2.add_histogram(x=final_prices, nbinsx=60,
+                   marker_color="#4da6ff", marker_line=dict(width=0.3, color="#06080c"),
+                   name="Final Price")
+fig2.add_vline(x=S0,         line_dash="dash", line_color="#ffd166", annotation_text=f"Today ${S0:.2f}")
+fig2.add_vline(x=pct_50[-1], line_dash="dash", line_color="#00e676", annotation_text=f"Median ${pct_50[-1]:.2f}")
+fig2.update_layout(**PLOTLY_THEME, height=280,
+                   title=f"Distribution of {ticker} Price After {fore_days} Days",
+                   xaxis_title="Final Price ($)", yaxis_title="Path Count", showlegend=False)
+st.plotly_chart(fig2, use_container_width=True)
