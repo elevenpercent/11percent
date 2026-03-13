@@ -14,19 +14,75 @@ st.markdown("""
 @keyframes fadeIn   { from{opacity:0}to{opacity:1} }
 @keyframes pulse    { 0%,100%{opacity:1}50%{opacity:0.5} }
 @keyframes scanline { 0%{top:-100%}100%{top:100%} }
+@keyframes tickerScroll {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
 .hero-title  { animation:fadeUp 0.7s ease both; }
 .hero-sub    { animation:fadeUp 0.7s 0.15s ease both; }
 .hero-ctas   { animation:fadeUp 0.7s 0.28s ease both; }
-.tape-wrap   { animation:fadeIn 0.5s ease both; }
 .stat-grid   { animation:fadeUp 0.6s 0.1s ease both; }
 .feat-card   { animation:fadeUp 0.5s ease both; }
 .hero-candles { animation:fadeIn 1s ease both; }
+
 .live-dot {
     display:inline-block; width:7px; height:7px; border-radius:50%;
     background:#00e676; margin-right:6px;
     animation:pulse 1.8s ease-in-out infinite;
     box-shadow:0 0 6px rgba(0,230,118,0.6);
 }
+
+/* ── Ticker tape ── */
+.ticker-outer {
+    width:100%;
+    overflow:hidden;
+    background:#08100d;
+    border:1px solid #1a2235;
+    border-radius:6px;
+    height:32px;
+    display:flex;
+    align-items:center;
+    margin-bottom:1.8rem;
+    position:relative;
+}
+.ticker-outer::before, .ticker-outer::after {
+    content:'';
+    position:absolute;
+    top:0; bottom:0;
+    width:60px;
+    z-index:2;
+    pointer-events:none;
+}
+.ticker-outer::before {
+    left:0;
+    background:linear-gradient(90deg,#08100d,transparent);
+}
+.ticker-outer::after {
+    right:0;
+    background:linear-gradient(-90deg,#08100d,transparent);
+}
+.ticker-track {
+    display:flex;
+    white-space:nowrap;
+    animation: tickerScroll 40s linear infinite;
+    will-change: transform;
+}
+.ticker-item {
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:0 22px;
+    border-right:1px solid #1a2235;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.68rem;
+    flex-shrink:0;
+}
+.t-sym  { color:#3a4a5e; font-weight:600; }
+.t-up   { color:#00e676; }
+.t-dn   { color:#ff3d57; }
+
+/* ── Screen card ── */
 .screen-card {
     background:#0c1018; border:1px solid #1a2235;
     border-radius:12px; overflow:hidden; position:relative;
@@ -44,6 +100,7 @@ st.markdown("""
 .dot-red  {width:10px;height:10px;border-radius:50%;background:#ff3d57;}
 .dot-yel  {width:10px;height:10px;border-radius:50%;background:#ffd166;}
 .dot-grn  {width:10px;height:10px;border-radius:50%;background:#00e676;}
+
 .step-num {
     font-family:'Bebas Neue',sans-serif;font-size:4rem;
     color:#1a2235;line-height:1;margin-bottom:0.3rem; transition:color 0.3s;
@@ -57,6 +114,78 @@ st.markdown("""
     border-radius:inherit; z-index:-1; opacity:0; transition:opacity 0.3s;
 }
 .glow-border:hover::before { opacity:1; }
+
+/* ── Strategies & Concepts ── */
+.sc-grid {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:1.5rem;
+    margin-top:1rem;
+}
+.sc-card {
+    background:#0c1018;
+    border:1px solid #1a2235;
+    border-radius:12px;
+    overflow:hidden;
+}
+.sc-card-hdr {
+    padding:0.9rem 1.2rem;
+    border-bottom:1px solid #1a2235;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.55rem;
+    text-transform:uppercase;
+    letter-spacing:0.2em;
+    color:#3a4a5e;
+    background:#08100d;
+}
+.strat-row {
+    display:flex;
+    align-items:flex-start;
+    gap:0.8rem;
+    padding:0.75rem 1.2rem;
+    border-bottom:1px solid #0d1117;
+    transition:background 0.15s;
+}
+.strat-row:last-child { border-bottom:none; }
+.strat-row:hover { background:rgba(255,255,255,0.015); }
+.strat-tag {
+    display:inline-block;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.5rem;
+    text-transform:uppercase;
+    letter-spacing:0.12em;
+    padding:2px 7px;
+    border-radius:3px;
+    white-space:nowrap;
+    flex-shrink:0;
+    margin-top:2px;
+}
+.strat-name {
+    font-size:0.82rem;
+    color:#eef2f7;
+    font-weight:500;
+    margin-bottom:0.15rem;
+}
+.strat-desc { font-size:0.72rem; color:#3a4a5e; line-height:1.5; }
+
+.concept-row {
+    display:grid;
+    grid-template-columns:160px 1fr;
+    gap:0.8rem;
+    align-items:baseline;
+    padding:0.75rem 1.2rem;
+    border-bottom:1px solid #0d1117;
+    transition:background 0.15s;
+}
+.concept-row:last-child { border-bottom:none; }
+.concept-row:hover { background:rgba(255,255,255,0.015); }
+.concept-term {
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.7rem;
+    color:#00e676;
+    font-weight:600;
+}
+.concept-def { font-size:0.78rem; color:#3a4a5e; line-height:1.6; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -105,19 +234,29 @@ def get_tape(tickers):
                 c = float(h["Close"].iloc[-1])
                 chg = ((c - p) / p) * 100
                 up = chg >= 0
-                out.append((s, f"{c:,.2f}", f"{chg:+.2f}%", "^" if up else "v", "t-up" if up else "t-dn"))
+                out.append((s, f"{c:,.2f}", f"{chg:+.2f}%", "▲" if up else "▼", "t-up" if up else "t-dn"))
         except:
             pass
     return out
 
 tape = get_tape(tuple(TICKERS))
 if tape:
-    items = "".join(
-        '<span class="ticker-item"><span class="t-sym">' + s + '</span>'
-        '<span class="' + cls + '">' + p + ' ' + a + ' ' + ch + '</span></span>'
-        for s, p, ch, a, cls in tape
-    ) * 2
-    st.markdown('<div class="ticker-wrap tape-wrap"><div class="ticker-tape">' + items + '</div></div>', unsafe_allow_html=True)
+    # Build items twice for seamless loop
+    items_html = "".join(
+        f'<span class="ticker-item">'
+        f'<span class="t-sym">{s}</span>'
+        f'<span class="{cls}">{p} {arrow} {ch}</span>'
+        f'</span>'
+        for s, p, ch, arrow, cls in tape
+    )
+    # Duplicate for seamless infinite scroll
+    st.markdown(
+        '<div class="ticker-outer">'
+        '<div class="ticker-track">'
+        + items_html + items_html +
+        '</div></div>',
+        unsafe_allow_html=True
+    )
 
 # -- Hero --
 hero_l, hero_r = st.columns([5, 4])
@@ -150,7 +289,7 @@ with hero_l:
         '<div class="hero-sub" style="font-size:1rem;color:#8896ab;max-width:480px;line-height:1.85;margin-bottom:2rem;">'
         'A professional trading platform for learners. Backtest real strategies, '
         'study 15+ indicators, replay historical charts bar by bar, '
-        'and get AI analysis - completely free.'
+        'and get AI analysis — completely free.'
         '</div>'
         '</div>',
         unsafe_allow_html=True
@@ -158,9 +297,9 @@ with hero_l:
 
     st.markdown('<div class="hero-ctas">', unsafe_allow_html=True)
     cta1, cta2, cta3 = st.columns(3)
-    with cta1: st.page_link("pages/1_Strategy_Lab.py",  label="Lab ->")
-    with cta2: st.page_link("pages/3_Replay.py",    label="Replay ->")
-    with cta3: st.page_link("pages/5_Assistant.py", label="AI Coach ->")
+    with cta1: st.page_link("pages/1_Strategy_Lab.py", label="Lab →")
+    with cta2: st.page_link("pages/3_Replay.py",       label="Replay →")
+    with cta3: st.page_link("pages/5_Assistant.py",    label="AI Coach →")
     st.markdown("</div>", unsafe_allow_html=True)
 
 with hero_r:
@@ -219,7 +358,7 @@ with hero_r:
         '<div style="display:flex;justify-content:space-between;margin-top:0.6rem;font-family:\'IBM Plex Mono\',monospace;font-size:0.6rem;color:#3a4a5e;">'
         '<span>+18.4% YTD</span><span>Vol 78.2M</span><span>P/E 29.1x</span><span>52W: $164-$199</span>'
         '</div></div></div>'
-        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem;animation:fadeUp 0.6s 0.3s ease both;opacity:0;">'
+        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:1rem;animation:fadeUp 0.6s 0.3s ease both;opacity:0;">'
         '<div style="background:#0c1018;border:1px solid #1a2235;border-radius:8px;padding:1.1rem;text-align:center;">'
         '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:2.4rem;color:#00e676;line-height:1;">15</div>'
         '<div style="font-family:\'IBM Plex Mono\',monospace;font-size:0.52rem;color:#3a4a5e;text-transform:uppercase;letter-spacing:0.15em;margin-top:0.2rem;">Indicators</div>'
@@ -229,7 +368,7 @@ with hero_r:
         '<div style="font-family:\'IBM Plex Mono\',monospace;font-size:0.52rem;color:#3a4a5e;text-transform:uppercase;letter-spacing:0.15em;margin-top:0.2rem;">Strategies</div>'
         '</div>'
         '<div style="background:#0c1018;border:1px solid #1a2235;border-radius:8px;padding:1.1rem;text-align:center;">'
-        '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:2.4rem;color:#00e676;line-height:1;">7</div>'
+        '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:2.4rem;color:#00e676;line-height:1;">8</div>'
         '<div style="font-family:\'IBM Plex Mono\',monospace;font-size:0.52rem;color:#3a4a5e;text-transform:uppercase;letter-spacing:0.15em;margin-top:0.2rem;">Pages</div>'
         '</div>'
         '<div style="background:#0c1018;border:1px solid #1a2235;border-radius:8px;padding:1.1rem;text-align:center;">'
@@ -262,14 +401,14 @@ _features_link  = [
 fc = st.columns(6)
 for col, icon, title, desc, link in zip(fc, _features_icon, _features_title, _features_desc, _features_link):
     col.markdown(
-        '<div class="feat-card glow-border">'
-        '<div class="feat-icon">' + icon + '</div>'
-        '<div class="feat-title">' + title + '</div>'
-        '<div class="feat-desc">' + desc + '</div>'
+        '<div class="feat-card glow-border" style="background:#0c1018;border:1px solid #1a2235;border-radius:10px;padding:1.2rem;margin-bottom:0.5rem;min-height:160px;">'
+        f'<div style="font-size:1.4rem;margin-bottom:0.6rem;">{icon}</div>'
+        f'<div style="font-family:IBM Plex Mono,monospace;font-size:0.62rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:#eef2f7;margin-bottom:0.5rem;">{title}</div>'
+        f'<div style="font-size:0.75rem;color:#3a4a5e;line-height:1.6;">{desc}</div>'
         '</div>',
         unsafe_allow_html=True
     )
-    col.page_link(link, label="Open ->")
+    col.page_link(link, label="Open →")
 
 # -- Indicators showcase --
 st.markdown('<div class="divider" style="margin-top:2.5rem;">15 Indicators Available</div>', unsafe_allow_html=True)
@@ -299,10 +438,10 @@ for col, (cat, color, inds) in zip(ig_cols, ind_groups):
 st.markdown('<div class="divider" style="margin-top:2.5rem;">How It Works</div>', unsafe_allow_html=True)
 hw = st.columns(5)
 steps = [
-    ("01","Pick a Stock",    "Enter any ticker - stocks, ETFs, or crypto. Live data from Yahoo Finance."),
+    ("01","Pick a Stock",    "Enter any ticker — stocks, ETFs, or crypto. Live data from Yahoo Finance."),
     ("02","Choose Strategy", "9 pre-built strategies or build your own with 15 indicators."),
     ("03","Run Backtest",    "Set date range and capital. Results computed in seconds."),
-    ("04","Study Results",   "Return, alpha, drawdown, Sharpe - all explained in plain English."),
+    ("04","Study Results",   "Return, alpha, drawdown, Sharpe — all explained in plain English."),
     ("05","Ask the Coach",   "The AI coach explains what the numbers mean and how to improve."),
 ]
 for col, (num, title, desc) in zip(hw, steps):
@@ -315,62 +454,82 @@ for col, (num, title, desc) in zip(hw, steps):
         unsafe_allow_html=True
     )
 
-# -- Strategies + Concepts --
+# ── Strategies + Concepts ─────────────────────────────────────────────────────
 st.markdown('<div class="divider" style="margin-top:2.5rem;">Strategies + Concepts</div>', unsafe_allow_html=True)
-sl, sr = st.columns(2)
-with sl:
-    st.markdown('<div style="font-family:IBM Plex Mono,monospace;font-size:0.58rem;color:#3a4a5e;text-transform:uppercase;letter-spacing:0.18em;margin-bottom:0.8rem;">9 Pre-built Strategies</div>', unsafe_allow_html=True)
-    for name, tag, desc in [
-        ("SMA Crossover",    "Trend",    "Classic MA cross. Fast crosses slow = buy."),
-        ("EMA Crossover",    "Trend",    "Like SMA but reacts faster to recent moves."),
-        ("RSI",              "Mean Rev", "Buy oversold <30, sell overbought >70."),
-        ("MACD",             "Momentum", "Momentum crossover. Catches accelerating trends."),
-        ("Bollinger Bands",  "Mean Rev", "Buy lower band, sell upper - mean reversion."),
-        ("SuperTrend",       "Trend",    "ATR-based with clear green/red direction signal."),
-        ("RSI + BB",         "Combo",    "Both must confirm - fewer but higher quality trades."),
-        ("EMA + RSI Filter", "Combo",    "EMA direction + RSI momentum confirmation."),
-        ("MACD + SuperTrend","Combo",    "Dual confirmation. Very patient, high conviction."),
-    ]:
-        tc = "#4da6ff" if tag == "Trend" else ("#b388ff" if tag == "Mean Rev" else ("#ffd166" if tag == "Momentum" else "#00e676"))
-        sl.markdown(
-            '<div class="row-item">'
-            '<span class="tag" style="background:' + tc + '12;color:' + tc + ';border:1px solid ' + tc + '25;flex-shrink:0;">' + tag + '</span>'
-            '<div><div style="font-size:0.82rem;color:#eef2f7;">' + name + '</div>'
-            '<div style="font-size:0.72rem;color:#3a4a5e;margin-top:0.1rem;">' + desc + '</div></div>'
-            '</div>',
-            unsafe_allow_html=True
+
+strategies = [
+    ("SMA Crossover",     "Trend",     "#4da6ff", "Classic MA cross. Fast crosses slow = buy signal."),
+    ("EMA Crossover",     "Trend",     "#4da6ff", "Like SMA but reacts faster to recent price moves."),
+    ("RSI",               "Mean Rev",  "#b388ff", "Buy oversold <30, sell overbought >70."),
+    ("MACD",              "Momentum",  "#ffd166", "Momentum crossover. Catches accelerating trends."),
+    ("Bollinger Bands",   "Mean Rev",  "#b388ff", "Buy lower band, sell upper — mean reversion."),
+    ("SuperTrend",        "Trend",     "#4da6ff", "ATR-based with clean green/red direction signal."),
+    ("RSI + BB",          "Combo",     "#00e676", "Both must confirm — fewer but higher quality trades."),
+    ("EMA + RSI Filter",  "Combo",     "#00e676", "EMA direction with RSI momentum confirmation."),
+    ("MACD + SuperTrend", "Combo",     "#00e676", "Dual confirmation. Very patient, high conviction."),
+]
+
+concepts = [
+    ("Backtesting",          "Running a strategy on historical data to see what would have happened."),
+    ("Max Drawdown",         "Worst peak-to-trough loss. Tells you the pain to expect in bad runs."),
+    ("Sharpe Ratio",         "Return divided by volatility. Above 1.0 is decent, above 2.0 is strong."),
+    ("Alpha",                "Return above buy-and-hold. Positive means you actually added value."),
+    ("Win Rate",             "% of trades that were profitable. Meaningless without avg win/loss size."),
+    ("ATR",                  "Average True Range — how far a stock typically moves per day."),
+    ("Support / Resistance", "Levels where price historically reverses. Foundation of technical analysis."),
+    ("Volume",               "Shares traded. Rising price + rising volume confirms a trend."),
+    ("Mean Reversion",       "Tendency of price to return to its historical average after extremes."),
+]
+
+sc_l, sc_r = st.columns(2)
+
+with sc_l:
+    rows_html = ""
+    for name, tag, color, desc in strategies:
+        rows_html += (
+            '<div class="strat-row">'
+            f'<span class="strat-tag" style="background:{color}18;color:{color};border:1px solid {color}30;">{tag}</span>'
+            '<div>'
+            f'<div class="strat-name">{name}</div>'
+            f'<div class="strat-desc">{desc}</div>'
+            '</div>'
+            '</div>'
         )
-with sr:
-    st.markdown('<div style="font-family:IBM Plex Mono,monospace;font-size:0.58rem;color:#3a4a5e;text-transform:uppercase;letter-spacing:0.18em;margin-bottom:0.8rem;">Key Concepts Explained</div>', unsafe_allow_html=True)
-    for term, defn in [
-        ("Backtesting",          "Running a strategy on historical data to measure what would have happened."),
-        ("Max Drawdown",         "Worst peak-to-trough loss. Tells you how much pain to expect."),
-        ("Sharpe Ratio",         "Return divided by volatility. Above 1.0 is decent, above 2.0 is strong."),
-        ("Alpha",                "Return above buy and hold. Positive = you actually added value."),
-        ("Win Rate",             "% of trades that were profitable. Meaningless without avg win/loss size."),
-        ("ATR",                  "Average True Range - how far a stock moves per day on average."),
-        ("Support / Resistance", "Levels where price historically reverses. Foundation of technical analysis."),
-        ("Volume",               "Number of shares traded. Rising price + rising volume confirms a trend."),
-        ("Mean Reversion",       "The tendency of price to return to its historical average after extremes."),
-    ]:
-        sr.markdown(
-            '<div class="row-item"><div>'
-            '<div style="font-family:IBM Plex Mono,monospace;font-size:0.72rem;color:#00e676;margin-bottom:0.2rem;">' + term + '</div>'
-            '<div style="font-size:0.79rem;color:#3a4a5e;line-height:1.6;">' + defn + '</div>'
-            '</div></div>',
-            unsafe_allow_html=True
+    st.markdown(
+        '<div class="sc-card">'
+        '<div class="sc-card-hdr">9 Pre-built Strategies</div>'
+        + rows_html +
+        '</div>',
+        unsafe_allow_html=True
+    )
+
+with sc_r:
+    rows_html = ""
+    for term, defn in concepts:
+        rows_html += (
+            '<div class="concept-row">'
+            f'<span class="concept-term">{term}</span>'
+            f'<span class="concept-def">{defn}</span>'
+            '</div>'
         )
+    st.markdown(
+        '<div class="sc-card">'
+        '<div class="sc-card-hdr">Key Concepts Explained</div>'
+        + rows_html +
+        '</div>',
+        unsafe_allow_html=True
+    )
 
 # -- FAQ --
 st.markdown('<div class="divider" style="margin-top:2rem;">FAQ</div>', unsafe_allow_html=True)
 fqa, fqb = st.columns(2)
 faqs = [
-    ("Is this real trading?",                     "No - fully simulated. No real money. Data from Yahoo Finance. For education only."),
+    ("Is this real trading?",                     "No — fully simulated. No real money. Data from Yahoo Finance. For education only."),
     ("How accurate is the backtest?",             "Indicative, not guaranteed. Assumes closing-price fills with no slippage, spread, or tax."),
     ("Do I need to code?",                        "No. Everything is point-and-click. Open source Python/Streamlit if you want to extend it."),
     ("How do I enable AI?",                       "Add your Gemini API key to Streamlit Secrets as GEMINI_API_KEY. Free tier is enough."),
     ("Why can't past performance predict future?","Markets change. A strategy that crushed a bull market may fail in a bear market."),
-    ("What data does it use?",                    "Yahoo Finance via yfinance - years of daily OHLCV for stocks, ETFs, and crypto."),
+    ("What data does it use?",                    "Yahoo Finance via yfinance — years of daily OHLCV for stocks, ETFs, and crypto."),
 ]
 for i, (q, a) in enumerate(faqs):
     with (fqa if i % 2 == 0 else fqb).expander(q):
