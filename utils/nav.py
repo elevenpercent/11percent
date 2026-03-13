@@ -127,21 +127,17 @@ section[data-testid="stSidebar"] {
 }
 
 .nb-tools-drop a {
-    display:flex;
-    align-items:center;
-    padding:0.75rem 1.2rem;
+    display:block;
+    padding:0.55rem 1rem;
     font-family:'IBM Plex Mono',monospace;
     font-size:0.6rem;
-    font-weight:600;
-    text-transform:uppercase;
-    letter-spacing:0.1em;
-    color:#3a4a5e;
+    color:#8896ab;
     text-decoration:none;
     border-bottom:1px solid #111927;
 }
 .nb-tools-drop a:hover {
+    background:#111927;
     color:#00e676;
-    background:rgba(0,230,118,0.04);
 }
 
 /* Beta tag */
@@ -198,7 +194,7 @@ def navbar():
         f'  <div class="nb-tools-drop">{tools_links}</div>'
         '</div>'
         '<div class="nb-tag"><span class="live-dot"></span>BETA</div>'
-        '</div>'  # close .nb
+        '</div>'  # close navbar
         '<div class="nb-spacer"></div>',
         unsafe_allow_html=True
     )
