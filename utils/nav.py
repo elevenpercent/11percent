@@ -142,7 +142,6 @@ section[data-testid="stSidebar"] {
 }
 
 /* ── Gap below navbar so content isn't flush ── */
-.nb + div, .nb ~ * { margin-top:0; }
 .nb-spacer { height:1.8rem; }
 </style>
 """
