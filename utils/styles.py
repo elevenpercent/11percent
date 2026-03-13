@@ -59,9 +59,11 @@ section[data-testid="stSidebar"] {
 html, body, [data-testid="stAppViewContainer"],
 [data-testid="stAppViewContainer"] > .main { background:#06080c!important; }
 .block-container {
-    padding-top:0!important; padding-bottom:2rem!important;
-    padding-left:2.5rem!important; padding-right:2.5rem!important;
-    max-width:100%!important;
+    padding-top:2.5rem !important;   /* ← this creates the gap */
+    padding-bottom:2rem !important;
+    padding-left:2.5rem !important;
+    padding-right:2.5rem !important;
+    max-width:100% !important;
 }
 * { box-sizing:border-box; }
 body { color:#eef2f7; font-family:'Space Grotesk',sans-serif; }
