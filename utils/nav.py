@@ -59,6 +59,18 @@ NAV_CSS = """
     color:#00e676;
     background:rgba(0,230,118,0.1);
 }
+/* FORCE NAVBAR BUTTONS INLINE — OVERRIDES GLOBAL CSS */
+.nav-buttons a,
+.nav-btn,
+.navbar a {
+    display:inline-flex !important;
+    flex-direction:row !important;
+    align-items:center !important;
+    justify-content:center !important;
+    width:auto !important;
+    max-width:none !important;
+    white-space:nowrap !important;
+}
 
 </style>
 """
@@ -92,3 +104,4 @@ def navbar():
         )
 
     st.markdown('</div></div>', unsafe_allow_html=True)
+    
