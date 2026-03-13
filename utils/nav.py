@@ -2,9 +2,9 @@ import streamlit as st
 from utils.styles import LOGO_IMG
 
 def navbar():
-    st.markdown("""
+    html = f"""
     <style>
-    .navbar {
+    .navbar {{
         background:#06080c;
         border-bottom:1px solid #1a2235;
         margin:0 -2.5rem;
@@ -14,21 +14,21 @@ def navbar():
         padding:0 1.4rem;
         gap:1.4rem;
         white-space:nowrap;
-    }
+    }}
 
-    .nav-logo img {
+    .nav-logo img {{
         height:36px;
-    }
+    }}
 
-    .nav-buttons {
+    .nav-buttons {{
         display:flex;
         flex-direction:row;
         align-items:center;
         gap:0.6rem;
         white-space:nowrap;
-    }
+    }}
 
-    .nav-btn {
+    .nav-btn {{
         display:inline-flex;
         align-items:center;
         justify-content:center;
@@ -45,17 +45,17 @@ def navbar():
         text-decoration:none;
         transition:all 0.15s ease;
         white-space:nowrap;
-    }
+    }}
 
-    .nav-btn:hover {
+    .nav-btn:hover {{
         border-color:#00e676;
         color:#00e676;
         background:rgba(0,230,118,0.05);
-    }
+    }}
     </style>
 
     <div class="navbar">
-        <div class="nav-logo">""" + LOGO_IMG + """</div>
+        <div class="nav-logo">{LOGO_IMG}</div>
 
         <div class="nav-buttons">
             <a class="nav-btn" href="/app.py" target="_self">Home</a>
@@ -65,4 +65,6 @@ def navbar():
             <a class="nav-btn" href="/pages/5_Assistant.py" target="_self">AI Coach</a>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """
+
+    st.markdown(html, unsafe_allow_html=True)
