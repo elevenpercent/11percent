@@ -22,18 +22,14 @@ section[data-testid="stSidebar"] {
 
 /* Navbar container */
 .nb {
-    background:rgba(6,8,12,0.98);
-    backdrop-filter:blur(24px);
+    background:#06080c;
     border-bottom:1px solid #1a2235;
     margin:0 -2.5rem;
     height:52px;
     display:flex;
     align-items:center;
-    gap:1rem;
     padding:0 1.4rem;
-    position:sticky;
-    top:0;
-    z-index:1000;
+    gap:1.2rem;
 }
 
 /* Logo */
@@ -41,33 +37,39 @@ section[data-testid="stSidebar"] {
     height:32px!important;
 }
 
-/* Links */
-.nb-links {
+/* Button row */
+.nb-buttons {
     display:flex;
     align-items:center;
-    gap:1.2rem;
+    gap:0.6rem;
 }
 
-.nb-link {
+/* Actual buttons */
+.nb-btn {
     font-family:'IBM Plex Mono',monospace;
     font-size:0.62rem;
     font-weight:600;
     text-transform:uppercase;
     letter-spacing:0.1em;
-    color:#3a4a5e;
-    padding-bottom:2px;
-    border-bottom:2px solid transparent;
+    padding:0.35rem 0.9rem;
+    border-radius:6px;
+    border:1px solid #1a2235;
+    background:#0c1018;
+    color:#8896ab;
     text-decoration:none;
+    transition:all 0.15s;
 }
 
-.nb-link:hover {
-    color:#eef2f7;
-    border-bottom-color:#2a3550;
-}
-
-.nb-link.active {
+.nb-btn:hover {
+    border-color:#00e676;
     color:#00e676;
-    border-bottom-color:#00e676;
+    background:rgba(0,230,118,0.05);
+}
+
+.nb-btn.active {
+    border-color:#00e676;
+    color:#00e676;
+    background:rgba(0,230,118,0.08);
 }
 </style>
 """
@@ -75,21 +77,21 @@ section[data-testid="stSidebar"] {
 def navbar():
     st.markdown(NAV_CSS, unsafe_allow_html=True)
 
-    # Start navbar
     st.markdown('<div class="nb">', unsafe_allow_html=True)
 
     # Logo
     st.markdown(f'<div class="nb-logo">{LOGO_IMG}</div>', unsafe_allow_html=True)
 
-    # Links
-    st.markdown('<div class="nb-links">', unsafe_allow_html=True)
+    # Buttons
+    st.markdown('<div class="nb-buttons">', unsafe_allow_html=True)
+
+    current = st.session_state.get("_page_", "")
 
     for path, label in NAV_ITEMS:
-        current = st.session_state.get("_page_", "")
         active = "active" if current == path else ""
         st.markdown(
-            f'<a class="nb-link {active}" href="/{path}" target="_self">{label}</a>',
+            f'<a class="nb-btn {active}" href="/{path}" target="_self">{label}</a>',
             unsafe_allow_html=True
         )
 
-    st.markdown('</div></div>', unsafe_allow_html=True)  # close links + navbar
+    st.markdown('</div></div>', unsafe_allow_html=True)
