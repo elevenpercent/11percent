@@ -10,8 +10,6 @@ st.markdown(SHARED_CSS, unsafe_allow_html=True)
 # ---------------------------------------------------------
 # NAVBAR (pure HTML, cannot stack)
 # ---------------------------------------------------------
-from utils.nav import navbar
-navbar()
 
 st.markdown(f"""
 <style>
@@ -69,7 +67,8 @@ st.markdown(f"""
     <div class="nav-logo">{LOGO_IMG}</div>
 </div>
 """, unsafe_allow_html=True)
-
+from utils.nav import navbar
+navbar()
 
 st.markdown("""
 <style>
