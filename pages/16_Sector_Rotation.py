@@ -61,7 +61,11 @@ if "sec_data" in st.session_state:
     st.markdown('<div class="sec-t">Performance Across Timeframes</div>', unsafe_allow_html=True)
 
     # Heatmap via plotly
-    df_heat = df.set_index("Sector")[["1W","1M","3M","6M","1Y"]].fillna(0)
+    wanted_cols = ["1W","1M","3M","6M","1Y"]
+    available_cols = [c for c in wanted_cols if c in df.columns]
+    if not available_cols:
+        st.warning("No performance data. Try reloading."); st.stop()
+    df_heat = df.set_index("Sector")[available_cols].fillna(0)
     fig_heat = go.Figure(go.Heatmap(
         z=df_heat.values,
         x=df_heat.columns.tolist(),
@@ -82,7 +86,7 @@ if "sec_data" in st.session_state:
     # Bar chart for selected period
     c1, c2 = st.columns([1, 3])
     with c1:
-        sel_period = st.selectbox("Period for ranking", list(PERIODS.keys()), index=1)
+        sel_period = st.selectbox("Period for ranking", available_cols, index=min(1, len(available_cols)-1))
     with c2:
         st.markdown("<br>", unsafe_allow_html=True)
 
