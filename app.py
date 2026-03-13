@@ -64,14 +64,6 @@ st.markdown(f"""
 
 <div class="navbar">
     <div class="nav-logo">{LOGO_IMG}</div>
-
-    <div class="nav-buttons">
-        <a class="nav-btn" href="/app.py" target="_self">Home</a>
-        <a class="nav-btn" href="/pages/1_Strategy_Lab.py" target="_self">Strategy Lab</a>
-        <a class="nav-btn" href="/pages/3_Replay.py" target="_self">Replay</a>
-        <a class="nav-btn" href="/pages/4_Analysis.py" target="_self">Analysis</a>
-        <a class="nav-btn" href="/pages/5_Assistant.py" target="_self">AI Coach</a>
-    </div>
 </div>
 """, unsafe_allow_html=True)
 
