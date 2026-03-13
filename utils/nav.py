@@ -3,6 +3,7 @@ from utils.styles import LOGO_IMG
 
 NAV_CSS = """
 <style>
+
 /* NAVBAR CONTAINER */
 .navbar {
     background:#06080c;
@@ -12,7 +13,7 @@ NAV_CSS = """
     display:flex;
     align-items:center;
     padding:0 1.4rem;
-    gap:1.2rem;
+    gap:1.4rem;
 }
 
 /* LOGO */
@@ -20,15 +21,18 @@ NAV_CSS = """
     height:32px;
 }
 
-/* BUTTON ROW */
+/* BUTTON ROW — THIS IS THE FIX */
 .nav-buttons {
-    display:flex;
+    display:flex !important;
+    flex-direction:row !important;
     align-items:center;
     gap:0.6rem;
+    white-space:nowrap;
 }
 
-/* BUTTON STYLE (your old hover style) */
+/* BUTTON STYLE */
 .nav-btn {
+    display:inline-block !important;
     font-family:'IBM Plex Mono',monospace;
     font-size:0.62rem;
     font-weight:600;
@@ -41,6 +45,7 @@ NAV_CSS = """
     color:#8896ab;
     text-decoration:none;
     transition:all 0.15s ease;
+    white-space:nowrap;
 }
 
 .nav-btn:hover {
@@ -54,6 +59,7 @@ NAV_CSS = """
     color:#00e676;
     background:rgba(0,230,118,0.1);
 }
+
 </style>
 """
 
@@ -65,7 +71,7 @@ def navbar():
     # LOGO
     st.markdown(f'<div class="nav-logo">{LOGO_IMG}</div>', unsafe_allow_html=True)
 
-    # BUTTONS
+    # BUTTONS (INLINE)
     st.markdown('<div class="nav-buttons">', unsafe_allow_html=True)
 
     pages = [
