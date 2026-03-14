@@ -1,4 +1,7 @@
 import streamlit as st
+import sys as _sys, os as _os
+_sys.path.insert(0, _os.path.dirname(_os.path.dirname(__file__)))
+from utils.session_persist import restore_session
 import sys, os, pandas as pd
 from datetime import date, timedelta
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
@@ -14,6 +17,7 @@ from utils.indicators import (
 )
 
 st.set_page_config(page_title="Strategy Lab | 11%", layout="wide", initial_sidebar_state="collapsed")
+restore_session()
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
 navbar()
 inject_bg()
