@@ -37,6 +37,22 @@ st.markdown("""<style>
 .dash-chg{font-family:'IBM Plex Mono',monospace;font-size:0.75rem;font-weight:700;margin-top:0.1rem}
 </style>""", unsafe_allow_html=True)
 navbar()
+
+# ── Same-tab nav hook ─────────────────────────────────────────────────────────
+import streamlit.components.v1 as _nav_cv1
+_nav_cv1.html("""<script>
+(function(){
+  window.parent.document.addEventListener('click',function(e){
+    var a=e.target.closest('a[href]');
+    if(!a)return;
+    var href=a.getAttribute('href');
+    if(!href||href.startsWith('http')||href.startsWith('mailto')||href.startsWith('#'))return;
+    e.preventDefault();e.stopPropagation();
+    window.top.location.href=href;
+  },true);
+})();
+</script>""", height=0)
+
 inject_bg()
 
 SECTORS = {
