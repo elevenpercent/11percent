@@ -2,7 +2,7 @@ import streamlit as st, sys, os, pandas as pd
 import plotly.graph_objects as go
 from datetime import date
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-from utils.styles import SHARED_CSS, PLOTLY_THEME; from utils.nav import navbar
+from utils.styles import SHARED_CSS, inject_bg, PLOTLY_THEME; from utils.nav import navbar
 from utils import db
 
 st.set_page_config(page_title="Trade Journal | 11%", layout="wide", initial_sidebar_state="collapsed")
@@ -28,6 +28,7 @@ st.markdown("""<style>
 .emotion-revenge{color:#ff3d57}.emotion-bored{color:#8896ab}
 </style>""", unsafe_allow_html=True)
 navbar()
+inject_bg()
 
 st.markdown("""<div class="jh"><div class="jh-ey">Psychology & Discipline</div><h1>Trade Journal</h1><p>Log trades with emotional state, setup notes, and mistakes. The most successful traders know their patterns — both technical and psychological. This page finds yours.</p></div>""", unsafe_allow_html=True)
 
