@@ -35,6 +35,22 @@ st.markdown("""<style>
 .next-badge{background:rgba(0,230,118,0.15);color:#00e676;border:1px solid rgba(0,230,118,0.3);font-family:'IBM Plex Mono',monospace;font-size:0.52rem;padding:3px 10px;border-radius:4px;font-weight:700;white-space:nowrap}
 </style>""", unsafe_allow_html=True)
 navbar()
+
+# ── Same-tab nav hook ─────────────────────────────────────────────────────────
+import streamlit.components.v1 as _nav_cv1
+_nav_cv1.html("""<script>
+(function(){
+  window.parent.document.addEventListener('click',function(e){
+    var a=e.target.closest('a[href]');
+    if(!a)return;
+    var href=a.getAttribute('href');
+    if(!href||href.startsWith('http')||href.startsWith('mailto')||href.startsWith('#'))return;
+    e.preventDefault();e.stopPropagation();
+    window.top.location.href=href;
+  },true);
+})();
+</script>""", height=0)
+
 inject_bg()
 
 st.markdown("""<div class="ph"><div class="ph-ey">Macro Events</div><h1>Economic Calendar</h1>
