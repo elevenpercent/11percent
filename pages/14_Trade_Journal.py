@@ -3,6 +3,7 @@ import plotly.graph_objects as go
 from datetime import date
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from utils.styles import SHARED_CSS, PLOTLY_THEME; from utils.nav import navbar
+from utils import db
 
 st.set_page_config(page_title="Trade Journal | 11%", layout="wide", initial_sidebar_state="collapsed")
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
@@ -30,7 +31,8 @@ navbar()
 
 st.markdown("""<div class="jh"><div class="jh-ey">Psychology & Discipline</div><h1>Trade Journal</h1><p>Log trades with emotional state, setup notes, and mistakes. The most successful traders know their patterns — both technical and psychological. This page finds yours.</p></div>""", unsafe_allow_html=True)
 
-if "journal" not in st.session_state: st.session_state["journal"] = []
+if "journal" not in st.session_state:
+    db.load_into_session("journal", "journal", [])
 
 tab1, tab2, tab3 = st.tabs(["Log Trade", "Analytics", "All Entries"])
 
@@ -68,6 +70,7 @@ with tab1:
             "lesson":j_lesson,"rating":j_rating,"setup":j_setup
         })
         st.success(f"Entry saved. P&L: ${pnl:+,.2f}")
+        db.sync("journal")
         st.rerun()
 
 with tab2:
@@ -163,4 +166,4 @@ with tab3:
                               file_name="trade_journal.csv", mime="text/csv", use_container_width=True)
         with cb:
             if st.button("Clear All Entries", use_container_width=True):
-                st.session_state["journal"] = []; st.rerun()
+                st.session_state["journal"] = []; db.sync("journal"); st.rerun()
