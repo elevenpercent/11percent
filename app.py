@@ -1,247 +1,79 @@
 import streamlit as st
 import sys, os
 from datetime import datetime
-import pytz
+import pytz, yfinance as yf
 sys.path.insert(0, os.path.dirname(__file__))
 from utils.styles import SHARED_CSS, LOGO_IMG
 from utils.nav import navbar
 from utils.session_persist import restore_session
 
-st.set_page_config(page_title="11% · Trade Smarter", page_icon="$", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(
+    page_title="11% · Trade Smarter",
+    page_icon="$",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+)
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
 
-# ── Home page specific CSS ─────────────────────────────────────────────────────
-st.markdown("""<style>
-/* Animated grid background */
-.home-bg {
-    position:fixed; top:0; left:0; width:100%; height:100%;
-    pointer-events:none; z-index:0;
-    background-image:
-        linear-gradient(rgba(38,217,127,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(38,217,127,0.03) 1px, transparent 1px);
-    background-size:80px 80px;
-    animation:bgShift 20s linear infinite;
-}
-@keyframes bgShift { 0%{background-position:0 0} 100%{background-position:80px 80px} }
-
-/* Radial glow orbs */
-.orb {
-    position:fixed; border-radius:50%;
-    pointer-events:none; z-index:0; filter:blur(80px);
-}
-.orb-green { width:600px; height:600px; background:rgba(38,217,127,0.04); top:-200px; right:-200px; }
-.orb-red   { width:400px; height:400px; background:rgba(232,64,64,0.03);   bottom:-100px; left:-100px; }
-
-/* Section labels */
-.section-label {
-    font-family:'IBM Plex Mono',monospace;
-    font-size:0.5rem; text-transform:uppercase;
-    letter-spacing:0.35em; color:#3d5068;
-    border-top:1px solid #1e2830;
-    padding-top:1.5rem; margin-top:1.5rem;
-    margin-bottom:1rem;
-}
-
-/* Feature cards */
-.feat-card {
-    background:linear-gradient(135deg,#141a1f,#111820);
-    border:1px solid #243040;
-    border-radius:14px; padding:1.4rem;
-    height:100%; min-height:180px;
-    transition:border-color 0.25s, transform 0.25s, box-shadow 0.25s;
-    position:relative; overflow:hidden;
-    animation:fadeUp 0.5s ease both;
-}
-.feat-card:hover {
-    border-color:#26d97f;
-    transform:translateY(-4px);
-    box-shadow:0 12px 40px rgba(0,0,0,0.4), 0 0 20px rgba(38,217,127,0.07);
-}
-.feat-card::before {
-    content:'';
-    position:absolute; top:0; left:0; right:0; height:2px;
-    background:linear-gradient(90deg,transparent,var(--card-accent,#26d97f),transparent);
-    opacity:0; transition:opacity 0.25s;
-}
-.feat-card:hover::before { opacity:1; }
-.feat-card-icon {
-    font-family:'Bebas Neue',sans-serif;
-    font-size:0.52rem; text-transform:uppercase;
-    letter-spacing:0.25em; margin-bottom:0.8rem;
-    padding:3px 10px; border-radius:4px;
-    display:inline-block;
-}
-.feat-card-title {
-    font-family:'Bebas Neue',sans-serif;
-    font-size:1.5rem; letter-spacing:0.05em;
-    color:#e8edf2; margin-bottom:0.4rem;
-}
-.feat-card-desc {
-    font-family:'IBM Plex Mono',monospace;
-    font-size:0.67rem; color:#3d5068;
-    line-height:1.7;
-}
-
-/* Stat cards */
-.stat-card {
-    background:#141a1f; border:1px solid #243040;
-    border-radius:12px; padding:1.2rem 1.4rem;
-    text-align:center; animation:fadeUp 0.6s ease both;
-    transition:border-color 0.2s;
-}
-.stat-card:hover { border-color:#2e3d50; }
-.stat-num {
-    font-family:'Bebas Neue',sans-serif;
-    font-size:3rem; letter-spacing:0.04em; line-height:1;
-    color:#26d97f;
-}
-.stat-lbl {
-    font-family:'IBM Plex Mono',monospace;
-    font-size:0.5rem; text-transform:uppercase;
-    letter-spacing:0.2em; color:#3d5068; margin-top:0.3rem;
-}
-
-/* Testimonial / why cards */
-.why-card {
-    background:#141a1f; border:1px solid #243040;
-    border-left:3px solid var(--why-color,#26d97f);
-    border-radius:0 12px 12px 0;
-    padding:1.2rem 1.4rem;
-    animation:fadeUp 0.5s ease both;
-    transition:background 0.2s;
-}
-.why-card:hover { background:#181f28; }
-.why-title {
-    font-family:'Bebas Neue',sans-serif;
-    font-size:1.2rem; letter-spacing:0.05em;
-    margin-bottom:0.3rem;
-}
-.why-body {
-    font-family:'IBM Plex Mono',monospace;
-    font-size:0.68rem; color:#8896ab; line-height:1.7;
-}
-
-/* Step cards */
-.step-card {
-    background:#141a1f; border:1px solid #243040;
-    border-radius:12px; padding:1.3rem;
-    position:relative; overflow:hidden;
-    animation:fadeUp 0.5s ease both;
-}
-.step-num {
-    font-family:'Bebas Neue',sans-serif;
-    font-size:4rem; color:#1e2830;
-    line-height:1; margin-bottom:0.3rem;
-}
-.step-title {
-    font-family:'IBM Plex Mono',monospace;
-    font-size:0.62rem; font-weight:700;
-    text-transform:uppercase; letter-spacing:0.12em;
-    color:#e8edf2; margin-bottom:0.3rem;
-}
-.step-desc {
-    font-family:'IBM Plex Mono',monospace;
-    font-size:0.65rem; color:#3d5068; line-height:1.65;
-}
-
-/* Glowing hero text */
-.hero-green {
-    color:#26d97f;
-    animation:glow 3s ease-in-out infinite;
-}
-@keyframes glow {
-    0%,100%{text-shadow:0 0 30px rgba(38,217,127,0.3)}
-    50%{text-shadow:0 0 60px rgba(38,217,127,0.6), 0 0 100px rgba(38,217,127,0.2)}
-}
-
-/* Candlestick bars animation */
-@keyframes barRise { from{height:4px;opacity:0} to{opacity:1} }
-.candle-bar { animation:barRise 0.5s ease both; }
-
-/* Marquee ticker */
-@keyframes marquee { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
-.marquee-wrap {
-    overflow:hidden; width:100%;
-    background:#141a1f; border:1px solid #243040;
-    border-radius:8px; height:36px;
-    display:flex; align-items:center;
-    margin-bottom:1.8rem; position:relative;
-}
-.marquee-wrap::before,.marquee-wrap::after {
-    content:''; position:absolute; top:0; bottom:0; width:80px; z-index:2;
-    pointer-events:none;
-}
-.marquee-wrap::before { left:0;  background:linear-gradient(90deg,#141a1f,transparent); }
-.marquee-wrap::after  { right:0; background:linear-gradient(-90deg,#141a1f,transparent); }
-.marquee-track {
-    display:flex; white-space:nowrap;
-    animation:marquee 40s linear infinite;
-}
-.marquee-item {
-    display:inline-flex; align-items:center; gap:8px;
-    padding:0 24px; border-right:1px solid #243040;
-    font-family:'IBM Plex Mono',monospace; font-size:0.68rem;
-    flex-shrink:0;
-}
-
-/* Tool grid */
-.tool-chip {
-    background:#141a1f; border:1px solid #243040;
-    border-radius:8px; padding:0.7rem 1rem;
-    font-family:'IBM Plex Mono',monospace;
-    font-size:0.65rem; color:#8896ab;
-    transition:border-color 0.2s, color 0.2s, background 0.2s;
-    cursor:pointer; text-align:center;
-}
-.tool-chip:hover {
-    border-color:#26d97f; color:#26d97f;
-    background:rgba(38,217,127,0.04);
-}
-.tool-chip-name { font-weight:700; font-size:0.72rem; margin-bottom:0.1rem; color:#e8edf2; }
-
-/* Market status */
-.mkt-pill {
-    display:inline-flex; align-items:center; gap:6px;
-    font-family:'IBM Plex Mono',monospace; font-size:0.62rem;
-    padding:4px 12px; border-radius:20px;
-    border:1px solid; white-space:nowrap;
-}
-
-/* Animated underline on hover */
-.animated-link {
-    position:relative; display:inline-block;
-    font-family:'IBM Plex Mono',monospace;
-    font-size:0.65rem; font-weight:700;
-    text-transform:uppercase; letter-spacing:0.1em;
-    color:#26d97f; text-decoration:none;
-    padding-bottom:2px;
-}
-.animated-link::after {
-    content:''; position:absolute; bottom:0; left:0;
-    width:0; height:1px; background:#26d97f;
-    transition:width 0.3s;
-}
-.animated-link:hover::after { width:100%; }
-</style>""", unsafe_allow_html=True)
+# Inject dark background INSTANTLY before anything renders — kills white flash
+st.markdown("""
+<style>
+html,body,[data-testid="stAppViewContainer"],[data-testid="stAppViewContainer"]>.main{background:#13161a!important}
+[data-testid="stSidebar"],[data-testid="stSidebarNav"],[data-testid="collapsedControl"],
+section[data-testid="stSidebar"]{display:none!important;width:0!important;max-width:0!important;opacity:0!important;visibility:hidden!important}
+</style>
+""", unsafe_allow_html=True)
 
 restore_session()
 navbar()
 
-# Animated background
-st.markdown('<div class="home-bg"></div><div class="orb orb-green"></div><div class="orb orb-red"></div>', unsafe_allow_html=True)
+# ── Particle background (canvas) ─────────────────────────────────────────────
+st.markdown("""
+<canvas id="particles" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.35"></canvas>
+<script>
+(function(){
+var c=document.getElementById('particles');
+if(!c)return;
+var ctx=c.getContext('2d');
+var W=c.width=window.innerWidth, H=c.height=window.innerHeight;
+var pts=[];
+for(var i=0;i<90;i++) pts.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-0.5)*0.4,vy:(Math.random()-0.5)*0.4,r:Math.random()*1.5+0.5});
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  for(var i=0;i<pts.length;i++){
+    var p=pts[i];
+    p.x+=p.vx; p.y+=p.vy;
+    if(p.x<0||p.x>W) p.vx*=-1;
+    if(p.y<0||p.y>H) p.vy*=-1;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle='rgba(74,222,128,0.5)';ctx.fill();
+    for(var j=i+1;j<pts.length;j++){
+      var q=pts[j],dx=p.x-q.x,dy=p.y-q.y,dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist<120){
+        ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);
+        ctx.strokeStyle='rgba(74,222,128,'+(0.12*(1-dist/120))+')';
+        ctx.lineWidth=0.5;ctx.stroke();
+      }
+    }
+  }
+  requestAnimationFrame(draw);
+}
+draw();
+window.addEventListener('resize',function(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;});
+})();
+</script>
+""", unsafe_allow_html=True)
 
-# ── Helpers ──────────────────────────────────────────────────────────────────
-def get_market_status(name):
+# ── Helpers ─────────────────────────────────────────────────────────────────
+def mkt_status(name):
     now = datetime.now(pytz.utc).astimezone(pytz.timezone("America/New_York"))
-    if name == "Crypto": return "OPEN 24/7", "#26d97f"
-    if now.weekday() >= 5: return "CLOSED", "#e84040"
-    s = now.replace(hour=9,  minute=30, second=0, microsecond=0)
+    if name == "Crypto": return "24/7", "#4ade80"
+    if now.weekday() >= 5: return "Closed", "#f87171"
+    s = now.replace(hour=9, minute=30, second=0, microsecond=0)
     e = now.replace(hour=16, minute=0,  second=0, microsecond=0)
-    if s <= now <= e: return "OPEN", "#26d97f"
-    elif now < s:     return f"PRE-MARKET", "#f0c040"
-    else:             return "AFTER-HOURS", "#f0c040"
-
-import yfinance as yf
+    if s <= now <= e:  return "Open",        "#4ade80"
+    elif now < s:      return "Pre-Market",  "#fbbf24"
+    else:              return "After-Hours", "#fbbf24"
 
 @st.cache_data(ttl=1800)
 def get_tape(tickers):
@@ -252,348 +84,337 @@ def get_tape(tickers):
             if len(h) >= 2:
                 p, c = float(h["Close"].iloc[-2]), float(h["Close"].iloc[-1])
                 chg = (c - p) / p * 100
-                out.append((s, f"{c:,.2f}", f"{chg:+.2f}%", "▲" if chg >= 0 else "▼", "t-up" if chg >= 0 else "t-dn"))
+                out.append((s, f"{c:,.2f}", f"{chg:+.2f}%", "▲" if chg >= 0 else "▼", chg >= 0))
         except: pass
     return out
 
-# ── Welcome banner ─────────────────────────────────────────────────────────────
-user_email = st.session_state.get("user_email", "")
-if user_email:
-    uname = user_email.split("@")[0].replace(".", " ").replace("_", " ").title()
+# ── Nav link helper — replaces page_link ─────────────────────────────────────
+def nav_btn(label, path, primary=False):
+    color = "#0a0f0a" if primary else "#9ca3af"
+    bg    = "#4ade80" if primary else "transparent"
+    bdr   = "#4ade80" if primary else "#2d333b"
+    hover_bg = "#6ee7a0" if primary else "rgba(74,222,128,0.06)"
     st.markdown(f"""
-    <div style="background:rgba(38,217,127,0.05);border:1px solid rgba(38,217,127,0.2);
-    border-radius:10px;padding:0.85rem 1.4rem;margin-bottom:1.2rem;
-    display:flex;align-items:center;justify-content:space-between;animation:fadeUp 0.3s ease both;">
-        <div style="display:flex;align-items:center;gap:0.8rem;">
-            <div style="width:36px;height:36px;border-radius:50%;background:rgba(38,217,127,0.12);
-            border:1px solid rgba(38,217,127,0.3);display:flex;align-items:center;justify-content:center;
-            font-family:IBM Plex Mono,monospace;font-size:0.72rem;font-weight:700;color:#26d97f;">
+    <a href="{path}" style="display:inline-flex;align-items:center;justify-content:center;
+    font-family:'IBM Plex Mono',monospace;font-size:0.65rem;font-weight:700;
+    text-transform:uppercase;letter-spacing:0.1em;text-decoration:none;
+    color:{color};background:{bg};border:1px solid {bdr};border-radius:8px;
+    padding:0.55rem 1.2rem;cursor:pointer;transition:all 0.15s;width:100%;text-align:center;">
+    {label}</a>""", unsafe_allow_html=True)
+
+# ── Welcome banner ─────────────────────────────────────────────────────────
+user_email = st.session_state.get("user_email","")
+if user_email:
+    uname = user_email.split("@")[0].replace("."," ").replace("_"," ").title()
+    st.markdown(f"""
+    <div style="background:rgba(74,222,128,0.05);border:1px solid rgba(74,222,128,0.18);
+    border-radius:10px;padding:0.8rem 1.3rem;margin-bottom:1.2rem;
+    display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:0.75rem">
+            <div style="width:34px;height:34px;border-radius:50%;background:rgba(74,222,128,0.1);
+            border:1px solid rgba(74,222,128,0.25);display:flex;align-items:center;justify-content:center;
+            font-family:'IBM Plex Mono',monospace;font-size:0.7rem;font-weight:700;color:#4ade80">
             {uname[0].upper()}</div>
             <div>
-                <div style="font-family:IBM Plex Mono,monospace;font-size:0.55rem;color:#3d5068;
-                text-transform:uppercase;letter-spacing:0.15em;margin-bottom:0.1rem;">Welcome back</div>
-                <div style="font-size:1rem;font-weight:600;color:#e8edf2;">Hi, {uname}</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:0.5rem;color:#3d4450;
+                text-transform:uppercase;letter-spacing:0.15em;margin-bottom:0.1rem">Welcome back</div>
+                <div style="font-size:0.95rem;font-weight:600;color:#e6eaf0">Hi, {uname}</div>
             </div>
         </div>
-        <div style="font-family:IBM Plex Mono,monospace;font-size:0.55rem;color:#3d5068;">
-            Ready to trade smarter today?
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:0.55rem;color:#3d4450">
+            Ready to trade smarter?
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-# ── Ticker tape ─────────────────────────────────────────────────────────────────
+# ── Ticker tape ──────────────────────────────────────────────────────────────
 TICKERS = ["AAPL","TSLA","SPY","NVDA","MSFT","AMZN","BTC-USD","META","GOOGL","AMD",
-           "NFLX","JPM","V","WMT","QQQ","GLD","PLTR","COIN","TSM","SMCI"]
+           "NFLX","JPM","V","QQQ","GLD","PLTR","COIN","TSM","SMCI","WMT"]
 tape = get_tape(tuple(TICKERS))
 if tape:
     items = "".join(
-        f'<span class="marquee-item">'
-        f'<span style="color:#3d5068;font-weight:700">{s}</span>'
-        f'<span style="color:{"#26d97f" if "▲" in a else "#e84040"}">{p} {a} {ch}</span>'
+        f'<span class="ticker-item">'
+        f'<span class="t-sym">{s}</span>'
+        f'<span class="{"t-up" if up else "t-dn"}">{p} {a} {ch}</span>'
         f'</span>'
-        for s, p, ch, a, _ in tape
+        for s,p,ch,a,up in tape
     )
-    st.markdown(f'<div class="marquee-wrap"><div class="marquee-track">{items}{items}</div></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="ticker-outer"><div class="ticker-track">{items}{items}</div></div>', unsafe_allow_html=True)
 
-# ── HERO ────────────────────────────────────────────────────────────────────────
-hero_l, hero_r = st.columns([6, 5])
+# ── HERO ────────────────────────────────────────────────────────────────────
+hl, hr = st.columns([6, 5])
 
-with hero_l:
+with hl:
     # Animated candlestick bars
-    bars = [(38,"#e84040"),(44,"#26d97f"),(28,"#e84040"),(52,"#26d97f"),(60,"#26d97f"),
-            (30,"#e84040"),(62,"#26d97f"),(70,"#26d97f"),(38,"#e84040"),(72,"#26d97f"),
-            (78,"#26d97f"),(46,"#e84040"),(80,"#26d97f"),(74,"#26d97f"),(85,"#26d97f"),
-            (65,"#e84040"),(88,"#26d97f"),(79,"#e84040"),(92,"#26d97f"),(95,"#26d97f")]
+    bars = [(35,"#f87171"),(42,"#4ade80"),(26,"#f87171"),(50,"#4ade80"),(58,"#4ade80"),
+            (32,"#f87171"),(60,"#4ade80"),(66,"#4ade80"),(36,"#f87171"),(70,"#4ade80"),
+            (76,"#4ade80"),(44,"#f87171"),(78,"#4ade80"),(72,"#4ade80"),(80,"#4ade80"),
+            (62,"#f87171"),(84,"#4ade80"),(75,"#f87171"),(88,"#4ade80"),(92,"#4ade80")]
     bars_html = "".join(
-        f'<div class="candle-bar" style="width:12px;height:{h}px;background:{c};border-radius:3px;'
-        f'opacity:0.85;animation-delay:{i*0.05}s"></div>'
-        for i, (h, c) in enumerate(bars)
+        f'<div style="width:11px;height:{h}px;background:{c};border-radius:2px 2px 0 0;opacity:0.9;'
+        f'animation:fadeUp 0.5s ease both;animation-delay:{i*0.03}s"></div>'
+        for i,(h,c) in enumerate(bars)
     )
 
-    # Market status pills
-    mkt_items = ""
+    # Market status
+    mkt_html = ""
     for label, mname in [("NYSE","NYSE"),("NASDAQ","NASDAQ"),("Crypto","Crypto")]:
-        ms, mc = get_market_status(mname)
-        dot_anim = 'animation:ep-pulse 2s ease-in-out infinite' if "OPEN" in ms else ''
-        mkt_items += f'<span class="mkt-pill" style="color:{mc};border-color:{mc}30;background:{mc}08"><span style="width:6px;height:6px;border-radius:50%;background:{mc};display:inline-block;{dot_anim}"></span>{label} {ms}</span>'
+        st2, col2 = mkt_status(mname)
+        dot_style = "animation:pulse 2s ease-in-out infinite" if "Open" in st2 or "24" in st2 else ""
+        mkt_html += f'<span style="display:inline-flex;align-items:center;gap:5px;font-family:IBM Plex Mono,monospace;font-size:0.58rem;color:{col2};background:{col2}12;border:1px solid {col2}25;border-radius:20px;padding:3px 10px;"><span style="width:6px;height:6px;border-radius:50%;background:{col2};display:inline-block;{dot_style}"></span>{label} · {st2}</span>'
 
     st.markdown(f"""
-    <div style="padding:1.5rem 0 1rem;animation:fadeUp 0.4s ease both">
-        <div style="display:flex;align-items:flex-end;gap:4px;height:72px;margin-bottom:1rem">
+    <div style="padding:1.2rem 0 1.5rem;animation:fadeUp 0.4s ease both">
+        <div style="display:flex;align-items:flex-end;gap:3px;height:68px;margin-bottom:1.2rem">
             {bars_html}
         </div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:5.5rem;line-height:0.88;
-        letter-spacing:0.02em;margin-bottom:1.4rem">
-            <span class="hero-green">TRADE</span><br>
-            <span style="color:#e8edf2">SMARTER</span><br>
-            <span style="color:#e84040">NOT HARDER</span>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:5rem;line-height:0.88;
+        letter-spacing:0.02em;margin-bottom:1.2rem">
+            <span style="color:#4ade80">Trade</span><br>
+            <span style="color:#e6eaf0">Smarter.</span>
         </div>
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:0.82rem;color:#8896ab;
-        max-width:480px;line-height:1.9;margin-bottom:1.6rem">
-            A professional-grade trading education platform. Backtest real strategies,
-            replay historical charts bar-by-bar, get AI analysis, and build real edge —
-            completely free.
+        <div style="font-size:0.88rem;color:#6b7280;max-width:440px;line-height:1.85;margin-bottom:1.4rem;font-family:Inter,sans-serif">
+            Backtest real strategies, replay historical markets, get AI-powered analysis — 
+            all in one platform. <strong style="color:#9ca3af">No cost. No fluff.</strong>
         </div>
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.4rem">
-            {mkt_items}
+            {mkt_html}
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    btn1, btn2, btn3 = st.columns(3)
-    with btn1: st.page_link("pages/1_Strategy_Lab.py", label="Strategy Lab")
-    with btn2: st.page_link("pages/3_Replay.py",       label="Market Replay")
-    with btn3: st.page_link("pages/5_Assistant.py",    label="AI Coach")
+    b1, b2, b3 = st.columns(3)
+    with b1: nav_btn("Strategy Lab",  "/Strategy_Lab", primary=True)
+    with b2: nav_btn("Market Replay", "/Replay")
+    with b3: nav_btn("AI Coach",      "/Assistant")
 
-with hero_r:
+with hr:
     st.markdown("""
-    <div style="padding:1.5rem 0;animation:fadeUp 0.5s ease both">
-        <div style="background:#141a1f;border:1px solid #243040;border-radius:14px 14px 0 0;
-        border-bottom:none;padding:0.5rem 1rem;
-        display:flex;align-items:center;gap:6px">
-            <div style="width:10px;height:10px;border-radius:50%;background:#e84040"></div>
-            <div style="width:10px;height:10px;border-radius:50%;background:#f0c040"></div>
-            <div style="width:10px;height:10px;border-radius:50%;background:#26d97f"></div>
-            <span style="margin-left:6px;font-family:IBM Plex Mono,monospace;font-size:0.5rem;
-            color:#3d5068;text-transform:uppercase;letter-spacing:0.16em">Live Chart · TradingView</span>
+    <div style="padding:1.5rem 0 0;animation:fadeUp 0.5s ease both">
+        <div style="background:#1c1f23;border:1px solid #2d333b;border-radius:10px 10px 0 0;
+        border-bottom:none;padding:0.45rem 0.9rem;
+        display:flex;align-items:center;gap:5px">
+            <div style="width:9px;height:9px;border-radius:50%;background:#f87171"></div>
+            <div style="width:9px;height:9px;border-radius:50%;background:#fbbf24"></div>
+            <div style="width:9px;height:9px;border-radius:50%;background:#4ade80"></div>
+            <span style="margin-left:5px;font-family:'IBM Plex Mono',monospace;font-size:0.48rem;
+            color:#3d4450;text-transform:uppercase;letter-spacing:0.16em">Live Chart</span>
         </div>
-    </div>
-    """, unsafe_allow_html=True)
+    </div>""", unsafe_allow_html=True)
 
     st.components.v1.html("""
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#141a1f}
-.wrap{height:300px;width:100%;background:#141a1f;border:1px solid #243040;
-border-top:none;border-radius:0 0 14px 14px;overflow:hidden}
-</style>
-<div class="wrap">
-  <div class="tradingview-widget-container" style="height:100%;width:100%">
-    <div id="tv_home" style="height:100%;width:100%"></div>
-    <script src="https://s3.tradingview.com/tv.js"></script>
-    <script>
-    new TradingView.widget({
-      autosize:true, symbol:"NASDAQ:AAPL", interval:"D",
-      timezone:"America/New_York", theme:"dark", style:"1", locale:"en",
-      toolbar_bg:"#141a1f", enable_publishing:false, hide_side_toolbar:true,
-      allow_symbol_change:true, save_image:false, container_id:"tv_home",
-      backgroundColor:"rgba(20,26,31,1)", gridColor:"rgba(30,40,50,0.4)",
-      overrides:{
-        "mainSeriesProperties.candleStyle.upColor":"#26d97f",
-        "mainSeriesProperties.candleStyle.downColor":"#e84040",
-        "mainSeriesProperties.candleStyle.borderUpColor":"#26d97f",
-        "mainSeriesProperties.candleStyle.borderDownColor":"#e84040",
-        "mainSeriesProperties.candleStyle.wickUpColor":"#26d97f",
-        "mainSeriesProperties.candleStyle.wickDownColor":"#e84040",
-        "paneProperties.background":"#141a1f",
-        "paneProperties.backgroundType":"solid",
-        "paneProperties.vertGridProperties.color":"#1e2830",
-        "paneProperties.horzGridProperties.color":"#1e2830",
-        "scalesProperties.textColor":"#3d5068",
-        "scalesProperties.lineColor":"#1e2830"
-      }
-    });
-    </script>
-  </div>
-</div>
-""", height=310, scrolling=False)
+<style>*{margin:0;padding:0}body{background:#1c1f23}.w{height:310px;width:100%;
+background:#1c1f23;border:1px solid #2d333b;border-top:none;border-radius:0 0 10px 10px;overflow:hidden}</style>
+<div class="w">
+<div class="tradingview-widget-container" style="height:100%;width:100%">
+<div id="tv_c" style="height:100%;width:100%"></div>
+<script src="https://s3.tradingview.com/tv.js"></script>
+<script>new TradingView.widget({
+autosize:true,symbol:"NASDAQ:AAPL",interval:"D",timezone:"America/New_York",
+theme:"dark",style:"1",locale:"en",toolbar_bg:"#1c1f23",
+enable_publishing:false,hide_side_toolbar:true,allow_symbol_change:true,
+save_image:false,container_id:"tv_c",backgroundColor:"rgba(28,31,35,1)",
+gridColor:"rgba(37,42,48,0.6)",
+overrides:{
+"mainSeriesProperties.candleStyle.upColor":"#4ade80",
+"mainSeriesProperties.candleStyle.downColor":"#f87171",
+"mainSeriesProperties.candleStyle.borderUpColor":"#4ade80",
+"mainSeriesProperties.candleStyle.borderDownColor":"#f87171",
+"mainSeriesProperties.candleStyle.wickUpColor":"#4ade80",
+"mainSeriesProperties.candleStyle.wickDownColor":"#f87171",
+"paneProperties.background":"#1c1f23","paneProperties.backgroundType":"solid",
+"paneProperties.vertGridProperties.color":"#252a30",
+"paneProperties.horzGridProperties.color":"#252a30",
+"scalesProperties.textColor":"#3d4450","scalesProperties.lineColor":"#252a30"}});</script>
+</div></div>""", height=322, scrolling=False)
 
-    # Quick stats
     st.markdown("""
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:0.8rem">
-        <div class="stat-card" style="animation-delay:0.1s"><div class="stat-num">15</div><div class="stat-lbl">Indicators</div></div>
-        <div class="stat-card" style="animation-delay:0.2s"><div class="stat-num" style="color:#e84040">9</div><div class="stat-lbl">Strategies</div></div>
-        <div class="stat-card" style="animation-delay:0.3s"><div class="stat-num">20+</div><div class="stat-lbl">Tools</div></div>
-        <div class="stat-card" style="animation-delay:0.4s"><div class="stat-num" style="color:#f0c040">$0</div><div class="stat-lbl">Forever Free</div></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:0.7rem">
+        <div style="background:#1c1f23;border:1px solid #2d333b;border-radius:8px;padding:0.9rem;text-align:center">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:1.5rem;font-weight:700;color:#4ade80;line-height:1">15</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:0.45rem;text-transform:uppercase;letter-spacing:0.18em;color:#3d4450;margin-top:0.2rem">Indicators</div>
+        </div>
+        <div style="background:#1c1f23;border:1px solid #2d333b;border-radius:8px;padding:0.9rem;text-align:center">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:1.5rem;font-weight:700;color:#f87171;line-height:1">9</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:0.45rem;text-transform:uppercase;letter-spacing:0.18em;color:#3d4450;margin-top:0.2rem">Strategies</div>
+        </div>
+        <div style="background:#1c1f23;border:1px solid #2d333b;border-radius:8px;padding:0.9rem;text-align:center">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:1.5rem;font-weight:700;color:#60a5fa;line-height:1">20+</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:0.45rem;text-transform:uppercase;letter-spacing:0.18em;color:#3d4450;margin-top:0.2rem">Tools</div>
+        </div>
+        <div style="background:#1c1f23;border:1px solid #2d333b;border-radius:8px;padding:0.9rem;text-align:center">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:1.5rem;font-weight:700;color:#fbbf24;line-height:1">$0</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:0.45rem;text-transform:uppercase;letter-spacing:0.18em;color:#3d4450;margin-top:0.2rem">Forever</div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
-# ── PLATFORM FEATURES ──────────────────────────────────────────────────────────
-st.markdown('<div class="section-label">Platform Features</div>', unsafe_allow_html=True)
+# ── FEATURES ────────────────────────────────────────────────────────────────
+st.markdown('<div style="font-family:IBM Plex Mono,monospace;font-size:0.48rem;text-transform:uppercase;letter-spacing:0.3em;color:#3d4450;border-top:1px solid #252a30;padding-top:1.5rem;margin-top:1.8rem;margin-bottom:1rem">Platform Features</div>', unsafe_allow_html=True)
 
 features = [
-    ("Strategy Lab", "BACKTEST", "#26d97f",
-     "9 pre-built strategies plus a custom signal builder with 15 indicators. Run backtests with real data, see equity curves, trade logs, and alpha vs buy-and-hold.",
-     "pages/1_Strategy_Lab.py"),
-    ("Market Replay", "FLAGSHIP", "#e84040",
-     "Step through history bar by bar. Execute trades without knowing what comes next. Build real muscle memory for reading price action under pressure.",
-     "pages/3_Replay.py"),
-    ("AI Coach", "AI-POWERED", "#4da6ff",
-     "Ask anything in plain English. Get your backtest results explained, strategy ideas, risk management advice, and real-time market breakdowns.",
-     "pages/5_Assistant.py"),
-    ("Options Chain", "NEW", "#a78bfa",
-     "Live options chain with open interest chart, full Greeks, Black-Scholes pricer, and a Play Advisor that scores every strategy for your specific setup.",
-     "pages/11_Options_Chain.py"),
-    ("Market Heatmap", "LIVE", "#f0c040",
-     "See every sector and stock colour-coded by today's performance. Full-screen ticker mode for trading monitors. Custom dashboard for any tickers you want.",
-     "pages/15_Market_Heatmap.py"),
-    ("Screener", "PRO", "#26d97f",
-     "Filter 70+ stocks across 6 sectors by RSI, momentum, SMA position, volume spikes, and market cap. TradingView-style sortable results table.",
-     "pages/12_Screener.py"),
+    ("Strategy Lab",     "BACKTEST",  "#4ade80", "/Strategy_Lab",
+     "9 pre-built strategies + custom signal builder with 15 indicators. Real equity curves, trade logs, alpha vs buy-and-hold."),
+    ("Market Replay",    "FLAGSHIP",  "#f87171", "/Replay",
+     "Step through history bar by bar. Execute trades blind. Build real pattern-recognition instincts without risking capital."),
+    ("AI Coach",         "AI",        "#60a5fa", "/Assistant",
+     "Ask anything. Get backtest results explained, strategy feedback, risk management advice in plain English."),
+    ("Options Chain",    "NEW",       "#a78bfa", "/Options_Chain",
+     "Live chain, full Greeks, Black-Scholes pricer, and a Play Advisor that scores every strategy for your specific setup."),
+    ("Screener",         "PRO",       "#4ade80", "/Screener",
+     "Filter 70+ stocks by RSI, momentum, SMA position, volume spikes. TradingView-style sortable results."),
+    ("Market Heatmap",   "LIVE",      "#fbbf24", "/Market_Heatmap",
+     "Sector heatmap, custom ticker dashboard, and full-screen ticker display for trading monitors."),
 ]
 
-cols = st.columns(3)
-for i, (title, badge, color, desc, link) in enumerate(features):
-    with cols[i % 3]:
+fc = st.columns(3)
+for i, (title, badge, color, path, desc) in enumerate(features):
+    with fc[i%3]:
         st.markdown(f"""
-        <div class="feat-card" style="--card-accent:{color};animation-delay:{i*0.08}s">
-            <div class="feat-card-icon" style="background:{color}15;color:{color};border:1px solid {color}30">{badge}</div>
-            <div class="feat-card-title">{title}</div>
-            <div class="feat-card-desc">{desc}</div>
+        <div style="background:#1c1f23;border:1px solid #2d333b;border-radius:10px;
+        padding:1.3rem;margin-bottom:10px;min-height:170px;position:relative;overflow:hidden;
+        transition:border-color 0.2s,transform 0.2s;animation:fadeUp 0.4s ease both;
+        animation-delay:{i*0.07}s">
+            <div style="position:absolute;top:0;left:0;right:0;height:2px;
+            background:linear-gradient(90deg,transparent,{color}55,transparent)"></div>
+            <div style="display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:0.46rem;
+            text-transform:uppercase;letter-spacing:0.14em;padding:2px 8px;border-radius:3px;
+            background:{color}12;color:{color};border:1px solid {color}25;margin-bottom:0.7rem">{badge}</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:0.04em;
+            color:#e6eaf0;margin-bottom:0.35rem">{title}</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:0.65rem;color:#6b7280;
+            line-height:1.65">{desc}</div>
         </div>
         """, unsafe_allow_html=True)
-        st.page_link(link, label=f"Open {title}")
+        nav_btn(f"Open {title}", path)
 
-# ── MORE TOOLS GRID ────────────────────────────────────────────────────────────
-st.markdown('<div class="section-label">All Tools</div>', unsafe_allow_html=True)
+# ── ALL TOOLS ────────────────────────────────────────────────────────────────
+st.markdown('<div style="font-family:IBM Plex Mono,monospace;font-size:0.48rem;text-transform:uppercase;letter-spacing:0.3em;color:#3d4450;border-top:1px solid #252a30;padding-top:1.4rem;margin-top:1.4rem;margin-bottom:0.9rem">All Tools</div>', unsafe_allow_html=True)
 
 tools = [
-    ("Risk Calculator",    "Position sizing, R-multiples, Kelly",     "pages/10_Risk_Calculator.py"),
-    ("Trade Journal",      "Log trades, emotions, mistakes",          "pages/14_Trade_Journal.py"),
-    ("Portfolio Tracker",  "Live P&L, allocation charts",             "pages/13_Portfolio_Tracker.py"),
-    ("Monte Carlo",        "1,000 price path simulations",            "pages/9_Monte_Carlo.py"),
-    ("Earnings Tracker",   "Historical earnings reactions",           "pages/6_Earnings.py"),
-    ("Sector Rotation",    "Follow institutional money",              "pages/16_Sector_Rotation.py"),
-    ("Whale Tracker",      "Unusual volume anomalies",                "pages/8_Whale_Tracker.py"),
-    ("Correlations",       "Asset correlation matrix",                "pages/7_Correlations.py"),
-    ("Pattern Recognition","Auto-detect chart patterns",              "pages/18_Pattern_Recognition.py"),
-    ("Trade Stats",        "Upload CSV, full analytics",              "pages/19_Trade_Stats.py"),
-    ("Econ Calendar",      "FOMC, CPI, NFP, GDP — 2026",             "pages/20_Economic_Calendar.py"),
-    ("Analysis",           "Fundamentals + AI breakdown",             "pages/4_Analysis.py"),
+    ("Risk Calculator",   "Position sizing, Kelly, R-multiples",    "/Risk_Calculator"),
+    ("Trade Journal",     "Log trades, emotions, pattern review",    "/Trade_Journal"),
+    ("Portfolio Tracker", "Live P&L, allocation, sector exposure",   "/Portfolio_Tracker"),
+    ("Monte Carlo",       "1,000 price path simulations",            "/Monte_Carlo"),
+    ("Earnings Tracker",  "Historical earnings reactions",           "/Earnings"),
+    ("Sector Rotation",   "Follow institutional money flows",        "/Sector_Rotation"),
+    ("Whale Tracker",     "Unusual volume anomalies",                "/Whale_Tracker"),
+    ("Correlations",      "Asset correlation heatmap",               "/Correlations"),
+    ("Pattern Recognition","Auto-detect double tops, flags, S/R",   "/Pattern_Recognition"),
+    ("Trade Stats",       "Upload CSV, full analytics dashboard",    "/Trade_Stats"),
+    ("Econ Calendar",     "FOMC, CPI, NFP, GDP — 2026",             "/Economic_Calendar"),
+    ("Analysis",          "Fundamentals + AI deep dive",             "/Analysis"),
 ]
 
-tool_cols = st.columns(4)
-for i, (name, desc, link) in enumerate(tools):
-    with tool_cols[i % 4]:
+tc = st.columns(4)
+for i, (name, desc, path) in enumerate(tools):
+    with tc[i%4]:
         st.markdown(f"""
-        <div class="tool-chip" style="margin-bottom:8px;animation:fadeUp 0.4s ease both;animation-delay:{i*0.04}s">
-            <div class="tool-chip-name">{name}</div>
-            <div>{desc}</div>
-        </div>
-        """, unsafe_allow_html=True)
-        st.page_link(link, label="Open")
-
-# ── WHY 11% ────────────────────────────────────────────────────────────────────
-st.markdown('<div class="section-label">Why 11%</div>', unsafe_allow_html=True)
-
-why_items = [
-    ("#26d97f", "Learn by doing, not reading",
-     "Most trading education is theory. 11% puts you in the market — with real historical data, real backtests, and real replay sessions. You will make mistakes in simulation before you make them with real money."),
-    ("#e84040", "Built by traders, for traders",
-     "Every feature was designed around actual trading workflows. The replay engine is bar-by-bar. The screener shows what TV shows. The journal captures emotions not just entries."),
-    ("#4da6ff", "AI that actually explains things",
-     "Our AI Coach doesn't just answer questions — it connects your backtest results to actionable next steps, explains why a strategy failed, and suggests improvements specific to your setup."),
-    ("#f0c040", "Everything in one place",
-     "Backtest, replay, analyze, screen, journal, track portfolio, calculate risk — all linked. Your replay trades inform your journal. Your journal feeds your AI coach. Context stays connected."),
-]
-
-why_cols = st.columns(2)
-for i, (color, title, body) in enumerate(why_items):
-    with why_cols[i % 2]:
-        st.markdown(f"""
-        <div class="why-card" style="--why-color:{color};margin-bottom:10px;animation-delay:{i*0.1}s">
-            <div class="why-title" style="color:{color}">{title}</div>
-            <div class="why-body">{body}</div>
-        </div>
+        <a href="{path}" style="display:block;text-decoration:none;
+        background:#1c1f23;border:1px solid #2d333b;border-radius:8px;
+        padding:0.8rem 1rem;margin-bottom:8px;
+        transition:border-color 0.18s;cursor:pointer;
+        animation:fadeUp 0.4s ease both;animation-delay:{i*0.03}s">
+            <div style="font-family:'IBM Plex Mono',monospace;font-weight:700;
+            font-size:0.7rem;color:#e6eaf0;margin-bottom:0.15rem">{name}</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:0.6rem;
+            color:#3d4450;line-height:1.5">{desc}</div>
+        </a>
         """, unsafe_allow_html=True)
 
-# ── HOW IT WORKS ───────────────────────────────────────────────────────────────
-st.markdown('<div class="section-label">How It Works</div>', unsafe_allow_html=True)
+# ── HOW IT WORKS ─────────────────────────────────────────────────────────────
+st.markdown('<div style="font-family:IBM Plex Mono,monospace;font-size:0.48rem;text-transform:uppercase;letter-spacing:0.3em;color:#3d4450;border-top:1px solid #252a30;padding-top:1.4rem;margin-top:1.4rem;margin-bottom:0.9rem">How It Works</div>', unsafe_allow_html=True)
 
 steps = [
-    ("01", "Pick Your Stock", "Enter any ticker. Stocks, ETFs, indices, crypto. Live data from Yahoo Finance."),
-    ("02", "Choose a Strategy", "Select from 9 pre-built strategies or build your own with our 15-indicator signal builder."),
-    ("03", "Run the Backtest", "Set date range and capital. Results — return, alpha, drawdown, Sharpe — in seconds."),
-    ("04", "Replay the Moves", "Step through the same period bar-by-bar and trade it in real time without knowing the outcome."),
-    ("05", "Ask the Coach", "Paste your results into the AI Coach. Get plain-English explanation of what worked and why."),
+    ("01", "Pick Your Stock",   "Enter any ticker — stocks, ETFs, indices, crypto. Live data from Yahoo Finance."),
+    ("02", "Choose a Strategy", "Select from 9 pre-built or build your own with 15 indicators and AND/OR logic."),
+    ("03", "Run the Backtest",  "Set date range and capital. Return, alpha, drawdown, Sharpe — in seconds."),
+    ("04", "Replay the Chart",  "Step through the same period bar-by-bar and trade it without knowing the outcome."),
+    ("05", "Ask the Coach",     "Paste results into the AI Coach. Get plain-English explanation of what worked."),
 ]
-
-step_cols = st.columns(5)
-for i, (num, title, desc) in enumerate(steps):
-    with step_cols[i]:
+sc2 = st.columns(5)
+for i,(num,title,desc) in enumerate(steps):
+    with sc2[i]:
         st.markdown(f"""
-        <div class="step-card" style="animation-delay:{i*0.08}s">
-            <div class="step-num">{num}</div>
-            <div class="step-title">{title}</div>
-            <div class="step-desc">{desc}</div>
-        </div>
-        """, unsafe_allow_html=True)
+        <div style="background:#1c1f23;border:1px solid #2d333b;border-radius:10px;
+        padding:1.2rem;animation:fadeUp 0.4s ease both;animation-delay:{i*0.08}s">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:3.5rem;
+            color:#252a30;line-height:1;margin-bottom:0.25rem">{num}</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:0.6rem;font-weight:700;
+            text-transform:uppercase;letter-spacing:0.1em;color:#e6eaf0;margin-bottom:0.3rem">{title}</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:0.63rem;
+            color:#3d4450;line-height:1.65">{desc}</div>
+        </div>""", unsafe_allow_html=True)
 
-# ── INDICATORS ─────────────────────────────────────────────────────────────────
-st.markdown('<div class="section-label">15 Indicators Available</div>', unsafe_allow_html=True)
+# ── WHY 11% ──────────────────────────────────────────────────────────────────
+st.markdown('<div style="font-family:IBM Plex Mono,monospace;font-size:0.48rem;text-transform:uppercase;letter-spacing:0.3em;color:#3d4450;border-top:1px solid #252a30;padding-top:1.4rem;margin-top:1.4rem;margin-bottom:0.9rem">Why 11%?</div>', unsafe_allow_html=True)
 
-ind_cols = st.columns(3)
-for col, (cat, color, inds) in zip(ind_cols, [
-    ("Trend",               "#4da6ff", ["SMA","EMA","WMA","Hull MA","SuperTrend","Ichimoku","Parabolic SAR"]),
-    ("Momentum",            "#a78bfa", ["RSI","Stochastic RSI","MACD","CCI","Williams %R"]),
-    ("Volatility & Volume", "#f0c040", ["Bollinger Bands","Keltner Channels","Donchian Channels","VWAP","OBV"]),
-]):
-    tags = "".join(
-        f'<span style="display:inline-block;font-family:IBM Plex Mono,monospace;font-size:0.62rem;'
-        f'padding:3px 10px;border-radius:4px;background:{color}12;color:{color};'
-        f'border:1px solid {color}25;margin:3px 3px 3px 0;">{ind}</span>'
-        for ind in inds
-    )
-    col.markdown(f"""
-    <div style="background:#141a1f;border:1px solid #243040;border-radius:12px;padding:1.2rem;height:100%">
-        <div style="font-family:IBM Plex Mono,monospace;font-size:0.55rem;color:{color};
-        text-transform:uppercase;letter-spacing:0.18em;margin-bottom:0.8rem">{cat}</div>
-        <div>{tags}</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-# ── ABOUT THE NAME ─────────────────────────────────────────────────────────────
-st.markdown('<div class="section-label">Why 11%?</div>', unsafe_allow_html=True)
 st.markdown("""
-<div style="background:linear-gradient(135deg,#141a1f,#111820);border:1px solid #243040;
-border-radius:16px;padding:2.5rem 3rem;position:relative;overflow:hidden;animation:fadeUp 0.5s ease both">
-    <div style="position:absolute;top:-60px;right:-60px;width:200px;height:200px;
-    background:radial-gradient(circle,rgba(38,217,127,0.06),transparent 70%);pointer-events:none"></div>
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:4rem;letter-spacing:0.04em;margin-bottom:0.8rem">
-        <span style="color:#26d97f">11</span><span style="color:#e84040">%</span>
-        <span style="color:#e8edf2;font-size:2rem;margin-left:0.5rem">— THE EDGE THAT CHANGES EVERYTHING</span>
+<div style="background:#1c1f23;border:1px solid #2d333b;border-radius:12px;
+padding:2rem 2.5rem;position:relative;overflow:hidden;animation:fadeUp 0.4s ease both">
+    <div style="position:absolute;top:-40px;right:-40px;width:180px;height:180px;
+    background:radial-gradient(circle,rgba(74,222,128,0.05),transparent 70%);pointer-events:none"></div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:3rem;letter-spacing:0.04em;
+    margin-bottom:0.75rem;line-height:1">
+        <span style="color:#4ade80">11</span><span style="color:#f87171">%</span>
+        <span style="color:#e6eaf0;font-size:1.6rem;margin-left:0.4rem">— The edge that changes everything</span>
     </div>
-    <div style="font-family:'IBM Plex Mono',monospace;font-size:0.75rem;color:#8896ab;
-    line-height:2;max-width:800px">
-        The S&amp;P 500 returns roughly 10% per year. Most retail traders underperform it.
-        Getting to <strong style="color:#26d97f">11%</strong> — just one percentage point above the index —
-        means your edge is real, your process is sound, and compounding is working in your favour.
-        <br><br>
-        That's the mission. Not moon shots. Not leverage. Not tips.
-        <strong style="color:#e8edf2">Consistent, process-driven outperformance.</strong>
-        The tools on this platform are built to help you get there.
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:#6b7280;
+    line-height:2;max-width:760px">
+        The S&P 500 returns roughly 10% per year. Most retail traders underperform it significantly.
+        Getting to <strong style="color:#4ade80">11%</strong> — one point above the index — means your edge is real,
+        your process is sound, and compounding is working for you.<br><br>
+        That's the goal. Not moon shots. Not leverage. Not tips from strangers on the internet.
+        <strong style="color:#e6eaf0">Consistent, process-driven, repeatable outperformance.</strong>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# ── FAQ ────────────────────────────────────────────────────────────────────────
-st.markdown('<div class="section-label">FAQ</div>', unsafe_allow_html=True)
+# ── FAQ ────────────────────────────────────────────────────────────────────
+st.markdown('<div style="font-family:IBM Plex Mono,monospace;font-size:0.48rem;text-transform:uppercase;letter-spacing:0.3em;color:#3d4450;border-top:1px solid #252a30;padding-top:1.4rem;margin-top:1.4rem;margin-bottom:0.9rem">FAQ</div>', unsafe_allow_html=True)
 
 fqa, fqb = st.columns(2)
-faq_items = [
-    ("Is this real trading?",                     "No — fully simulated. No real money involved. Data from Yahoo Finance. Educational use only."),
-    ("How accurate is the backtest?",             "Indicative, not guaranteed. Assumes closing-price fills with no slippage, spread, or commission. Real results will differ."),
-    ("Do I need to know how to code?",            "No. Everything is point-and-click. The platform is built on open-source Python/Streamlit if you want to extend it."),
-    ("How do I enable the AI features?",          "Add your Gemini API key to Streamlit Secrets as GEMINI_API_KEY. The free tier is more than enough."),
-    ("Is my data saved between sessions?",        "Yes — if you create an account. Trade journal, portfolio, and replay trades sync to your profile via Supabase."),
-    ("Why can't past performance predict future?","Markets adapt. A strategy that worked in a bull run may fail in a bear market. The goal is to understand why a strategy works, not just that it worked."),
-    ("What data does it use?",                    "Yahoo Finance via yfinance. Years of daily OHLCV for US stocks, ETFs, indices, and major crypto pairs."),
-    ("Is it really free?",                        "Yes. No credit card. No trial period. No premium tier. The full platform is free."),
+faqs = [
+    ("Is this real trading?",              "No. Fully simulated. No real money. Data from Yahoo Finance. Educational use only."),
+    ("How accurate is the backtest?",      "Indicative only. Assumes close-price fills, no slippage or commission."),
+    ("Do I need to code?",                 "No. Everything is point-and-click. Open-source Python/Streamlit under the hood."),
+    ("How do I enable AI features?",       "Add GEMINI_API_KEY to Streamlit Secrets. Free Gemini tier is more than enough."),
+    ("Is my data saved between sessions?", "Yes — create an account. Journal and portfolio sync to Supabase automatically."),
+    ("Is it actually free?",               "Yes. No credit card, no trial, no premium tier. The full platform is permanently free."),
+    ("What data does it use?",             "Yahoo Finance via yfinance. Years of daily OHLCV for US stocks, ETFs, and crypto."),
+    ("Why can't backtests predict future?","Markets change. A strategy that worked in a bull run may fail in a bear. Understand why it works, not just that it did."),
 ]
-for i, (q, a) in enumerate(faq_items):
-    with (fqa if i % 2 == 0 else fqb).expander(q):
-        st.markdown(f'<div style="font-family:IBM Plex Mono,monospace;font-size:0.75rem;color:#8896ab;line-height:1.8">{a}</div>', unsafe_allow_html=True)
+for i,(q,a) in enumerate(faqs):
+    with (fqa if i%2==0 else fqb).expander(q):
+        st.markdown(f'<div style="font-family:IBM Plex Mono,monospace;font-size:0.72rem;color:#6b7280;line-height:1.8">{a}</div>', unsafe_allow_html=True)
 
-# ── FOOTER ─────────────────────────────────────────────────────────────────────
-st.markdown("""
-<div style="margin-top:3rem;padding:1.5rem 0;border-top:1px solid #1e2830;
-display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:0.06em">
-        <span style="color:#26d97f">11</span><span style="color:#e84040">%</span>
-        <span style="font-family:IBM Plex Mono,monospace;font-size:0.58rem;color:#3d5068;
-        font-family:normal;letter-spacing:0.1em;margin-left:0.5rem">TRADE SMARTER</span>
+# ── TICKER CHIP STRIP (like BacktestingMax bottom) ────────────────────────
+if tape:
+    chips = "".join(
+        f'<span style="display:inline-flex;align-items:center;gap:6px;font-family:IBM Plex Mono,monospace;'
+        f'font-size:0.62rem;background:#1c1f23;border:1px solid #2d333b;border-radius:6px;'
+        f'padding:4px 12px;white-space:nowrap;color:{"#4ade80" if up else "#f87171"}">'
+        f'<span style="color:#6b7280;font-weight:600">{s}</span>{p} {a} {ch}</span>'
+        for s,p,ch,a,up in tape
+    )
+    st.markdown(f"""
+    <div style="margin-top:2rem;border-top:1px solid #252a30;padding-top:1.2rem">
+        <div style="font-family:IBM Plex Mono,monospace;font-size:0.46rem;text-transform:uppercase;
+        letter-spacing:0.28em;color:#3d4450;margin-bottom:0.6rem">Market Snapshot</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">{chips}</div>
     </div>
-    <div style="font-family:'IBM Plex Mono',monospace;font-size:0.55rem;color:#3d5068">
+    """, unsafe_allow_html=True)
+
+# ── FOOTER ───────────────────────────────────────────────────────────────────
+st.markdown("""
+<div style="margin-top:2rem;padding:1.2rem 0;border-top:1px solid #252a30;
+display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.4rem">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:0.06em">
+        <span style="color:#4ade80">11</span><span style="color:#f87171">%</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:0.54rem;
+        color:#3d4450;letter-spacing:0.1em;margin-left:0.4rem">TRADE SMARTER</span>
+    </div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:0.52rem;color:#3d4450">
         Not financial advice &nbsp;·&nbsp; Educational use only &nbsp;·&nbsp; Data: Yahoo Finance
     </div>
 </div>
