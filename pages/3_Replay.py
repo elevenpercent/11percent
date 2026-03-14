@@ -1,5 +1,11 @@
 import streamlit as st
+import sys as _sys, os as _os
+_sys.path.insert(0, _os.path.dirname(_os.path.dirname(__file__)))
+from utils.session_persist import restore_session
 import streamlit.components.v1 as components
+import sys as _sys, os as _os
+_sys.path.insert(0, _os.path.dirname(_os.path.dirname(__file__)))
+from utils.session_persist import restore_session
 import yfinance as yf
 import pandas as pd
 import json
@@ -10,6 +16,7 @@ from utils.styles import SHARED_CSS, inject_bg
 from utils.nav import navbar
 
 st.set_page_config(page_title="Replay — 11%", page_icon="$", layout="wide", initial_sidebar_state="collapsed")
+restore_session()
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
 st.markdown("""<style>
 #MainMenu,footer,header{display:none!important}
