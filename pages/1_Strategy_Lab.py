@@ -2,7 +2,7 @@ import streamlit as st
 import sys, os, pandas as pd
 from datetime import date, timedelta
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from utils.styles import SHARED_CSS
+from utils.styles import SHARED_CSS, inject_bg
 from utils.nav import navbar
 from utils.data import get_stock_data, get_ticker_info
 from utils.strategies import STRATEGY_REGISTRY, run_backtest
@@ -16,7 +16,9 @@ from utils.indicators import (
 st.set_page_config(page_title="Strategy Lab | 11%", layout="wide", initial_sidebar_state="collapsed")
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
 navbar()
+inject_bg()
 
+# ── Page header ────────────────────────────────────────────────────────────────
 st.markdown("""
 <div class="page-header">
     <div class="page-header-eyebrow">Backtest Engine</div>
@@ -61,6 +63,7 @@ with tab1:
         </div>
         """, unsafe_allow_html=True)
 
+    # Parameters
     st.markdown('<div class="section-hdr"><div class="section-hdr-label">Parameters</div></div>', unsafe_allow_html=True)
     user_params = {}
     pc = st.columns(4)
@@ -186,6 +189,7 @@ with tab1:
     </div>
     """, unsafe_allow_html=True)
 
+    # Chart overlays
     overlays = {}
     if strategy_name == "SMA Crossover":
         overlays[f"SMA {user_params['short']}"] = sma(df_bt["Close"], user_params["short"])
@@ -388,6 +392,7 @@ with tab2:
 
     run_cs = st.button("Run Test", type="primary", key="run_cs")
 
+    # Fix: ensure combo_logic is always defined
     if mode_cs == "Single":
         combo_logic = "AND"
 
