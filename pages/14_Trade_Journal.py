@@ -32,6 +32,22 @@ st.markdown("""<style>
 .emotion-revenge{color:#ff3d57}.emotion-bored{color:#8896ab}
 </style>""", unsafe_allow_html=True)
 navbar()
+
+# ── Same-tab nav hook ─────────────────────────────────────────────────────────
+import streamlit.components.v1 as _nav_cv1
+_nav_cv1.html("""<script>
+(function(){
+  window.parent.document.addEventListener('click',function(e){
+    var a=e.target.closest('a[href]');
+    if(!a)return;
+    var href=a.getAttribute('href');
+    if(!href||href.startsWith('http')||href.startsWith('mailto')||href.startsWith('#'))return;
+    e.preventDefault();e.stopPropagation();
+    window.top.location.href=href;
+  },true);
+})();
+</script>""", height=0)
+
 inject_bg()
 
 st.markdown("""<div class="jh"><div class="jh-ey">Psychology & Discipline</div><h1>Trade Journal</h1><p>Log trades with emotional state, setup notes, and mistakes. The most successful traders know their patterns — both technical and psychological. This page finds yours.</p></div>""", unsafe_allow_html=True)
