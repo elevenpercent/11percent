@@ -1,9 +1,13 @@
 import streamlit as st
+import sys as _sys, os as _os
+_sys.path.insert(0, _os.path.dirname(_os.path.dirname(__file__)))
+from utils.session_persist import restore_session
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from utils.styles import SHARED_CSS, LOGO_IMG
 
 st.set_page_config(page_title="Sign Up — 11%", page_icon="$", layout="centered", initial_sidebar_state="collapsed")
+restore_session()
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
 st.markdown("""
 <style>
