@@ -1,553 +1,593 @@
 import streamlit as st
 import sys, os
-from datetime import datetime
-import pytz, yfinance as yf
 sys.path.insert(0, os.path.dirname(__file__))
 from utils.styles import SHARED_CSS, LOGO_IMG
 from utils.nav import navbar
 from utils.session_persist import restore_session
 
 st.set_page_config(
-    page_title="11% · Trade Smarter",
-    page_icon="$",
+    page_title="11% · Build Real Edge",
+    page_icon="📈",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
 
-# ── Restore session FIRST — before any rendering ──────────────────────────────
 restore_session()
 if st.session_state.get("user"):
     st.switch_page("pages/21_Dashboard.py")
 
-# ── Kill white flash INSTANTLY ─────────────────────────────────────────────────
 st.markdown("""<style>
-html,body{background:#1a1510!important}
-[data-testid="stAppViewContainer"],[data-testid="stAppViewContainer"]>.main{background:#1a1510!important}
+html,body,[data-testid="stAppViewContainer"],
+[data-testid="stAppViewContainer"]>.main,.block-container{background:#0a0e14!important}
 [data-testid="stSidebar"],[data-testid="stSidebarNav"],[data-testid="collapsedControl"],
 section[data-testid="stSidebar"]{display:none!important;width:0!important;max-width:0!important;
 opacity:0!important;visibility:hidden!important;pointer-events:none!important}
-#MainMenu,footer,header,iframe[title="streamlit_analytics"]{display:none!important}
+#MainMenu,footer,header{display:none!important}
 .stDeployButton{display:none!important}
 </style>""", unsafe_allow_html=True)
 
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
 
-# ── Home page specific styles — matching BacktestingMax exactly ───────────────
 st.markdown("""<style>
 :root{
-  --bg:     #1a1510;
-  --bg2:    #211c16;
-  --bg3:    #29221a;
-  --border: #332a20;
-  --border2:#3d3028;
-  --text:   #e8ddd0;
-  --text2:  #a8998a;
-  --dim:    #5a4e42;
-  --dim2:   #3d3028;
-  --green:  #4ade80;
-  --red:    #f87171;
-  --gold:   #f59e0b;
+  --bg:    #0a0e14;
+  --bg2:   #0f1420;
+  --bg3:   #141926;
+  --chart: #0d1117;
+  --border:#1a2235;
+  --border2:#1f2a3d;
+  --text:  #e2e8f0;
+  --text2: #64748b;
+  --green: #00ff88;
+  --green2:#00cc6a;
+  --red:   #ff3d5a;
+  --red2:  #cc2244;
+  --dim:   #1e2d40;
+  --dim2:  #2a3a50;
 }
 html,body,[data-testid="stAppViewContainer"],
 [data-testid="stAppViewContainer"]>.main,
 .block-container{background:var(--bg)!important}
 .block-container{
-  padding-top:1.5rem!important;padding-bottom:4rem!important;
+  padding-top:0!important;padding-bottom:4rem!important;
   padding-left:2.5rem!important;padding-right:2.5rem!important;
   max-width:100%!important;
 }
 
-/* ── Dot grid background (BacktestingMax texture) ── */
-.dot-grid{
+/* ── Animated chart canvas background ── */
+#chart-canvas{
+  position:fixed;top:0;left:0;width:100vw;height:100vh;
+  pointer-events:none;z-index:0;opacity:0.35;
+}
+
+/* ── Spotlight — centered, lower ── */
+.spotlight{
+  position:fixed;
+  top:55%;left:50%;
+  transform:translate(-50%,-50%);
+  width:900px;height:500px;
+  background:radial-gradient(ellipse at center,
+    rgba(0,255,136,0.06) 0%,
+    rgba(0,100,255,0.04) 40%,
+    transparent 70%);
+  pointer-events:none;z-index:1;
+}
+.spotlight-red{
+  position:fixed;
+  top:65%;left:30%;
+  transform:translate(-50%,-50%);
+  width:600px;height:400px;
+  background:radial-gradient(ellipse at center,
+    rgba(255,61,90,0.04) 0%,
+    transparent 65%);
+  pointer-events:none;z-index:1;
+}
+
+/* ── Grid lines background ── */
+.grid-bg{
   position:fixed;top:0;left:0;width:100%;height:100%;
   pointer-events:none;z-index:0;
-  background-image:radial-gradient(circle,rgba(255,220,160,0.07) 1px,transparent 1px);
-  background-size:28px 28px;
-}
-/* Radial vignette over the grid */
-.dot-vignette{
-  position:fixed;top:0;left:0;width:100%;height:100%;
-  pointer-events:none;z-index:1;
-  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(26,21,16,0) 0%,rgba(26,21,16,0.85) 100%);
+  background-image:
+    linear-gradient(rgba(0,255,136,0.02) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,255,136,0.02) 1px,transparent 1px);
+  background-size:60px 60px;
 }
 
 /* ── Sections ── */
-.hp-section{position:relative;z-index:2;padding:4rem 0 1rem;}
+.hp-wrap{position:relative;z-index:2;}
+.hp-section{position:relative;z-index:2;padding:5rem 0 1rem;}
 .hp-section-sm{position:relative;z-index:2;padding:2.5rem 0 1rem;}
-.section-tag{
-  font-family:'IBM Plex Mono',monospace;font-size:0.52rem;
-  text-transform:uppercase;letter-spacing:0.35em;
-  color:var(--dim);margin-bottom:1rem;text-align:center;
-}
 
 /* ── Hero ── */
-.hero-wrap{max-width:680px}
-.hero-the{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;
-  letter-spacing:0.08em;color:var(--green);}
-.hero-h1{font-family:'Bebas Neue',sans-serif;font-size:4.5rem;
-  letter-spacing:0.03em;line-height:0.92;color:var(--text);margin:0.2rem 0 1rem}
-.hero-sub{font-size:0.88rem;color:var(--text2);line-height:1.85;
-  font-family:'Inter',sans-serif;max-width:460px;margin-bottom:1.8rem}
-.hero-btns{display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap}
-.btn-primary{
-  background:var(--green);color:#0a120a;
-  font-family:'IBM Plex Mono',monospace;font-size:0.68rem;font-weight:700;
-  text-transform:uppercase;letter-spacing:0.1em;
-  padding:0.75rem 2rem;border-radius:8px;text-decoration:none;
-  display:inline-block;transition:all 0.18s;
-  box-shadow:0 0 24px rgba(74,222,128,0.25);
+.hero-eyebrow{
+  font-family:'IBM Plex Mono',monospace;font-size:0.55rem;
+  text-transform:uppercase;letter-spacing:0.4em;
+  color:var(--green);opacity:0.8;margin-bottom:1.2rem;
+  display:flex;align-items:center;gap:0.6rem;
 }
-.btn-primary:hover{background:#6ee7a0;box-shadow:0 0 40px rgba(74,222,128,0.4)}
+.hero-eyebrow::before{
+  content:'';width:20px;height:1px;background:var(--green);opacity:0.6;
+}
+.hero-h1{
+  font-family:'Bebas Neue',sans-serif;font-size:5.2rem;
+  letter-spacing:0.02em;line-height:0.9;color:var(--text);
+  margin:0 0 1.2rem;
+}
+.hero-h1 .green{color:var(--green);}
+.hero-h1 .red{color:var(--red);}
+.hero-sub{
+  font-size:0.9rem;color:var(--text2);line-height:1.9;
+  font-family:'Inter',sans-serif;max-width:480px;margin-bottom:2rem;
+}
+.hero-btns{display:flex;gap:0.8rem;align-items:center;flex-wrap:wrap;margin-bottom:1.5rem;}
+.btn-primary{
+  background:var(--green);color:#020a06;
+  font-family:'IBM Plex Mono',monospace;font-size:0.68rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:0.12em;
+  padding:0.8rem 2.2rem;border-radius:6px;text-decoration:none;
+  display:inline-block;transition:all 0.18s;
+  box-shadow:0 0 30px rgba(0,255,136,0.2);
+}
+.btn-primary:hover{background:#33ffaa;box-shadow:0 0 50px rgba(0,255,136,0.35);transform:translateY(-1px);}
 .btn-secondary{
   background:transparent;color:var(--text2);
   border:1px solid var(--border2);
   font-family:'IBM Plex Mono',monospace;font-size:0.68rem;font-weight:600;
-  text-transform:uppercase;letter-spacing:0.1em;
-  padding:0.75rem 1.6rem;border-radius:8px;text-decoration:none;
+  text-transform:uppercase;letter-spacing:0.12em;
+  padding:0.8rem 1.8rem;border-radius:6px;text-decoration:none;
   display:inline-block;transition:all 0.18s;
 }
-.btn-secondary:hover{border-color:var(--dim);color:var(--text)}
-.hero-users{font-family:'IBM Plex Mono',monospace;font-size:0.6rem;
-  color:var(--dim);margin-top:1rem}
-
-/* ── Conveyor strips ── */
-.conveyor-label{
-  font-family:'IBM Plex Mono',monospace;font-size:0.48rem;
-  text-transform:uppercase;letter-spacing:0.3em;color:var(--dim);
-  text-align:center;margin-bottom:0.5rem;
+.btn-secondary:hover{border-color:var(--red);color:var(--red);}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:0.5rem;
+  font-family:'IBM Plex Mono',monospace;font-size:0.52rem;
+  color:var(--dim2);text-transform:uppercase;letter-spacing:0.2em;
 }
+.hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--green);
+  animation:blink 2s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1;box-shadow:0 0 6px var(--green);}50%{opacity:0.3;box-shadow:none;}}
+
+/* ── Live chart mock ── */
+.chart-wrap{
+  background:var(--chart);border:1px solid var(--border);
+  border-radius:12px;overflow:hidden;
+  box-shadow:0 0 60px rgba(0,0,0,0.6),0 0 120px rgba(0,255,136,0.04);
+}
+.chart-topbar{
+  background:#0d1117;border-bottom:1px solid var(--border);
+  padding:0.5rem 1rem;display:flex;align-items:center;gap:8px;
+}
+.c-dot{width:8px;height:8px;border-radius:50%;}
+
+/* ── Conveyor ── */
 @keyframes scrollL{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 @keyframes scrollR{0%{transform:translateX(-50%)}100%{transform:translateX(0%)}}
-.conv-track{display:flex;white-space:nowrap;width:max-content}
-.conv-track.left{animation:scrollL 45s linear infinite}
-.conv-track.right{animation:scrollR 50s linear infinite}
-.conv-track:hover{animation-play-state:paused}
-.conv-outer{overflow:hidden;position:relative;margin-bottom:0.4rem}
+.conv-outer{overflow:hidden;position:relative;margin-bottom:0.4rem;}
 .conv-outer::before,.conv-outer::after{
   content:'';position:absolute;top:0;bottom:0;width:80px;z-index:2;pointer-events:none;
 }
-.conv-outer::before{left:0;background:linear-gradient(90deg,var(--bg),transparent)}
-.conv-outer::after{right:0;background:linear-gradient(-90deg,var(--bg),transparent)}
+.conv-outer::before{left:0;background:linear-gradient(90deg,var(--bg),transparent);}
+.conv-outer::after{right:0;background:linear-gradient(-90deg,var(--bg),transparent);}
+.conv-track{display:flex;white-space:nowrap;width:max-content;}
+.conv-track.left{animation:scrollL 50s linear infinite;}
+.conv-track.right{animation:scrollR 55s linear infinite;}
+.conv-track:hover{animation-play-state:paused;}
 .conv-chip{
-  display:inline-flex;align-items:center;justify-content:center;
-  background:var(--bg2);border:1px solid var(--border);border-radius:6px;
-  font-family:'IBM Plex Mono',monospace;font-size:0.62rem;color:var(--text2);
-  padding:4px 14px;margin:0 4px;white-space:nowrap;height:30px;
+  display:inline-flex;align-items:center;
+  background:var(--bg2);border:1px solid var(--border);border-radius:5px;
+  font-family:'IBM Plex Mono',monospace;font-size:0.6rem;
+  padding:3px 12px;margin:0 3px;white-space:nowrap;height:28px;
   transition:border-color 0.2s;
 }
-.conv-chip:hover{border-color:var(--border2)}
+.conv-chip:hover{border-color:var(--border2);}
 
-/* ── Proof section ── */
-.proof-wrap{
-  background:var(--bg2);border:1px solid var(--border);border-radius:16px;
-  padding:3rem 3.5rem;display:flex;gap:4rem;align-items:flex-start;flex-wrap:wrap;
-}
-.proof-text h2{
-  font-family:'Bebas Neue',sans-serif;font-size:3.5rem;letter-spacing:0.03em;
-  line-height:0.92;color:var(--text);margin-bottom:0.8rem;
-}
-.proof-text h2 span{color:var(--green)}
-.proof-text p{font-family:'Inter',sans-serif;font-size:0.8rem;color:var(--text2);line-height:1.8;max-width:320px}
-.proof-stats{display:flex;gap:2.5rem;flex-wrap:wrap;align-items:center}
-.stat-big{text-align:center}
-.stat-big-n{font-family:'Bebas Neue',sans-serif;font-size:3.2rem;letter-spacing:0.04em;color:var(--green);line-height:1}
-.stat-big-l{font-family:'IBM Plex Mono',monospace;font-size:0.46rem;text-transform:uppercase;letter-spacing:0.2em;color:var(--dim);margin-top:0.2rem}
-
-/* ── Feature cards (BacktestingMax style) ── */
-.feat-section-title{
-  font-family:'Bebas Neue',sans-serif;font-size:2rem;
-  letter-spacing:0.05em;color:var(--green);text-align:center;margin-bottom:1.5rem;
-}
-.feat-row{display:grid;gap:1.2rem;grid-template-columns:1fr;margin-bottom:0.8rem}
-.feat-card{
+/* ── Stats bar ── */
+.stats-row{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:0;
   background:var(--bg2);border:1px solid var(--border);border-radius:12px;
-  padding:1.3rem 1.5rem;transition:border-color 0.2s,transform 0.2s;
+  overflow:hidden;margin:3rem 0;
 }
-.feat-card:hover{border-color:var(--border2);transform:translateY(-2px)}
-.feat-card-title{font-family:'IBM Plex Mono',monospace;font-size:0.68rem;font-weight:700;
-  color:var(--green);margin-bottom:0.4rem}
-.feat-card-body{font-family:'Inter',sans-serif;font-size:0.75rem;color:var(--text2);line-height:1.7}
-
-/* ── Performance analysis ── */
-.perf-row{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1.2rem}
-.perf-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.4rem;transition:border-color 0.2s}
-.perf-card:hover{border-color:var(--border2)}
-.perf-card-label{font-family:'IBM Plex Mono',monospace;font-size:0.6rem;font-weight:700;
-  color:var(--green);margin-bottom:0.4rem}
-.perf-card-body{font-family:'Inter',sans-serif;font-size:0.75rem;color:var(--text2);line-height:1.7}
-
-/* ── Why cards ── */
-.why-title{font-family:'Bebas Neue',sans-serif;font-size:2rem;
-  letter-spacing:0.05em;color:var(--green);text-align:center;margin-bottom:1.2rem}
-.why-card{
-  background:var(--bg2);border:1px solid var(--border);border-radius:12px;
-  padding:1.5rem;text-align:center;transition:border-color 0.2s,transform 0.2s;
-  height:100%;
+.stats-cell{padding:1.5rem 1.8rem;border-right:1px solid var(--border);position:relative;}
+.stats-cell:last-child{border-right:none;}
+.stats-cell::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  opacity:0;transition:opacity 0.3s;
 }
-.why-card:hover{border-color:var(--border2);transform:translateY(-3px)}
-.why-icon{font-size:1.6rem;margin-bottom:0.7rem}
-.why-name{font-family:'IBM Plex Mono',monospace;font-size:0.65rem;font-weight:700;
-  color:var(--text);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.5rem}
-.why-body{font-family:'Inter',sans-serif;font-size:0.72rem;color:var(--text2);line-height:1.65}
+.stats-cell:hover::after{opacity:1;}
+.stats-cell:nth-child(1)::after,.stats-cell:nth-child(3)::after{background:linear-gradient(90deg,transparent,var(--green),transparent);}
+.stats-cell:nth-child(2)::after,.stats-cell:nth-child(4)::after{background:linear-gradient(90deg,transparent,var(--red),transparent);}
+.stats-n{font-family:'Bebas Neue',sans-serif;font-size:3rem;letter-spacing:0.04em;line-height:1;}
+.stats-n.g{color:var(--green);text-shadow:0 0 30px rgba(0,255,136,0.3);}
+.stats-n.r{color:var(--red);text-shadow:0 0 30px rgba(255,61,90,0.3);}
+.stats-l{font-family:'IBM Plex Mono',monospace;font-size:0.48rem;text-transform:uppercase;
+  letter-spacing:0.22em;color:var(--dim2);margin-top:0.3rem;}
 
-/* ── Testimonials ── */
-.test-title{font-family:'Bebas Neue',sans-serif;font-size:2rem;
-  letter-spacing:0.05em;color:var(--green);text-align:center;margin-bottom:1.2rem}
-.test-card{
-  background:var(--bg2);border:1px solid var(--border);border-radius:12px;
-  padding:1.5rem;height:100%;
+/* ── Feature grid ── */
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
+  background:var(--border);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.feat-cell{
+  background:var(--bg2);padding:1.8rem;
+  transition:background 0.2s;position:relative;
 }
-.test-stars{color:var(--gold);font-size:0.8rem;margin-bottom:0.7rem;letter-spacing:2px}
-.test-quote{font-family:'Inter',sans-serif;font-size:0.78rem;color:var(--text2);
-  line-height:1.75;font-style:italic;margin-bottom:0.9rem}
-.test-name{font-family:'IBM Plex Mono',monospace;font-size:0.64rem;font-weight:700;color:var(--text)}
-.test-role{font-family:'IBM Plex Mono',monospace;font-size:0.55rem;color:var(--dim)}
+.feat-cell:hover{background:var(--bg3);}
+.feat-cell::before{
+  content:'';position:absolute;top:0;left:0;width:2px;height:100%;
+  background:var(--green);opacity:0;transition:opacity 0.2s;
+}
+.feat-cell:hover::before{opacity:1;}
+.feat-cell.red::before{background:var(--red);}
+.feat-icon{font-size:1.4rem;margin-bottom:0.9rem;}
+.feat-title{font-family:'IBM Plex Mono',monospace;font-size:0.65rem;font-weight:700;
+  color:var(--text);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.5rem;}
+.feat-body{font-family:'Inter',sans-serif;font-size:0.74rem;color:var(--text2);line-height:1.75;}
 
 /* ── CTA ── */
 .cta-wrap{
-  background:linear-gradient(135deg,var(--bg2),var(--bg3));
-  border:1px solid var(--border);border-radius:20px;
-  padding:4rem 3rem;text-align:center;position:relative;overflow:hidden;
+  background:var(--bg2);
+  border:1px solid var(--border);border-radius:16px;
+  padding:5rem 3rem;text-align:center;position:relative;overflow:hidden;
 }
 .cta-wrap::before{
   content:'';position:absolute;top:0;left:0;right:0;height:1px;
   background:linear-gradient(90deg,transparent,var(--green),transparent);
 }
-.cta-title{font-family:'Bebas Neue',sans-serif;font-size:3.5rem;
-  letter-spacing:0.04em;line-height:0.92;color:var(--text);margin-bottom:0.8rem}
-.cta-sub{font-family:'Inter',sans-serif;font-size:0.82rem;color:var(--text2);
-  max-width:440px;margin:0 auto 1.8rem;line-height:1.8}
+.cta-wrap::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--red),transparent);
+}
+.cta-title{font-family:'Bebas Neue',sans-serif;font-size:4rem;
+  letter-spacing:0.03em;line-height:0.9;color:var(--text);margin-bottom:0.9rem;}
+.cta-sub{font-family:'Inter',sans-serif;font-size:0.84rem;color:var(--text2);
+  max-width:420px;margin:0 auto 2rem;line-height:1.85;}
+
+/* ── Section label ── */
+.sec-label{
+  font-family:'IBM Plex Mono',monospace;font-size:0.5rem;
+  text-transform:uppercase;letter-spacing:0.4em;
+  color:var(--dim2);text-align:center;margin-bottom:0.6rem;
+}
+.sec-title{
+  font-family:'Bebas Neue',sans-serif;font-size:2.6rem;
+  letter-spacing:0.04em;color:var(--text);text-align:center;
+  margin-bottom:2.5rem;
+}
+.sec-title span.g{color:var(--green);}
+.sec-title span.r{color:var(--red);}
+
+/* ── Conveyor section ── */
+.conv-section{padding:3rem 0;position:relative;z-index:2;}
 
 /* ── Footer ── */
 .footer-wrap{
-  border-top:1px solid var(--border);padding:2.5rem 0;margin-top:2rem;
-  display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1.5rem;
+  border-top:1px solid var(--border);padding:3rem 0;margin-top:2rem;
+  display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:2rem;
+  position:relative;z-index:2;
 }
-.footer-brand{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:0.06em}
-.footer-col-title{font-family:'IBM Plex Mono',monospace;font-size:0.55rem;
-  text-transform:uppercase;letter-spacing:0.2em;color:var(--dim);margin-bottom:0.6rem}
-.footer-link{display:block;font-family:'IBM Plex Mono',monospace;font-size:0.62rem;
-  color:var(--text2);text-decoration:none;margin-bottom:0.3rem;transition:color 0.15s}
-.footer-link:hover{color:var(--green)}
-.footer-legal{font-family:'IBM Plex Mono',monospace;font-size:0.5rem;color:var(--dim);margin-top:0.5rem}
-
-/* ── Chart mock (hero right) ── */
-.chart-mock{
-  background:var(--bg2);border:1px solid var(--border);border-radius:10px;
-  overflow:hidden;
-}
-.chart-mock-bar{
-  background:var(--bg3);border-bottom:1px solid var(--border);
-  padding:0.45rem 0.9rem;display:flex;align-items:center;gap:5px;
-}
-.mock-dot{width:9px;height:9px;border-radius:50%}
+.footer-brand{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:0.06em;margin-bottom:0.4rem;}
+.footer-col-title{font-family:'IBM Plex Mono',monospace;font-size:0.5rem;
+  text-transform:uppercase;letter-spacing:0.22em;color:var(--dim2);margin-bottom:0.7rem;}
+.footer-link{display:block;font-family:'IBM Plex Mono',monospace;font-size:0.6rem;
+  color:var(--text2);text-decoration:none;margin-bottom:0.35rem;transition:color 0.15s;}
+.footer-link:hover{color:var(--green);}
+.footer-legal{font-family:'IBM Plex Mono',monospace;font-size:0.48rem;color:var(--dim2);margin-top:0.5rem;}
 </style>""", unsafe_allow_html=True)
+
+# ── Animated chart canvas + grid + spotlights ─────────────────────────────────
+st.markdown("""
+<div class="grid-bg"></div>
+<div class="spotlight"></div>
+<div class="spotlight-red"></div>
+<canvas id="chart-canvas"></canvas>
+<script>
+(function(){
+  var canvas = document.getElementById('chart-canvas');
+  if(!canvas) return;
+  var ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  window.addEventListener('resize', function(){
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    initBars();
+  });
+
+  var bars = [], barW = 14, gap = 4, step = barW + gap;
+  function initBars(){
+    bars = [];
+    var count = Math.ceil(canvas.width / step) + 2;
+    var baseY = canvas.height * 0.6;
+    var price = 150;
+    for(var i=0;i<count;i++){
+      var change = (Math.random()-0.48)*4;
+      price += change;
+      var high = price + Math.random()*3;
+      var low  = price - Math.random()*3;
+      var open = price + (Math.random()-0.5)*2;
+      bars.push({open:open, close:price, high:high, low:low});
+    }
+  }
+  initBars();
+
+  var offset = 0;
+  var scale = 3;
+  var baseY = canvas.height * 0.6;
+
+  function drawBars(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    offset += 0.15;
+    if(offset >= step) {
+      offset -= step;
+      bars.shift();
+      var last = bars[bars.length-1];
+      var change = (Math.random()-0.48)*4;
+      var price = last.close + change;
+      var high = price + Math.random()*3;
+      var low  = price - Math.random()*3;
+      var open = price + (Math.random()-0.5)*2;
+      bars.push({open:open,close:price,high:high,low:low});
+    }
+    bars.forEach(function(b,i){
+      var x = i*step - offset;
+      var bull = b.close >= b.open;
+      var col = bull ? 'rgba(0,255,136,' : 'rgba(255,61,90,';
+      var yO = baseY - b.open*scale;
+      var yC = baseY - b.close*scale;
+      var yH = baseY - b.high*scale;
+      var yL = baseY - b.low*scale;
+      var bodyTop = Math.min(yO,yC);
+      var bodyH = Math.max(Math.abs(yO-yC), 2);
+      ctx.fillStyle = col+'0.7)';
+      ctx.fillRect(x, bodyTop, barW, bodyH);
+      ctx.strokeStyle = col+'0.5)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x+barW/2, yH);
+      ctx.lineTo(x+barW/2, bodyTop);
+      ctx.moveTo(x+barW/2, bodyTop+bodyH);
+      ctx.lineTo(x+barW/2, yL);
+      ctx.stroke();
+    });
+    requestAnimationFrame(drawBars);
+  }
+  drawBars();
+
+  /* Same-tab nav */
+  document.addEventListener('click',function(e){
+    var a=e.target.closest('a[href]');
+    if(!a)return;
+    var href=a.getAttribute('href');
+    if(!href||href.startsWith('http')||href.startsWith('mailto')||href.startsWith('#'))return;
+    e.preventDefault();
+    try{window.top.location.href=href;}catch(err){window.location.href=href;}
+  },true);
+})();
+</script>
+""", unsafe_allow_html=True)
 
 navbar()
 
-# ── Dot grid + vignette background ──────────────────────────────────────────
-st.markdown('<div class="dot-grid"></div><div class="dot-vignette"></div>', unsafe_allow_html=True)
-
-# ── Redirect logged-in users ─────────────────────────────────────────────────
-if st.session_state.get("user"):
-    _uname = st.session_state.get("user_email","").split("@")[0].replace("."," ").replace("_"," ").title()
-    st.markdown(f"""<div style="position:relative;z-index:2;background:rgba(74,222,128,0.05);
-    border:1px solid rgba(74,222,128,0.18);border-radius:10px;padding:0.75rem 1.2rem;
-    margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;">
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:0.7rem;color:#9ca3af">
-        Welcome back, <strong style="color:#e8ddd0">{_uname}</strong></span>
-        <a href="/Dashboard" style="background:#4ade80;color:#0a120a;font-family:'IBM Plex Mono',monospace;
-        font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;
-        padding:0.38rem 1rem;border-radius:6px;text-decoration:none">Dashboard</a>
-    </div>""", unsafe_allow_html=True)
-
 # ═══════════════════════════════════════════════════════════════
-# SECTION 1 — HERO
+# HERO
 # ═══════════════════════════════════════════════════════════════
 hero_l, hero_r = st.columns([5, 4])
 
 with hero_l:
     st.markdown("""
-    <div style="position:relative;z-index:2;padding:2rem 0 1rem">
-        <div class="hero-the">THE</div>
-        <div class="hero-h1">Free Trading<br>Education<br>Platform</div>
+    <div class="hp-wrap" style="padding:3.5rem 0 1rem">
+        <div class="hero-eyebrow">
+            <span class="hero-badge-dot"></span>
+            Professional Trading Education
+        </div>
+        <div class="hero-h1">
+            Stop Guessing.<br>
+            Start <span class="green">Winning</span><br>
+            <span class="red">With Edge.</span>
+        </div>
         <div class="hero-sub">
-            Test strategies with professional-grade backtesting tools.
-            Replay markets bar-by-bar. Analyze performance, optimize parameters,
-            and build real confidence in your trades.
+            11% gives you the tools professional traders use — bar replay, strategy backtesting, 
+            performance analytics, and live market research. All free. No excuses left.
         </div>
         <div class="hero-btns">
-            <a class="btn-primary" href="/Strategy_Lab">Start Backtesting</a>
-            <a class="btn-secondary" href="/Battles">Join Battles</a>
+            <a class="btn-primary" href="/Strategy_Lab" target="_self">Backtest Now</a>
+            <a class="btn-secondary" href="/Replay" target="_self">Try Bar Replay</a>
         </div>
-        <div class="hero-users">100%&nbsp; Free &nbsp;·&nbsp; No Signup Required &nbsp;·&nbsp; Real Market Data</div>
+        <div class="hero-badge">
+            <span class="hero-badge-dot"></span>
+            Free forever &nbsp;·&nbsp; No card required &nbsp;·&nbsp; Real market data
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
 with hero_r:
     st.markdown("""
-    <div style="position:relative;z-index:2;padding:2.5rem 0 0">
-        <div class="chart-mock">
-            <div class="chart-mock-bar">
-                <div class="mock-dot" style="background:#f87171"></div>
-                <div class="mock-dot" style="background:#fbbf24"></div>
-                <div class="mock-dot" style="background:#4ade80"></div>
-                <span style="font-family:'IBM Plex Mono',monospace;font-size:0.48rem;color:#5a4e42;margin-left:6px;text-transform:uppercase;letter-spacing:0.14em">Live Chart · AAPL</span>
+    <div style="position:relative;z-index:2;padding:3rem 0 0">
+        <div class="chart-wrap">
+            <div class="chart-topbar">
+                <div class="c-dot" style="background:#ff3d5a"></div>
+                <div class="c-dot" style="background:#fbbf24"></div>
+                <div class="c-dot" style="background:#00ff88"></div>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:0.45rem;color:#1e2d40;
+                margin-left:8px;text-transform:uppercase;letter-spacing:0.16em">Strategy Lab · NVDA · 1D</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:0.45rem;color:#00ff88;
+                margin-left:auto;letter-spacing:0.1em">+2.34%</span>
             </div>
     """, unsafe_allow_html=True)
     st.components.v1.html("""
-<style>*{margin:0;padding:0}body{background:#211c16}.w{height:300px;background:#211c16;border-radius:0 0 9px 9px;overflow:hidden}</style>
+<style>*{margin:0;padding:0}body{background:#0d1117}.w{height:300px;background:#0d1117;overflow:hidden}</style>
 <div class="w">
 <div class="tradingview-widget-container" style="height:100%;width:100%">
 <div id="tv_c" style="height:100%;width:100%"></div>
 <script src="https://s3.tradingview.com/tv.js"></script>
 <script>new TradingView.widget({
-autosize:true,symbol:"NASDAQ:AAPL",interval:"D",timezone:"America/New_York",
-theme:"dark",style:"1",locale:"en",toolbar_bg:"#211c16",
+autosize:true,symbol:"NASDAQ:NVDA",interval:"D",timezone:"America/New_York",
+theme:"dark",style:"1",locale:"en",toolbar_bg:"#0d1117",
 enable_publishing:false,hide_side_toolbar:true,hide_top_toolbar:true,
 allow_symbol_change:true,save_image:false,container_id:"tv_c",
-backgroundColor:"rgba(33,28,22,1)",gridColor:"rgba(51,42,32,0.6)",
+backgroundColor:"rgba(13,17,23,1)",gridColor:"rgba(26,34,53,0.8)",
 overrides:{
-"mainSeriesProperties.candleStyle.upColor":"#4ade80",
-"mainSeriesProperties.candleStyle.downColor":"#f87171",
-"mainSeriesProperties.candleStyle.borderUpColor":"#4ade80",
-"mainSeriesProperties.candleStyle.borderDownColor":"#f87171",
-"mainSeriesProperties.candleStyle.wickUpColor":"#4ade80",
-"mainSeriesProperties.candleStyle.wickDownColor":"#f87171",
-"paneProperties.background":"#211c16","paneProperties.backgroundType":"solid",
-"paneProperties.vertGridProperties.color":"#332a20",
-"paneProperties.horzGridProperties.color":"#332a20",
-"scalesProperties.textColor":"#5a4e42","scalesProperties.lineColor":"#332a20"}});</script>
-</div></div>""", height=305, scrolling=False)
+"mainSeriesProperties.candleStyle.upColor":"#00ff88",
+"mainSeriesProperties.candleStyle.downColor":"#ff3d5a",
+"mainSeriesProperties.candleStyle.borderUpColor":"#00ff88",
+"mainSeriesProperties.candleStyle.borderDownColor":"#ff3d5a",
+"mainSeriesProperties.candleStyle.wickUpColor":"#00ff88",
+"mainSeriesProperties.candleStyle.wickDownColor":"#ff3d5a",
+"paneProperties.background":"#0d1117","paneProperties.backgroundType":"solid",
+"paneProperties.vertGridProperties.color":"#1a2235",
+"paneProperties.horzGridProperties.color":"#1a2235",
+"scalesProperties.textColor":"#1e2d40","scalesProperties.lineColor":"#1a2235"}});</script>
+</div></div>""", height=302, scrolling=False)
     st.markdown('</div></div>', unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════════════
-# SECTION 2 — TICKER CONVEYORS (BacktestingMax style)
+# STATS BAR
 # ═══════════════════════════════════════════════════════════════
-st.markdown('<div class="hp-section">', unsafe_allow_html=True)
-st.markdown('<div class="section-tag" style="position:relative;z-index:2">Trusted by traders worldwide</div>', unsafe_allow_html=True)
-
-# Row 1 — Forex pairs
-fx = ["EUR/USD","GBP/USD","USD/JPY","AUD/USD","USD/CAD","EUR/GBP","EUR/JPY","GBP/JPY",
-      "AUD/CAD","AUD/CHF","AUD/JPY","AUD/NZD","CAD/CHF","CAD/JPY","CHF/JPY",
-      "EUR/AUD","EUR/CAD","EUR/CHF","EUR/DKK","EUR/HUF","EUR/HKD","EUR/NZD","EUR/NOK",
-      "GBP/AUD","GBP/CAD","GBP/CHF","GBP/NZD","NZD/USD","USD/CHF","USD/DKK"]
-fx_chips = "".join(f'<span class="conv-chip">{t}</span>' for t in fx)
-st.markdown(f'<div class="conv-outer" style="position:relative;z-index:2"><div class="conv-track left">{fx_chips}{fx_chips}</div></div>', unsafe_allow_html=True)
-
-# Row 2 — Crypto
-crypto = ["BTC/USD","ETH/USD","BNB/USD","SOL/USD","ADA/USD","XRP/USD","DOT/USD","LTC/USD",
-          "AVAX/USD","MATIC/USD","LINK/USD","UNI/USD","ATOM/USD","NEAR/USD","FTM/USD",
-          "BCH/USD","EOS/USD","TRX/USD","XLM/USD","VET/USD","ALGO/USD","MANA/USD",
-          "SAND/USD","APE/USD","DOGE/USD","SHIB/USD","MKR/USD","COMP/USD","YFI/USD"]
-cr_chips = "".join(f'<span class="conv-chip" style="color:#fbbf24">{t}</span>' for t in crypto)
-st.markdown(f'<div class="conv-outer" style="position:relative;z-index:2"><div class="conv-track right">{cr_chips}{cr_chips}</div></div>', unsafe_allow_html=True)
-
-# Row 3 — Stocks + Indices
-stocks = ["AAPL","MSFT","NVDA","GOOGL","META","AMZN","TSLA","AMD","AVGO","CRM",
-          "JPM","GS","V","MA","BAC","XOM","CVX","UNH","LLY","ABBV",
-          "SPY","QQQ","IWM","DIA","VTI","GLD","TLT","USO","SLV","VXX",
-          "XAU/USD","XAG/USD","COPPER","CRUDE OIL","NAT GAS","USA500","NASDAQ","DOW30","VIX"]
-st_chips = "".join(f'<span class="conv-chip" style="color:#a8998a">{t}</span>' for t in stocks)
-st.markdown(f'<div class="conv-outer" style="position:relative;z-index:2"><div class="conv-track left">{st_chips}{st_chips}</div></div>', unsafe_allow_html=True)
-
-# Row 4 — Indicators conveyor
-from utils.indicators import INDICATOR_INFO
-inds = list(INDICATOR_INFO.keys())
-ind_chips = "".join(f'<span class="conv-chip" style="color:#4ade80">{i}</span>' for i in inds)
-st.markdown(f'<div class="conv-outer" style="position:relative;z-index:2;margin-top:0.3rem"><div class="conv-track right">{ind_chips}{ind_chips}</div></div>', unsafe_allow_html=True)
-
-st.markdown('</div>', unsafe_allow_html=True)
-
-# ═══════════════════════════════════════════════════════════════
-# SECTION 3 — PROOF IN THE PERFORMANCE
-# ═══════════════════════════════════════════════════════════════
-st.markdown('<div class="hp-section" style="position:relative;z-index:2">', unsafe_allow_html=True)
 st.markdown("""
-<div class="proof-wrap">
-    <div class="proof-text">
-        <h2>Proof is in the<br><span>performance</span></h2>
-        <p>11% empowers traders to develop real edge with professional-grade
-        backtesting tools. With thousands of sessions completed daily,
-        we let the results do the talking.</p>
+<div style="position:relative;z-index:2;padding:2rem 0 0">
+<div class="stats-row">
+    <div class="stats-cell">
+        <div class="stats-n g">33+</div>
+        <div class="stats-l">Built-in Strategies</div>
     </div>
-    <div class="proof-stats">
-        <div class="stat-big">
-            <div class="stat-big-n">33+</div>
-            <div class="stat-big-l">Strategies<br>Available</div>
-        </div>
-        <div class="stat-big">
-            <div class="stat-big-n">56+</div>
-            <div class="stat-big-l">Technical<br>Indicators</div>
-        </div>
-        <div class="stat-big">
-            <div class="stat-big-n">20+</div>
-            <div class="stat-big-l">Trading<br>Tools</div>
-        </div>
-        <div class="stat-big">
-            <div class="stat-big-n" style="color:#f87171">$0</div>
-            <div class="stat-big-l">Cost.<br>Forever.</div>
-        </div>
+    <div class="stats-cell">
+        <div class="stats-n r">56+</div>
+        <div class="stats-l">Technical Indicators</div>
+    </div>
+    <div class="stats-cell">
+        <div class="stats-n g">20Y+</div>
+        <div class="stats-l">Historical Data</div>
+    </div>
+    <div class="stats-cell">
+        <div class="stats-n r">$0</div>
+        <div class="stats-l">Cost. Always.</div>
     </div>
 </div>
+</div>
 """, unsafe_allow_html=True)
+
+# ═══════════════════════════════════════════════════════════════
+# CONVEYORS
+# ═══════════════════════════════════════════════════════════════
+st.markdown('<div class="conv-section">', unsafe_allow_html=True)
+st.markdown('<div class="sec-label" style="position:relative;z-index:2">All markets. All instruments. All yours.</div>', unsafe_allow_html=True)
+
+fx = ["EUR/USD","GBP/USD","USD/JPY","AUD/USD","USD/CAD","EUR/GBP","EUR/JPY","GBP/JPY","AUD/CAD","AUD/CHF","AUD/JPY","NZD/USD","USD/CHF","EUR/NZD","GBP/AUD","GBP/CAD","CAD/JPY","CHF/JPY","EUR/CAD","EUR/CHF"]
+fx_chips = "".join(f'<span class="conv-chip" style="color:#64748b">{t}</span>' for t in fx)
+st.markdown(f'<div class="conv-outer" style="position:relative;z-index:2"><div class="conv-track left">{fx_chips}{fx_chips}</div></div>', unsafe_allow_html=True)
+
+crypto = ["BTC/USD","ETH/USD","SOL/USD","BNB/USD","ADA/USD","XRP/USD","DOGE/USD","AVAX/USD","MATIC/USD","LINK/USD","DOT/USD","UNI/USD","ATOM/USD","NEAR/USD","APE/USD","SHIB/USD","LTC/USD","BCH/USD","ALGO/USD","VET/USD"]
+cr_chips = "".join(f'<span class="conv-chip" style="color:#00ff88">{t}</span>' for t in crypto)
+st.markdown(f'<div class="conv-outer" style="position:relative;z-index:2"><div class="conv-track right">{cr_chips}{cr_chips}</div></div>', unsafe_allow_html=True)
+
+stocks = ["AAPL","MSFT","NVDA","GOOGL","META","AMZN","TSLA","AMD","AVGO","CRM","JPM","GS","V","MA","BAC","XOM","UNH","LLY","SPY","QQQ","IWM","GLD","TLT","VXX","XAU/USD","CRUDE OIL","NAT GAS","USA500","NASDAQ","DOW30"]
+st_chips = "".join(f'<span class="conv-chip" style="color:#ff3d5a">{t}</span>' for t in stocks)
+st.markdown(f'<div class="conv-outer" style="position:relative;z-index:2"><div class="conv-track left">{st_chips}{st_chips}</div></div>', unsafe_allow_html=True)
+
+try:
+    from utils.indicators import INDICATOR_INFO
+    inds = list(INDICATOR_INFO.keys())
+except:
+    inds = ["RSI","MACD","EMA","SMA","Bollinger Bands","ATR","Stochastic","CCI","Williams %R","OBV","VWAP","ADX","Ichimoku","Parabolic SAR","Pivot Points"]
+ind_chips = "".join(f'<span class="conv-chip" style="color:#64748b">{i}</span>' for i in inds)
+st.markdown(f'<div class="conv-outer" style="position:relative;z-index:2"><div class="conv-track right">{ind_chips}{ind_chips}</div></div>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════════════
-# SECTION 4 — USING TRADINGVIEW CHARTS
+# FEATURES
 # ═══════════════════════════════════════════════════════════════
 st.markdown('<div class="hp-section" style="position:relative;z-index:2">', unsafe_allow_html=True)
-st.markdown('<div class="feat-section-title">Using TradingView Charts</div>', unsafe_allow_html=True)
+st.markdown('<div class="sec-label">What you get</div>', unsafe_allow_html=True)
+st.markdown('<div class="sec-title">Every tool a serious trader needs.<br><span class="g">None of the fluff.</span></div>', unsafe_allow_html=True)
 
-fc_l, fc_r = st.columns([5, 4])
-with fc_l:
-    feats = [
-        ("Professional Trading Interface",
-         "Access the same TradingView charts used by millions of professional traders worldwide. Full candlestick charts with real historical data across all major markets."),
-        ("Advanced Chart Analysis Tools",
-         "Utilize drawing tools, trendlines, Fibonacci, and advanced charting features for precise backtesting. Everything a professional trader needs."),
-        ("20+ Years Historical Data",
-         "Access years of accurate historical price data across stocks, forex, crypto, indices, and commodities. All through Yahoo Finance — free."),
-        ("No-Code Backtesting Platform",
-         "Test trading strategies visually without programming. No coding skills or complex setup required. Just pick a strategy and click run."),
-    ]
-    for title, body in feats:
-        st.markdown(f"""
-        <div class="feat-card" style="margin-bottom:0.8rem">
-            <div class="feat-card-title">{title}</div>
-            <div class="feat-card-body">{body}</div>
+features = [
+    ("📊", "Strategy Backtester", "Run 33+ professional strategies on 20+ years of real data. Tweak parameters, compare results, and find what actually works before risking a dollar.", False),
+    ("🔁", "Bar-by-Bar Replay", "Replay any market, any timeframe, bar by bar. Trade blind like it's happening live. The most realistic practice environment available.", False),
+    ("⚔️", "Live Battles", "Compete head-to-head with other traders on the same historical period. Real leaderboards. Real bragging rights.", True),
+    ("🧠", "AI Trade Coach", "Get instant analysis of your trades. Understand why your strategy succeeded or failed — not just the numbers, but the reasoning.", False),
+    ("📈", "56+ Indicators", "Every major technical indicator built in. RSI, MACD, Ichimoku, Bollinger Bands, ATR and dozens more. Layer them, combine them, master them.", False),
+    ("🛡", "Risk Calculator", "Calculate position size, risk/reward ratio, and max drawdown before entering any trade. Stop blowing accounts on bad sizing.", True),
+    ("🔍", "Market Screener", "Scan thousands of instruments for your exact setup. Filter by technical conditions, volume, momentum, and more.", False),
+    ("📰", "Earnings & Econ Calendar", "Never get caught off guard by a Fed announcement or earnings report again. Track every market-moving event.", False),
+    ("📋", "Trade Journal", "Log every trade with full context. Track your patterns, biases, and improvement over time. Data-driven self-improvement.", True),
+]
+
+st.markdown('<div class="feat-grid" style="position:relative;z-index:2">', unsafe_allow_html=True)
+for icon, title, body, is_red in features:
+    red_class = "feat-cell red" if is_red else "feat-cell"
+    st.markdown(f"""
+    <div class="{red_class}">
+        <div class="feat-icon">{icon}</div>
+        <div class="feat-title">{title}</div>
+        <div class="feat-body">{body}</div>
+    </div>
+    """, unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
+
+# ═══════════════════════════════════════════════════════════════
+# SECOND CHART SECTION
+# ═══════════════════════════════════════════════════════════════
+st.markdown('<div class="hp-section" style="position:relative;z-index:2">', unsafe_allow_html=True)
+ch_l, ch_r = st.columns([4, 5])
+with ch_l:
+    st.markdown("""
+    <div style="padding:2rem 0">
+        <div class="hero-eyebrow"><span class="hero-badge-dot"></span>Replay Engine</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:3.2rem;line-height:0.9;
+        color:#e2e8f0;margin-bottom:1rem;letter-spacing:0.03em">
+            Trade History<br>Like It's<br><span style="color:#00ff88">Happening Now</span>
         </div>
-        """, unsafe_allow_html=True)
-
-with fc_r:
-    st.markdown('<div class="chart-mock" style="margin-top:0.5rem"><div class="chart-mock-bar"><div class="mock-dot" style="background:#f87171"></div><div class="mock-dot" style="background:#fbbf24"></div><div class="mock-dot" style="background:#4ade80"></div><span style="font-family:IBM Plex Mono,monospace;font-size:0.46rem;color:#5a4e42;margin-left:6px;text-transform:uppercase;letter-spacing:0.14em">Replay Engine · TSLA</span></div>', unsafe_allow_html=True)
+        <div style="font-family:'Inter',sans-serif;font-size:0.82rem;color:#64748b;
+        line-height:1.85;max-width:360px;margin-bottom:1.5rem">
+            Our bar replay engine lets you step through any market one candle at a time. 
+            Practice reading price action, test your instincts, and build real pattern recognition 
+            without any financial risk. Pause. Rewind. Replay until you've got it.
+        </div>
+        <a class="btn-primary" href="/Replay" target="_self">Launch Replay</a>
+    </div>
+    """, unsafe_allow_html=True)
+with ch_r:
+    st.markdown('<div class="chart-wrap" style="margin-top:1rem"><div class="chart-topbar"><div class="c-dot" style="background:#ff3d5a"></div><div class="c-dot" style="background:#fbbf24"></div><div class="c-dot" style="background:#00ff88"></div><span style="font-family:IBM Plex Mono,monospace;font-size:0.44rem;color:#1e2d40;margin-left:8px;text-transform:uppercase;letter-spacing:0.16em">Replay Mode · SPY · 1H</span></div>', unsafe_allow_html=True)
     st.components.v1.html("""
-<style>*{margin:0;padding:0}body{background:#211c16}.w{height:360px;background:#211c16;overflow:hidden}</style>
+<style>*{margin:0;padding:0}body{background:#0d1117}.w{height:340px;background:#0d1117;overflow:hidden}</style>
 <div class="w">
 <div class="tradingview-widget-container" style="height:100%;width:100%">
 <div id="tv_c2" style="height:100%;width:100%"></div>
 <script src="https://s3.tradingview.com/tv.js"></script>
 <script>new TradingView.widget({
-autosize:true,symbol:"NASDAQ:TSLA",interval:"60",timezone:"America/New_York",
-theme:"dark",style:"1",locale:"en",toolbar_bg:"#211c16",
+autosize:true,symbol:"AMEX:SPY",interval:"60",timezone:"America/New_York",
+theme:"dark",style:"1",locale:"en",toolbar_bg:"#0d1117",
 enable_publishing:false,hide_side_toolbar:true,hide_top_toolbar:true,
 allow_symbol_change:false,save_image:false,container_id:"tv_c2",
-backgroundColor:"rgba(33,28,22,1)",gridColor:"rgba(51,42,32,0.6)",
+backgroundColor:"rgba(13,17,23,1)",gridColor:"rgba(26,34,53,0.8)",
 overrides:{
-"mainSeriesProperties.candleStyle.upColor":"#4ade80",
-"mainSeriesProperties.candleStyle.downColor":"#f87171",
-"mainSeriesProperties.candleStyle.borderUpColor":"#4ade80",
-"mainSeriesProperties.candleStyle.borderDownColor":"#f87171",
-"mainSeriesProperties.candleStyle.wickUpColor":"#4ade80",
-"mainSeriesProperties.candleStyle.wickDownColor":"#f87171",
-"paneProperties.background":"#211c16","paneProperties.backgroundType":"solid",
-"paneProperties.vertGridProperties.color":"#332a20",
-"paneProperties.horzGridProperties.color":"#332a20",
-"scalesProperties.textColor":"#5a4e42","scalesProperties.lineColor":"#332a20"}});</script>
-</div></div>""", height=362, scrolling=False)
+"mainSeriesProperties.candleStyle.upColor":"#00ff88",
+"mainSeriesProperties.candleStyle.downColor":"#ff3d5a",
+"mainSeriesProperties.candleStyle.borderUpColor":"#00ff88",
+"mainSeriesProperties.candleStyle.borderDownColor":"#ff3d5a",
+"mainSeriesProperties.candleStyle.wickUpColor":"#00ff88",
+"mainSeriesProperties.candleStyle.wickDownColor":"#ff3d5a",
+"paneProperties.background":"#0d1117","paneProperties.backgroundType":"solid",
+"paneProperties.vertGridProperties.color":"#1a2235",
+"paneProperties.horzGridProperties.color":"#1a2235",
+"scalesProperties.textColor":"#1e2d40","scalesProperties.lineColor":"#1a2235"}});</script>
+</div></div>""", height=342, scrolling=False)
     st.markdown('</div>', unsafe_allow_html=True)
-
 st.markdown('</div>', unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════════════
-# SECTION 5 — BACKTESTING PERFORMANCE ANALYSIS
-# ═══════════════════════════════════════════════════════════════
-st.markdown('<div class="hp-section" style="position:relative;z-index:2">', unsafe_allow_html=True)
-st.markdown('<div class="feat-section-title">Backtesting Performance Analysis</div>', unsafe_allow_html=True)
-
-perf_items = [
-    ("Journal Your Trading Results",
-     "Track your trading performance with detailed balance and equity charts. Monitor account growth, drawdowns, and overall profitability over time. Visualize how your strategies perform with comprehensive equity curve analysis.",
-     True),
-    ("Trading Review & Replay Controls",
-     "Step through history bar-by-bar and trade blind. Continue unfinished sessions at any time. Our advanced replay controls let you pause, resume, and analyze at any point without losing progress.",
-     False),
-    ("Simulate Your Trading Strategy",
-     "Run Monte Carlo simulations to test strategies under thousands of different market scenarios. Analyze potential outcomes, risk profiles, and performance variations to understand your strategy statistically.",
-     False),
-    ("Battles — Compete With Traders",
-     "Enter paper trading competitions with real-time leaderboards. Set your capital, trade the same period as everyone else, and see where you rank. Win points and build your reputation.",
-     True),
-]
-for i in range(0, len(perf_items), 2):
-    pair = perf_items[i:i+2]
-    cols = st.columns(2)
-    for col, (title, body, flip) in zip(cols, pair):
-        with col:
-            st.markdown(f"""
-            <div class="perf-card">
-                <div class="perf-card-label">{title}</div>
-                <div class="perf-card-body">{body}</div>
-            </div>
-            """, unsafe_allow_html=True)
-
-st.markdown('</div>', unsafe_allow_html=True)
-
-# ═══════════════════════════════════════════════════════════════
-# SECTION 6 — WHY CHOOSE 11%
-# ═══════════════════════════════════════════════════════════════
-st.markdown('<div class="hp-section" style="position:relative;z-index:2">', unsafe_allow_html=True)
-st.markdown('<div class="why-title">Why Choose 11%?</div>', unsafe_allow_html=True)
-
-why_cols = st.columns(4)
-why_items = [
-    ("📊", "Bar Replay & Strategy Testing",
-     "Experience advanced bar replay and test strategies in minutes. No setup, no coding, no complex configuration required."),
-    ("🛡", "Risk-Free Strategy Testing",
-     "Validate trading ideas with historical data before risking real money. Avoid costly mistakes and trade with confidence."),
-    ("⚡", "No-Code Platform",
-     "Professional-grade backtesting without programming skills. Visual strategy testing that any trader can master instantly."),
-    ("$0", "Always Free",
-     "Start testing profitable strategies immediately with no subscription fees, hidden costs, or trial limitations."),
-]
-for col, (icon, name, body) in zip(why_cols, why_items):
-    with col:
-        st.markdown(f"""
-        <div class="why-card">
-            <div class="why-icon">{icon}</div>
-            <div class="why-name">{name}</div>
-            <div class="why-body">{body}</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-st.markdown('</div>', unsafe_allow_html=True)
-
-# ═══════════════════════════════════════════════════════════════
-# SECTION 7 — TESTIMONIALS
-# ═══════════════════════════════════════════════════════════════
-st.markdown('<div class="hp-section" style="position:relative;z-index:2">', unsafe_allow_html=True)
-st.markdown('<div class="test-title">What Our Users Say</div>', unsafe_allow_html=True)
-
-test_cols = st.columns(3)
-testimonials = [
-    ("★★★★★", '"The replay engine is insane. I can replay any day in history and actually practice trading it. Nothing else does this for free."', "Marcus K.", "Swing Trader"),
-    ("★★★★★", '"Finally found a platform where I can test my EMA strategies without paying $50/month. The backtester is seriously professional grade."', "Sarah L.", "Day Trader"),
-    ("★★★★★", '"The AI coach actually explains WHY a strategy failed, not just the numbers. That\'s been the most educational part for me."', "Reza M.", "Options Trader"),
-]
-for col, (stars, quote, name, role) in zip(test_cols, testimonials):
-    with col:
-        st.markdown(f"""
-        <div class="test-card">
-            <div class="test-stars">{stars}</div>
-            <div class="test-quote">{quote}</div>
-            <div class="test-name">{name}</div>
-            <div class="test-role">{role}</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-st.markdown('</div>', unsafe_allow_html=True)
-
-# ═══════════════════════════════════════════════════════════════
-# SECTION 8 — CTA
+# CTA
 # ═══════════════════════════════════════════════════════════════
 st.markdown('<div class="hp-section-sm" style="position:relative;z-index:2">', unsafe_allow_html=True)
 st.markdown("""
 <div class="cta-wrap">
-    <div class="cta-title">Ready to Transform<br>Your Trading?</div>
-    <div class="cta-sub">Join traders who use 11% to develop winning strategies with real historical data — completely free.</div>
-    <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">
-        <a class="btn-primary" href="/Strategy_Lab">Start For Free</a>
-        <a class="btn-secondary" href="/Replay">Try Replay</a>
+    <div class="cta-title">Your Edge is<br>Waiting.</div>
+    <div class="cta-sub">
+        Every winning trader built their edge through practice, data, and honest self-review. 
+        11% gives you all three — starting right now, for free.
+    </div>
+    <div style="display:flex;gap:0.8rem;justify-content:center;flex-wrap:wrap">
+        <a class="btn-primary" href="/Strategy_Lab" target="_self">Start Backtesting Free</a>
+        <a class="btn-secondary" href="/Signup" target="_self">Create Account</a>
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -557,32 +597,35 @@ st.markdown('</div>', unsafe_allow_html=True)
 # FOOTER
 # ═══════════════════════════════════════════════════════════════
 st.markdown("""
-<div class="footer-wrap" style="position:relative;z-index:2">
+<div class="footer-wrap">
     <div>
-        <div class="footer-brand"><span style="color:#4ade80">11</span><span style="color:#f87171">%</span></div>
+        <div class="footer-brand"><span style="color:#00ff88">11</span><span style="color:#ff3d5a">%</span></div>
         <div class="footer-legal">Professional trading education for serious traders.</div>
         <div class="footer-legal" style="margin-top:0.3rem">Not financial advice · Educational use only</div>
     </div>
     <div>
-        <div class="footer-col-title">Product</div>
-        <a class="footer-link" href="/Strategy_Lab">Strategy Lab</a>
-        <a class="footer-link" href="/Replay">Market Replay</a>
-        <a class="footer-link" href="/Battles">Battles</a>
-        <a class="footer-link" href="/Marketplace">Marketplace</a>
+        <div class="footer-col-title">Platform</div>
+        <a class="footer-link" href="/Strategy_Lab" target="_self">Strategy Lab</a>
+        <a class="footer-link" href="/Replay" target="_self">Market Replay</a>
+        <a class="footer-link" href="/Battles" target="_self">Battles</a>
+        <a class="footer-link" href="/Marketplace" target="_self">Marketplace</a>
+        <a class="footer-link" href="/Assistant" target="_self">AI Coach</a>
     </div>
     <div>
         <div class="footer-col-title">Tools</div>
-        <a class="footer-link" href="/Screener">Screener</a>
-        <a class="footer-link" href="/Options_Chain">Options Chain</a>
-        <a class="footer-link" href="/Trade_Journal">Trade Journal</a>
-        <a class="footer-link" href="/Risk_Calculator">Risk Calculator</a>
+        <a class="footer-link" href="/Screener" target="_self">Screener</a>
+        <a class="footer-link" href="/Options_Chain" target="_self">Options Chain</a>
+        <a class="footer-link" href="/Trade_Journal" target="_self">Trade Journal</a>
+        <a class="footer-link" href="/Risk_Calculator" target="_self">Risk Calculator</a>
+        <a class="footer-link" href="/Portfolio_Tracker" target="_self">Portfolio</a>
     </div>
     <div>
         <div class="footer-col-title">Research</div>
-        <a class="footer-link" href="/Market_Heatmap">Heatmap</a>
-        <a class="footer-link" href="/Economic_Calendar">Econ Calendar</a>
-        <a class="footer-link" href="/Sector_Rotation">Sector Rotation</a>
-        <a class="footer-link" href="/Pattern_Recognition">Patterns</a>
+        <a class="footer-link" href="/Market_Heatmap" target="_self">Heatmap</a>
+        <a class="footer-link" href="/Economic_Calendar" target="_self">Econ Calendar</a>
+        <a class="footer-link" href="/Sector_Rotation" target="_self">Sector Rotation</a>
+        <a class="footer-link" href="/Pattern_Recognition" target="_self">Patterns</a>
+        <a class="footer-link" href="/Whale_Tracker" target="_self">Whale Tracker</a>
     </div>
 </div>
 """, unsafe_allow_html=True)
