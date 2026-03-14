@@ -1,0 +1,130 @@
+import streamlit as st, sys, os, pandas as pd, yfinance as yf
+import plotly.graph_objects as go, plotly.express as px
+from datetime import datetime
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+from utils.styles import SHARED_CSS, inject_bg, PLOTLY_THEME; from utils.nav import navbar
+from utils import db
+
+st.set_page_config(page_title="Portfolio Tracker | 11%", layout="wide", initial_sidebar_state="collapsed")
+st.markdown(SHARED_CSS, unsafe_allow_html=True)
+st.markdown("""<style>
+.ph{background:linear-gradient(135deg,#0c1018,#0d1420);border:1px solid #1a2235;border-radius:16px;padding:2.5rem 3rem;margin-bottom:2rem}
+.ph-ey{font-family:'IBM Plex Mono',monospace;font-size:0.55rem;text-transform:uppercase;letter-spacing:0.3em;color:#3a4a5e;margin-bottom:0.5rem}
+.ph h1{font-family:'Bebas Neue',sans-serif;font-size:3.5rem;letter-spacing:0.05em;line-height:1;margin:0 0 0.5rem 0}
+.ph p{font-family:'IBM Plex Mono',monospace;font-size:0.75rem;color:#8896ab;line-height:1.8;margin:0}
+.bm{background:#0c1018;border:1px solid #1a2235;border-radius:12px;padding:1.5rem 1.8rem;transition:border-color 0.2s}
+.bm:hover{border-color:#2a3550}
+.bm-v{font-family:'Bebas Neue',sans-serif;font-size:2.4rem;letter-spacing:0.04em;line-height:1}
+.bm-l{font-family:'IBM Plex Mono',monospace;font-size:0.5rem;text-transform:uppercase;letter-spacing:0.22em;color:#3a4a5e;margin-top:0.35rem}
+.sec-t{font-family:'IBM Plex Mono',monospace;font-size:0.55rem;text-transform:uppercase;letter-spacing:0.25em;color:#3a4a5e;padding:1.5rem 0 0.8rem;border-top:1px solid #0d1117}
+.pos-row{display:grid;grid-template-columns:80px 60px 90px 90px 90px 90px 100px 100px;gap:8px;align-items:center;padding:0.8rem 1rem;border-bottom:1px solid #0d1117;font-family:'IBM Plex Mono',monospace;font-size:0.7rem}
+.pos-row:hover{background:rgba(255,255,255,0.02)}
+.pos-hdr{background:#0d1117;font-size:0.5rem;text-transform:uppercase;letter-spacing:0.15em;color:#3a4a5e;border-radius:6px 6px 0 0}
+.pos-sym{font-weight:700;font-size:0.82rem;color:#eef2f7}
+.pos-long{color:#00e676}.pos-short{color:#ff3d57}
+.pos-pos{color:#00e676;font-weight:700}.pos-neg{color:#ff3d57;font-weight:700}.pos-neu{color:#8896ab}
+</style>""", unsafe_allow_html=True)
+navbar()
+inject_bg()
+
+st.markdown("""<div class="ph"><div class="ph-ey">Live Tracking</div><h1>Portfolio Tracker</h1><p>Track your real or paper portfolio with live prices, P&L by position, sector exposure, and total return — updated every time you load.</p></div>""", unsafe_allow_html=True)
+
+if "portfolio" not in st.session_state:
+    db.load_into_session("portfolio", "portfolio", [])
+
+st.markdown('<div class="sec-t">Add Position</div>', unsafe_allow_html=True)
+pa, pb, pc, pd2, pe, pf = st.columns([2, 1.2, 1.2, 1, 1.2, 0.9])
+with pa: pt_sym  = st.text_input("Ticker", placeholder="AAPL, TSLA, BTC-USD", key="pt_s", label_visibility="collapsed").upper().strip()
+with pb: pt_qty  = st.number_input("Shares", value=10, min_value=1, key="pt_q", label_visibility="collapsed", placeholder="Shares")
+with pc: pt_avg  = st.number_input("Avg Cost", value=150.00, format="%.2f", key="pt_c", label_visibility="collapsed", placeholder="Avg Cost $")
+with pd2: pt_type = st.selectbox("Type", ["Long","Short"], key="pt_t", label_visibility="collapsed")
+with pe: pt_note  = st.text_input("Note (optional)", key="pt_n", label_visibility="collapsed", placeholder="e.g. Earnings play")
+with pf:
+    st.markdown("<br>", unsafe_allow_html=True)
+    add_clicked = st.button("Add Position", type="primary", use_container_width=True)
+
+if add_clicked and pt_sym:
+    st.session_state["portfolio"].append({"sym":pt_sym,"qty":pt_qty,"avg":pt_avg,"type":pt_type,"note":pt_note})
+    st.rerun()
+
+if st.session_state["portfolio"]:
+    with st.spinner("Fetching live prices..."):
+        rows = []; total_val=0; total_cost=0; total_pnl=0
+        for pos in st.session_state["portfolio"]:
+            try:
+                price = float(yf.Ticker(pos["sym"]).history(period="1d")["Close"].iloc[-1])
+            except: price = pos["avg"]
+            cost = pos["avg"] * pos["qty"]
+            val  = price * pos["qty"]
+            pnl  = (val - cost) if pos["type"]=="Long" else (cost - val)
+            pnl_pct = pnl/cost*100
+            total_val += val; total_cost += cost; total_pnl += pnl
+            rows.append({"sym":pos["sym"],"type":pos["type"],"qty":pos["qty"],
+                         "avg":pos["avg"],"price":price,"val":val,"pnl":pnl,"pnl_pct":pnl_pct,"note":pos.get("note","")})
+
+    total_ret = total_pnl/total_cost*100 if total_cost > 0 else 0
+    st.markdown('<div class="sec-t">Portfolio Summary</div>', unsafe_allow_html=True)
+    m1,m2,m3,m4,m5 = st.columns(5)
+    for col,(v,l,c) in zip([m1,m2,m3,m4,m5],[
+        (f"${total_val:,.0f}","Market Value","#eef2f7"),
+        (f"${total_cost:,.0f}","Total Cost","#8896ab"),
+        (f"${total_pnl:+,.0f}","Unrealised P&L","#00e676" if total_pnl>=0 else "#ff3d57"),
+        (f"{total_ret:+.2f}%","Return","#00e676" if total_ret>=0 else "#ff3d57"),
+        (f"{len(rows)}","Open Positions","#4da6ff"),
+    ]):
+        col.markdown(f'<div class="bm"><div class="bm-v" style="color:{c}">{v}</div><div class="bm-l">{l}</div></div>', unsafe_allow_html=True)
+
+    st.markdown('<div class="sec-t">Holdings</div>', unsafe_allow_html=True)
+    st.markdown("""<div class="pos-row pos-hdr">
+        <span>Ticker</span><span>Type</span><span>Qty</span><span>Avg Cost</span>
+        <span>Current</span><span>Value</span><span>P&L ($)</span><span>P&L (%)</span>
+    </div>""", unsafe_allow_html=True)
+    for r in sorted(rows, key=lambda x: x["pnl"], reverse=True):
+        tc = "pos-long" if r["type"]=="Long" else "pos-short"
+        pc2 = "pos-pos" if r["pnl"]>=0 else "pos-neg"
+        st.markdown(f"""<div class="pos-row">
+            <span class="pos-sym">{r["sym"]}</span>
+            <span class="{tc}">{r["type"]}</span>
+            <span class="pos-neu">{r["qty"]}</span>
+            <span class="pos-neu">${r["avg"]:.2f}</span>
+            <span class="pos-neu">${r["price"]:.2f}</span>
+            <span class="pos-neu">${r["val"]:,.0f}</span>
+            <span class="{pc2}">${r["pnl"]:+,.0f}</span>
+            <span class="{pc2}">{r["pnl_pct"]:+.1f}%</span>
+        </div>""", unsafe_allow_html=True)
+
+    # Charts
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown('<div class="sec-t">Allocation by Position</div>', unsafe_allow_html=True)
+        fig_pie = go.Figure(go.Pie(
+            labels=[r["sym"] for r in rows],
+            values=[r["val"] for r in rows],
+            hole=0.5,
+            textfont=dict(family="IBM Plex Mono", size=11),
+            marker_colors=["#00e676","#4da6ff","#ffd166","#ff9f43","#b388ff","#ff3d57","#00bcd4","#ff7043","#69f0ae","#82b1ff"]
+        ))
+        fig_pie.update_layout(**{**PLOTLY_THEME,"margin":dict(l=10,r=10,t=20,b=10)}, height=300, showlegend=True)
+        st.plotly_chart(fig_pie, use_container_width=True)
+    with c2:
+        st.markdown('<div class="sec-t">P&L by Position</div>', unsafe_allow_html=True)
+        fig_bar = go.Figure(go.Bar(
+            x=[r["sym"] for r in rows],
+            y=[r["pnl"] for r in rows],
+            marker_color=["#00e676" if r["pnl"]>=0 else "#ff3d57" for r in rows],
+            text=[f"${r['pnl']:+,.0f}" for r in rows], textposition="outside",
+            textfont=dict(family="IBM Plex Mono", size=11)
+        ))
+        fig_bar.update_layout(**PLOTLY_THEME, height=300, showlegend=False)
+        st.plotly_chart(fig_bar, use_container_width=True)
+
+    ca, cb = st.columns([1, 5])
+    with ca:
+        if st.button("Clear All", use_container_width=True):
+            st.session_state["portfolio"] = []; db.sync("portfolio"); st.rerun()
+    with cb:
+        df_export = pd.DataFrame(rows)
+        st.download_button("Download Portfolio CSV", df_export.to_csv(index=False),
+                          file_name="portfolio.csv", mime="text/csv", use_container_width=True)
+else:
+    st.markdown('<div style="text-align:center;padding:4rem;color:#3a4a5e;font-family:IBM Plex Mono,monospace;font-size:0.75rem;border:1px dashed #1a2235;border-radius:12px;margin-top:1rem;">Add your first position above to start tracking your portfolio.</div>', unsafe_allow_html=True)
