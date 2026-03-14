@@ -2,7 +2,7 @@ import streamlit as st, sys, os, pandas as pd, yfinance as yf
 import plotly.graph_objects as go, plotly.express as px
 from datetime import datetime
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-from utils.styles import SHARED_CSS, PLOTLY_THEME; from utils.nav import navbar
+from utils.styles import SHARED_CSS, inject_bg, PLOTLY_THEME; from utils.nav import navbar
 from utils import db
 
 st.set_page_config(page_title="Portfolio Tracker | 11%", layout="wide", initial_sidebar_state="collapsed")
@@ -25,6 +25,7 @@ st.markdown("""<style>
 .pos-pos{color:#00e676;font-weight:700}.pos-neg{color:#ff3d57;font-weight:700}.pos-neu{color:#8896ab}
 </style>""", unsafe_allow_html=True)
 navbar()
+inject_bg()
 
 st.markdown("""<div class="ph"><div class="ph-ey">Live Tracking</div><h1>Portfolio Tracker</h1><p>Track your real or paper portfolio with live prices, P&L by position, sector exposure, and total return — updated every time you load.</p></div>""", unsafe_allow_html=True)
 
