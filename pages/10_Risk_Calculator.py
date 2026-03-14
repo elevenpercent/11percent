@@ -2,7 +2,7 @@ import streamlit as st
 import sys, os, math, pandas as pd
 import plotly.graph_objects as go
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-from utils.styles import SHARED_CSS, PLOTLY_THEME
+from utils.styles import SHARED_CSS, inject_bg, PLOTLY_THEME
 from utils.nav import navbar
 
 st.set_page_config(page_title="Risk Calculator | 11%", layout="wide", initial_sidebar_state="collapsed")
@@ -29,6 +29,7 @@ st.markdown("""<style>
 </style>""", unsafe_allow_html=True)
 
 navbar()
+inject_bg()
 
 st.markdown("""
 <div class="rc-hero">
