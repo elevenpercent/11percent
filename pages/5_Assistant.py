@@ -1,4 +1,7 @@
 import streamlit as st
+import sys as _sys, os as _os
+_sys.path.insert(0, _os.path.dirname(_os.path.dirname(__file__)))
+from utils.session_persist import restore_session
 import sys, os
 import re
 
@@ -7,6 +10,7 @@ from utils.styles import SHARED_CSS, inject_bg
 from utils.nav import navbar
 
 st.set_page_config(page_title="AI Coach | 11%", layout="wide", initial_sidebar_state="collapsed")
+restore_session()
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
 navbar()
 inject_bg()
