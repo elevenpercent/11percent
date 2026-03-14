@@ -1,7 +1,7 @@
 import streamlit as st, sys, os, yfinance as yf, pandas as pd
 import plotly.graph_objects as go
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-from utils.styles import SHARED_CSS, PLOTLY_THEME; from utils.nav import navbar
+from utils.styles import SHARED_CSS, inject_bg, PLOTLY_THEME; from utils.nav import navbar
 
 st.set_page_config(page_title="Market Heatmap | 11%", layout="wide", initial_sidebar_state="collapsed")
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
@@ -33,6 +33,7 @@ st.markdown("""<style>
 .dash-chg{font-family:'IBM Plex Mono',monospace;font-size:0.75rem;font-weight:700;margin-top:0.1rem}
 </style>""", unsafe_allow_html=True)
 navbar()
+inject_bg()
 
 SECTORS = {
     "Technology":  ["AAPL","MSFT","NVDA","AMD","GOOGL","META","TSLA","AVGO","ORCL","CRM"],
