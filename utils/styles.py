@@ -11,11 +11,11 @@ LOGO_IMG = f'<img src="data:image/png;base64,{_B64}" alt="11%" style="height:36p
 LOGO_B64 = _B64
 
 PLOTLY_THEME = dict(
-    paper_bgcolor="#1c1f23",
-    plot_bgcolor="#1c1f23",
+    paper_bgcolor="#211c16",
+    plot_bgcolor="#211c16",
     font=dict(family="Inter", color="#6b7280", size=11),
-    xaxis=dict(gridcolor="#252a30", linecolor="#252a30", zerolinecolor="#252a30"),
-    yaxis=dict(gridcolor="#252a30", linecolor="#252a30", zerolinecolor="#252a30"),
+    xaxis=dict(gridcolor="#2a2118", linecolor="#332a20", zerolinecolor="#332a20"),
+    yaxis=dict(gridcolor="#2a2118", linecolor="#332a20", zerolinecolor="#332a20"),
     margin=dict(l=48, r=16, t=40, b=40),
 )
 
@@ -32,17 +32,17 @@ SHARED_CSS = """
   --blue:     #60a5fa;
   --yellow:   #fbbf24;
   --purple:   #a78bfa;
-  --bg:       #13161a;
-  --bg2:      #1c1f23;
-  --bg3:      #21252b;
-  --surface:  #252a30;
-  --surface2: #2d333b;
-  --border:   #2d333b;
-  --border2:  #373d47;
-  --text:     #e6eaf0;
-  --text2:    #9ca3af;
+  --bg:       #1a1510;
+  --bg2:      #211c16;
+  --bg3:      #29221a;
+  --surface:  #2a2118;
+  --surface2: #332a20;
+  --border:   #332a20;
+  --border2:  #3d3028;
+  --text:     #e8ddd0;
+  --text2:    #a8998a;
   --muted:    #6b7280;
-  --dim:      #3d4450;
+  --dim:      #5a4e42;
 }
 
 /* ── Kill Streamlit chrome instantly ── */
