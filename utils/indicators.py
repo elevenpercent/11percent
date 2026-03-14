@@ -418,3 +418,466 @@ def parabolic_sar(df: pd.DataFrame, af_start: float = 0.02, af_max: float = 0.2)
                 if low[i] < pe: ep[i] = low[i]; af[i] = min(pa + af_start, af_max)
                 else: ep[i] = pe; af[i] = pa
     return {"sar": pd.Series(sar, index=df.index), "direction": pd.Series(trend.astype(int), index=df.index)}
+
+import numpy as _np
+
+# ── Additional indicator functions ───────────────────────────────────────────
+
+def stochastic(df, k_window=14, d_window=3):
+    low_min  = df["Low"].rolling(k_window).min()
+    high_max = df["High"].rolling(k_window).max()
+    k = 100 * (df["Close"] - low_min) / (high_max - low_min)
+    d = k.rolling(d_window).mean()
+    return {"k": k, "d": d}
+
+def mfi(df, window=14):
+    tp  = (df["High"] + df["Low"] + df["Close"]) / 3
+    mf  = tp * df["Volume"]
+    pos = mf.where(tp > tp.shift(1), 0).rolling(window).sum()
+    neg = mf.where(tp < tp.shift(1), 0).rolling(window).sum()
+    return 100 - (100 / (1 + pos / neg.abs()))
+
+def roc(series, window=12):
+    return (series - series.shift(window)) / series.shift(window) * 100
+
+def momentum(series, window=10):
+    return series - series.shift(window)
+
+def trix(series, window=15):
+    e1 = series.ewm(span=window).mean()
+    e2 = e1.ewm(span=window).mean()
+    e3 = e2.ewm(span=window).mean()
+    return (e3 - e3.shift(1)) / e3.shift(1) * 100
+
+def dema(series, window=20):
+    e = series.ewm(span=window).mean()
+    return 2 * e - e.ewm(span=window).mean()
+
+def tema(series, window=20):
+    e1 = series.ewm(span=window).mean()
+    e2 = e1.ewm(span=window).mean()
+    e3 = e2.ewm(span=window).mean()
+    return 3*e1 - 3*e2 + e3
+
+def vidya(series, window=14, smooth=12):
+    delta = series.diff().abs()
+    rsi_val = rsi(series, window)
+    k  = (rsi_val / 100).ewm(span=smooth).mean()
+    v  = series.copy()
+    for i in range(1, len(series)):
+        v.iloc[i] = k.iloc[i] * series.iloc[i] + (1 - k.iloc[i]) * v.iloc[i-1]
+    return v
+
+def elder_ray(df, window=13):
+    bull = df["High"] - ema(df["Close"], window)
+    bear = df["Low"]  - ema(df["Close"], window)
+    return {"bull": bull, "bear": bear}
+
+def mass_index(df, fast=9, slow=25):
+    hl    = df["High"] - df["Low"]
+    e1    = hl.ewm(span=fast).mean()
+    e2    = e1.ewm(span=fast).mean()
+    ratio = e1 / e2
+    return ratio.rolling(slow).sum()
+
+def chande_momentum(series, window=20):
+    diff = series.diff()
+    up   = diff.clip(lower=0).rolling(window).sum()
+    down = (-diff.clip(upper=0)).rolling(window).sum()
+    return 100 * (up - down) / (up + down)
+
+def dpo(series, window=20):
+    shifted = series.shift(window // 2 + 1)
+    return series - sma(series, window).shift(window // 2 + 1)
+
+def aroon(df, window=25):
+    high_idx = df["High"].rolling(window+1).apply(lambda x: x.argmax(), raw=True)
+    low_idx  = df["Low"].rolling(window+1).apply(lambda x: x.argmin(), raw=True)
+    up   = 100 * high_idx / window
+    down = 100 * low_idx  / window
+    return {"up": up, "down": down, "oscillator": up - down}
+
+def ultimate_oscillator(df, p1=7, p2=14, p3=28):
+    bp  = df["Close"] - df[["Low", "Close"]].shift(1).min(axis=1)
+    tr  = df["High"]  - df[["Low", "Close"]].shift(1).min(axis=1)
+    avg1 = bp.rolling(p1).sum() / tr.rolling(p1).sum()
+    avg2 = bp.rolling(p2).sum() / tr.rolling(p2).sum()
+    avg3 = bp.rolling(p3).sum() / tr.rolling(p3).sum()
+    return 100 * (4*avg1 + 2*avg2 + avg3) / 7
+
+def cmo(series, window=14):
+    return chande_momentum(series, window)
+
+def pivot_points(df):
+    p  = (df["High"] + df["Low"] + df["Close"]) / 3
+    r1 = 2*p - df["Low"]
+    s1 = 2*p - df["High"]
+    r2 = p + (df["High"] - df["Low"])
+    s2 = p - (df["High"] - df["Low"])
+    return {"pivot": p, "r1": r1, "s1": s1, "r2": r2, "s2": s2}
+
+def standard_deviation(series, window=20):
+    return series.rolling(window).std()
+
+def historical_volatility(series, window=20):
+    log_ret = (series / series.shift(1)).apply(_np.log)
+    return log_ret.rolling(window).std() * _np.sqrt(252) * 100
+
+def linear_regression_slope(series, window=14):
+    def _slope(x):
+        n = len(x)
+        xi = _np.arange(n)
+        return _np.polyfit(xi, x, 1)[0]
+    return series.rolling(window).apply(_slope, raw=True)
+
+def envelope(series, window=20, pct=0.025):
+    mid = sma(series, window)
+    return {"upper": mid*(1+pct), "mid": mid, "lower": mid*(1-pct)}
+
+def price_channel(df, window=20):
+    return {"upper": df["High"].rolling(window).max(),
+            "lower": df["Low"].rolling(window).min()}
+
+def chaikin_money_flow(df, window=20):
+    mfm  = ((df["Close"]-df["Low"]) - (df["High"]-df["Close"])) / (df["High"]-df["Low"])
+    mfv  = mfm * df["Volume"]
+    return mfv.rolling(window).sum() / df["Volume"].rolling(window).sum()
+
+def chaikin_oscillator(df, fast=3, slow=10):
+    adl  = ((df["Close"]-df["Low"]) - (df["High"]-df["Close"])) / (df["High"]-df["Low"]) * df["Volume"]
+    adl  = adl.cumsum()
+    return adl.ewm(span=fast).mean() - adl.ewm(span=slow).mean()
+
+def klinger_oscillator(df, fast=34, slow=55):
+    dm   = df["High"] - df["Low"]
+    trend = df["Close"].diff()
+    sv   = dm * df["Volume"] * trend.apply(lambda x: 1 if x > 0 else -1)
+    return sv.ewm(span=fast).mean() - sv.ewm(span=slow).mean()
+
+def ease_of_movement(df, window=14):
+    dm   = (df["High"]+df["Low"])/2 - (df["High"].shift(1)+df["Low"].shift(1))/2
+    br   = df["Volume"] / (df["High"] - df["Low"])
+    eom  = dm / br
+    return eom.rolling(window).mean()
+
+def force_index(df, window=13):
+    fi = df["Close"].diff() * df["Volume"]
+    return fi.ewm(span=window).mean()
+
+def negative_volume_index(df):
+    nvi = _pd_series_ones(df)
+    for i in range(1, len(df)):
+        if df["Volume"].iloc[i] < df["Volume"].iloc[i-1]:
+            nvi.iloc[i] = nvi.iloc[i-1] * (1 + (df["Close"].iloc[i]-df["Close"].iloc[i-1])/df["Close"].iloc[i-1])
+        else:
+            nvi.iloc[i] = nvi.iloc[i-1]
+    return nvi
+
+def _pd_series_ones(df):
+    import pandas as _pd
+    return _pd.Series(1.0, index=df.index)
+
+def accumulation_distribution(df):
+    mfm = ((df["Close"]-df["Low"]) - (df["High"]-df["Close"])) / (df["High"]-df["Low"])
+    return (mfm * df["Volume"]).cumsum()
+
+def vortex(df, window=14):
+    vm_pos = (df["High"] - df["Low"].shift(1)).abs().rolling(window).sum()
+    vm_neg = (df["Low"]  - df["High"].shift(1)).abs().rolling(window).sum()
+    tr_sum = atr(df, 1).rolling(window).sum()
+    return {"vi_pos": vm_pos/tr_sum, "vi_neg": vm_neg/tr_sum}
+
+def know_sure_thing(series):
+    r1  = roc(series, 10).rolling(10).mean()
+    r2  = roc(series, 15).rolling(10).mean()
+    r3  = roc(series, 20).rolling(10).mean()
+    r4  = roc(series, 30).rolling(15).mean()
+    kst = r1 + 2*r2 + 3*r3 + 4*r4
+    sig = kst.rolling(9).mean()
+    return {"kst": kst, "signal": sig}
+
+def schaff_trend_cycle(series, fast=23, slow=50, cycle=10):
+    macd_line = series.ewm(span=fast).mean() - series.ewm(span=slow).mean()
+    stc = _stoch_of(macd_line, cycle)
+    return stc
+
+def _stoch_of(series, window):
+    lo = series.rolling(window).min()
+    hi = series.rolling(window).max()
+    return 100*(series - lo)/(hi - lo).replace(0, 1)
+
+def rainbow_ma(series, periods=[2,3,4,5,6,7,8,9,10]):
+    return {f"ema_{p}": ema(series, p) for p in periods}
+
+def adaptive_moving_average(series, fast=2, slow=30):
+    direction = (series - series.shift(10)).abs()
+    noise     = (series.diff().abs()).rolling(10).sum()
+    er        = (direction / noise).fillna(0)
+    fast_sc   = 2/(fast+1); slow_sc = 2/(slow+1)
+    sc        = (er*(fast_sc-slow_sc)+slow_sc)**2
+    ama       = series.copy().astype(float)
+    for i in range(1, len(series)):
+        ama.iloc[i] = ama.iloc[i-1] + sc.iloc[i]*(series.iloc[i]-ama.iloc[i-1])
+    return ama
+
+def coppock_curve(series):
+    r1  = roc(series, 14).rolling(11).mean()
+    r2  = roc(series, 11).rolling(11).mean()
+    return (r1 + r2).rolling(10).mean()
+
+def connors_rsi(series, rsi_len=3, streak_len=2, pct_rank_len=100):
+    rsi_main   = rsi(series, rsi_len)
+    streaks    = _streak(series)
+    rsi_streak = rsi(streaks, streak_len)
+    pct        = series.pct_change() * 100
+    pct_rank   = pct.rolling(pct_rank_len).apply(lambda x: (x[:-1] < x[-1]).mean() * 100, raw=True)
+    return (rsi_main + rsi_streak + pct_rank) / 3
+
+def _streak(series):
+    import pandas as _pd
+    streak = _pd.Series(0.0, index=series.index)
+    for i in range(1, len(series)):
+        if series.iloc[i] > series.iloc[i-1]:
+            streak.iloc[i] = streak.iloc[i-1] + 1 if streak.iloc[i-1] > 0 else 1
+        elif series.iloc[i] < series.iloc[i-1]:
+            streak.iloc[i] = streak.iloc[i-1] - 1 if streak.iloc[i-1] < 0 else -1
+        else:
+            streak.iloc[i] = 0
+    return streak
+
+def dmi(df, window=14):
+    plus_dm  = (df["High"] - df["High"].shift(1)).clip(lower=0)
+    minus_dm = (df["Low"].shift(1) - df["Low"]).clip(lower=0)
+    tr_s     = atr(df, 1).rolling(window).sum()
+    plus_di  = 100 * plus_dm.rolling(window).sum()  / tr_s
+    minus_di = 100 * minus_dm.rolling(window).sum() / tr_s
+    dx       = 100 * (plus_di - minus_di).abs() / (plus_di + minus_di)
+    adx      = dx.rolling(window).mean()
+    return {"adx": adx, "plus_di": plus_di, "minus_di": minus_di}
+
+def price_oscillator(series, fast=12, slow=26):
+    return (ema(series, fast) - ema(series, slow)) / ema(series, slow) * 100
+
+def detrended_price(series, window=20):
+    return dpo(series, window)
+
+def qstick(df, window=8):
+    return (df["Close"] - df["Open"]).rolling(window).mean()
+
+def market_facilitation(df):
+    return (df["High"] - df["Low"]) / df["Volume"]
+
+# ── Extended INDICATOR_INFO ────────────────────────────────────────────────────
+INDICATOR_INFO.update({
+    "Stochastic": {
+        "label": "Stochastic Oscillator", "overlay": False,
+        "params": {"k_window":{"type":"int","default":14,"min":2,"max":50,"label":"K Period"},
+                   "d_window":{"type":"int","default":3,"min":1,"max":10,"label":"D Period"}},
+        "description": "K% and D% momentum oscillator. <20 oversold, >80 overbought.",
+    },
+    "MFI": {
+        "label": "Money Flow Index", "overlay": False,
+        "params": {"window":{"type":"int","default":14,"min":2,"max":50,"label":"Period"}},
+        "description": "Volume-weighted RSI. Measures buying and selling pressure.",
+    },
+    "ROC": {
+        "label": "Rate of Change", "overlay": False,
+        "params": {"window":{"type":"int","default":12,"min":1,"max":50,"label":"Period"}},
+        "description": "Percentage change in price over N periods. Momentum.",
+    },
+    "Momentum": {
+        "label": "Momentum", "overlay": False,
+        "params": {"window":{"type":"int","default":10,"min":1,"max":50,"label":"Period"}},
+        "description": "Raw price difference over N periods. Trend strength.",
+    },
+    "TRIX": {
+        "label": "TRIX", "overlay": False,
+        "params": {"window":{"type":"int","default":15,"min":2,"max":50,"label":"Period"}},
+        "description": "Triple-smoothed EMA rate of change. Filters noise well.",
+    },
+    "DEMA": {
+        "label": "Double EMA", "overlay": True,
+        "params": {"window":{"type":"int","default":20,"min":2,"max":200,"label":"Period"}},
+        "description": "Double Exponential Moving Average. Less lag than EMA.",
+    },
+    "TEMA": {
+        "label": "Triple EMA", "overlay": True,
+        "params": {"window":{"type":"int","default":20,"min":2,"max":200,"label":"Period"}},
+        "description": "Triple Exponential Moving Average. Minimal lag.",
+    },
+    "Aroon": {
+        "label": "Aroon Indicator", "overlay": False,
+        "params": {"window":{"type":"int","default":25,"min":5,"max":100,"label":"Period"}},
+        "description": "Measures time since last high/low. Identifies trend changes.",
+    },
+    "Ultimate Oscillator": {
+        "label": "Ultimate Oscillator", "overlay": False,
+        "params": {},
+        "description": "Combines 3 timeframes to reduce false signals.",
+    },
+    "CMO": {
+        "label": "Chande Momentum Oscillator", "overlay": False,
+        "params": {"window":{"type":"int","default":20,"min":5,"max":50,"label":"Period"}},
+        "description": "Unbounded momentum. +100 max bullish, -100 max bearish.",
+    },
+    "DPO": {
+        "label": "Detrended Price Oscillator", "overlay": False,
+        "params": {"window":{"type":"int","default":20,"min":5,"max":50,"label":"Period"}},
+        "description": "Removes long-term trend to identify cycles.",
+    },
+    "Mass Index": {
+        "label": "Mass Index", "overlay": False,
+        "params": {"slow":{"type":"int","default":25,"min":10,"max":50,"label":"Sum Period"}},
+        "description": "Identifies reversals using high-low range expansion.",
+    },
+    "ADX": {
+        "label": "Average Directional Index", "overlay": False,
+        "params": {"window":{"type":"int","default":14,"min":2,"max":50,"label":"Period"}},
+        "description": "Trend strength 0-100. >25 strong trend, <20 weak.",
+    },
+    "Chaikin MF": {
+        "label": "Chaikin Money Flow", "overlay": False,
+        "params": {"window":{"type":"int","default":20,"min":5,"max":50,"label":"Period"}},
+        "description": "Accumulation/distribution over period. Positive = buying pressure.",
+    },
+    "Force Index": {
+        "label": "Force Index", "overlay": False,
+        "params": {"window":{"type":"int","default":13,"min":2,"max":50,"label":"Period"}},
+        "description": "Price change × volume. Measures force behind price moves.",
+    },
+    "Ease of Movement": {
+        "label": "Ease of Movement", "overlay": False,
+        "params": {"window":{"type":"int","default":14,"min":2,"max":50,"label":"Period"}},
+        "description": "Relates price movement to volume. High = easy price movement.",
+    },
+    "Vortex": {
+        "label": "Vortex Indicator", "overlay": False,
+        "params": {"window":{"type":"int","default":14,"min":2,"max":50,"label":"Period"}},
+        "description": "VI+ and VI- identify start of new trends.",
+    },
+    "KST": {
+        "label": "Know Sure Thing", "overlay": False,
+        "params": {},
+        "description": "Momentum oscillator combining 4 smoothed ROC periods.",
+    },
+    "STC": {
+        "label": "Schaff Trend Cycle", "overlay": False,
+        "params": {"fast":{"type":"int","default":23,"min":5,"max":50,"label":"Fast"},
+                   "slow":{"type":"int","default":50,"min":10,"max":100,"label":"Slow"}},
+        "description": "Combines MACD and Stochastic to identify cycle turns.",
+    },
+    "AMA": {
+        "label": "Adaptive Moving Average", "overlay": True,
+        "params": {"fast":{"type":"int","default":2,"min":2,"max":20,"label":"Fast"},
+                   "slow":{"type":"int","default":30,"min":10,"max":100,"label":"Slow"}},
+        "description": "Adjusts speed based on market efficiency. Kaufman's AMA.",
+    },
+    "Coppock Curve": {
+        "label": "Coppock Curve", "overlay": False,
+        "params": {},
+        "description": "Long-term buy signal. Developed for monthly charts.",
+    },
+    "Connors RSI": {
+        "label": "Connors RSI", "overlay": False,
+        "params": {},
+        "description": "3-component RSI for short-term mean reversion.",
+    },
+    "Price Oscillator": {
+        "label": "Price Oscillator (PPO)", "overlay": False,
+        "params": {"fast":{"type":"int","default":12,"min":2,"max":50,"label":"Fast"},
+                   "slow":{"type":"int","default":26,"min":5,"max":200,"label":"Slow"}},
+        "description": "EMA difference as percentage. Like MACD but normalised.",
+    },
+    "Historical Volatility": {
+        "label": "Historical Volatility", "overlay": False,
+        "params": {"window":{"type":"int","default":20,"min":5,"max":100,"label":"Period"}},
+        "description": "Annualised standard deviation of log returns.",
+    },
+    "Std Deviation": {
+        "label": "Standard Deviation", "overlay": False,
+        "params": {"window":{"type":"int","default":20,"min":5,"max":100,"label":"Period"}},
+        "description": "Rolling price standard deviation. Volatility measure.",
+    },
+    "Linear Reg Slope": {
+        "label": "Linear Regression Slope", "overlay": False,
+        "params": {"window":{"type":"int","default":14,"min":3,"max":100,"label":"Period"}},
+        "description": "Slope of linear regression line. Positive = uptrend.",
+    },
+    "Envelope": {
+        "label": "Moving Average Envelope", "overlay": True,
+        "params": {"window":{"type":"int","default":20,"min":5,"max":200,"label":"Period"},
+                   "pct":{"type":"float","default":0.025,"min":0.005,"max":0.2,"label":"% Width"}},
+        "description": "Upper/lower bands at fixed % from SMA. Trend channel.",
+    },
+    "Price Channel": {
+        "label": "Price Channel", "overlay": True,
+        "params": {"window":{"type":"int","default":20,"min":5,"max":200,"label":"Period"}},
+        "description": "Highest high / lowest low channel over N periods.",
+    },
+    "QStick": {
+        "label": "QStick", "overlay": False,
+        "params": {"window":{"type":"int","default":8,"min":2,"max":50,"label":"Period"}},
+        "description": "Average of open-close difference. Candlestick momentum.",
+    },
+    "AD Line": {
+        "label": "Accumulation/Distribution", "overlay": False,
+        "params": {},
+        "description": "Cumulative volume-weighted price indicator. Divergence signals.",
+    },
+    "VWAP": {
+        "label": "VWAP", "overlay": True,
+        "params": {},
+        "description": "Volume Weighted Average Price. Institutional reference level.",
+    },
+    "OBV": {
+        "label": "On-Balance Volume", "overlay": False,
+        "params": {},
+        "description": "Cumulative volume flow. Divergence with price = signal.",
+    },
+    "Pivot Points": {
+        "label": "Pivot Points", "overlay": True,
+        "params": {},
+        "description": "Daily pivot, S1/S2, R1/R2 support/resistance levels.",
+    },
+    "Elder Ray": {
+        "label": "Elder Ray Index", "overlay": False,
+        "params": {"window":{"type":"int","default":13,"min":2,"max":50,"label":"EMA Period"}},
+        "description": "Bull/bear power relative to EMA. Elder's system.",
+    },
+    "Chaikin Osc": {
+        "label": "Chaikin Oscillator", "overlay": False,
+        "params": {"fast":{"type":"int","default":3,"min":1,"max":20,"label":"Fast"},
+                   "slow":{"type":"int","default":10,"min":3,"max":50,"label":"Slow"}},
+        "description": "EMA difference of Accumulation/Distribution line.",
+    },
+    "Klinger Osc": {
+        "label": "Klinger Volume Oscillator", "overlay": False,
+        "params": {},
+        "description": "Long-term money flow trend with short-term fluctuations.",
+    },
+    "NVI": {
+        "label": "Negative Volume Index", "overlay": False,
+        "params": {},
+        "description": "Tracks price change on down-volume days. Smart money proxy.",
+    },
+    "MFI Divergence": {
+        "label": "MFI (Extended)", "overlay": False,
+        "params": {"window":{"type":"int","default":14,"min":2,"max":50,"label":"Period"}},
+        "description": "Money Flow Index with divergence detection.",
+    },
+    "Market Facilitation": {
+        "label": "Market Facilitation Index", "overlay": False,
+        "params": {},
+        "description": "(High-Low)/Volume. Measures efficiency of price movement.",
+    },
+    "Rainbow MA": {
+        "label": "Rainbow Moving Averages", "overlay": True,
+        "params": {},
+        "description": "9 EMAs (2-10 periods). Creates a rainbow of trend bands.",
+    },
+    "Vidya": {
+        "label": "Variable Index Dynamic Average", "overlay": True,
+        "params": {"window":{"type":"int","default":14,"min":2,"max":50,"label":"VI Period"}},
+        "description": "Adaptive MA using RSI-based volatility index.",
+    },
+})
