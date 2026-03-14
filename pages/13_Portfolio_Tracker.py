@@ -103,7 +103,7 @@ if st.session_state["portfolio"]:
             textfont=dict(family="IBM Plex Mono", size=11),
             marker_colors=["#00e676","#4da6ff","#ffd166","#ff9f43","#b388ff","#ff3d57","#00bcd4","#ff7043","#69f0ae","#82b1ff"]
         ))
-        fig_pie.update_layout(**PLOTLY_THEME, height=300, showlegend=True, margin=dict(l=10,r=10,t=20,b=10))
+        fig_pie.update_layout(**{**PLOTLY_THEME,"margin":dict(l=10,r=10,t=20,b=10)}, height=300, showlegend=True)
         st.plotly_chart(fig_pie, use_container_width=True)
     with c2:
         st.markdown('<div class="sec-t">P&L by Position</div>', unsafe_allow_html=True)
