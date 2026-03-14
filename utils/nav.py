@@ -13,38 +13,28 @@ def navbar():
         right = (
             '<div class="ep-right">'
             '<span class="ep-welcome">Hi, ' + user_name + '</span>'
-            '<a class="ep-signout" href="/Login" target="_self">Sign Out</a>'
+            '<a class="ep-signout" href="/Login">Sign Out</a>'
             '</div>'
         )
     else:
         right = (
             '<div class="ep-right">'
             '<div class="ep-beta"><span class="ep-dot"></span>Beta</div>'
-            '<a class="ep-signup" href="/Login" target="_self">Sign Up</a>'
+            '<a class="ep-signup" href="/Login">Sign Up</a>'
             '</div>'
         )
 
-    # CRITICAL FIXES vs previous version:
-    # 1. overflow:visible on .main and .block-container so dropdown shows above page
-    # 2. Links styled as plain text — no browser blue underline (text-decoration:none, color inherited)
-    # 3. Dropdown uses padding bridge between button and menu so mouse doesn't "leave" the hover zone
-    # 4. No iframe (components.html) — st.markdown only, so clicks work
-    # 5. body overflow reset so page stays scrollable
-
     css = """<style>
-/* Restore page scroll — previous overflow:visible broke it */
 .main { overflow-y: auto !important; }
 section[data-testid="stMain"] > div { overflow: visible !important; }
 .block-container { overflow: visible !important; }
 
-/* Hide Streamlit default link styling everywhere in nav */
 .ep-navbar a, .ep-navbar a:visited, .ep-navbar a:hover, .ep-navbar a:active {
     text-decoration: none !important;
 }
-
 .ep-navbar {
-    background: #06080c;
-    border-bottom: 1px solid #1a2235;
+    background: #0f1318;
+    border-bottom: 1px solid #243040;
     margin: -2.5rem -2.5rem 0 -2.5rem;
     height: 60px;
     display: flex;
@@ -55,28 +45,20 @@ section[data-testid="stMain"] > div { overflow: visible !important; }
     padding: 0 1.6rem;
 }
 .ep-brand {
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
-    margin-right: 0.5rem;
-    text-decoration: none !important;
+    display: flex; align-items: center; flex-shrink: 0;
+    margin-right: 0.5rem; text-decoration: none !important;
+    cursor: pointer;
 }
 .ep-brand img { height: 42px !important; width: auto !important; display: block; }
-
 .ep-center {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
+    flex: 1; display: flex; align-items: center;
+    justify-content: center; gap: 2px;
 }
-
-/* Pill — looks like button, no browser link styling */
 .ep-pill {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 0.58rem; font-weight: 600;
     text-transform: uppercase; letter-spacing: 0.09em;
-    color: #3a4a5e !important;
+    color: #3d5068 !important;
     background: transparent;
     border: 1px solid transparent;
     border-radius: 6px;
@@ -89,24 +71,18 @@ section[data-testid="stMain"] > div { overflow: visible !important; }
     text-decoration: none !important;
 }
 .ep-pill:hover {
-    color: #eef2f7 !important;
-    background: rgba(255,255,255,0.06) !important;
-    border-color: #1a2235 !important;
-    text-decoration: none !important;
+    color: #e8edf2 !important;
+    background: rgba(255,255,255,0.05) !important;
+    border-color: #243040 !important;
 }
-
-/* Tools wrapper — the padding-top bridge prevents dropdown from closing
-   when mouse moves from button down to the menu */
 .ep-tools-wrap {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
+    position: relative; display: inline-flex; align-items: center;
 }
 .ep-tools-btn {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 0.58rem; font-weight: 600;
     text-transform: uppercase; letter-spacing: 0.09em;
-    color: #3a4a5e;
+    color: #3d5068;
     background: transparent;
     border: 1px solid transparent;
     border-radius: 6px;
@@ -118,81 +94,63 @@ section[data-testid="stMain"] > div { overflow: visible !important; }
 }
 .ep-tools-btn:hover,
 .ep-tools-wrap:hover .ep-tools-btn {
-    color: #eef2f7;
-    background: rgba(255,255,255,0.06);
-    border-color: #1a2235;
+    color: #e8edf2;
+    background: rgba(255,255,255,0.05);
+    border-color: #243040;
 }
-.ep-arrow {
-    font-size: 0.4rem; opacity: 0.5;
-    transition: transform 0.2s; display: inline-block;
-}
+.ep-arrow { font-size:0.4rem; opacity:0.5; transition:transform 0.2s; display:inline-block; }
 .ep-tools-wrap:hover .ep-arrow { transform: rotate(180deg); }
-
-/* Invisible bridge fills gap between button and dropdown 
-   so mouse doesn't leave hover zone while crossing the gap */
 .ep-tools-wrap::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 0; right: 0;
-    height: 14px;
-    display: none;
+    content: ''; position: absolute; top: 100%; left: 0; right: 0;
+    height: 14px; display: none;
 }
 .ep-tools-wrap:hover::after { display: block; }
-
 .ep-dropdown {
     display: none;
-    position: absolute;
-    top: calc(100% + 8px);
-    left: 50%;
-    transform: translateX(-50%);
+    position: absolute; top: calc(100% + 8px);
+    left: 50%; transform: translateX(-50%);
     min-width: 220px;
-    background: #0d1117;
-    border: 1px solid #1a2235;
-    border-top: 2px solid #00e676;
+    background: #141a1f;
+    border: 1px solid #243040;
+    border-top: 2px solid #26d97f;
     border-radius: 0 0 10px 10px;
     box-shadow: 0 20px 60px rgba(0,0,0,0.9);
-    z-index: 999999;
-    padding: 0.2rem 0;
-    overflow: hidden;
+    z-index: 999999; padding: 0.2rem 0; overflow: hidden;
 }
 .ep-tools-wrap:hover .ep-dropdown { display: block; }
-
 .ep-drop-link {
     display: flex; align-items: center; gap: 0.6rem;
     padding: 0.58rem 1rem;
     font-family: 'IBM Plex Mono', monospace;
     font-size: 0.57rem; font-weight: 600;
     text-transform: uppercase; letter-spacing: 0.08em;
-    color: #3a4a5e !important;
+    color: #3d5068 !important;
     text-decoration: none !important;
-    border-bottom: 1px solid #0d1117;
+    border-bottom: 1px solid #0f1318;
     transition: color 0.12s, background 0.12s, padding-left 0.12s;
 }
 .ep-drop-link:last-child { border-bottom: none; }
 .ep-drop-link:hover {
-    color: #00e676 !important;
-    background: rgba(0,230,118,0.05) !important;
+    color: #26d97f !important;
+    background: rgba(38,217,127,0.05) !important;
     padding-left: 1.4rem !important;
-    text-decoration: none !important;
 }
-
 .ep-right {
     display: flex; align-items: center;
     gap: 0.65rem; flex-shrink: 0; margin-left: 0.5rem;
 }
 .ep-beta {
     font-family: 'IBM Plex Mono', monospace; font-size: 0.4rem;
-    text-transform: uppercase; letter-spacing: 0.2em; color: #2a3550;
+    text-transform: uppercase; letter-spacing: 0.2em; color: #243040;
     display: flex; align-items: center; gap: 0.35rem;
 }
 .ep-dot {
     width: 5px; height: 5px; border-radius: 50%;
-    background: #00e676; flex-shrink: 0;
+    background: #26d97f; flex-shrink: 0;
     animation: ep-pulse 2s ease-in-out infinite;
 }
 @keyframes ep-pulse {
-    0%,100% { opacity:1; box-shadow: 0 0 5px #00e676; }
+    0%,100% { opacity:1; box-shadow: 0 0 5px #26d97f; }
     50%      { opacity:0.3; box-shadow: none; }
 }
 .ep-signup {
@@ -200,7 +158,7 @@ section[data-testid="stMain"] > div { overflow: visible !important; }
     font-size: 0.55rem; font-weight: 700;
     text-transform: uppercase; letter-spacing: 0.07em;
     color: #000 !important;
-    background: #00e676;
+    background: #26d97f;
     border: none; border-radius: 6px;
     padding: 0.38rem 0.85rem;
     cursor: pointer; white-space: nowrap;
@@ -209,79 +167,74 @@ section[data-testid="stMain"] > div { overflow: visible !important; }
     display: inline-flex; align-items: center;
 }
 .ep-signup:hover {
-    background: #00ff88 !important;
-    box-shadow: 0 0 12px rgba(0,230,118,0.4);
+    background: #30f090 !important;
+    box-shadow: 0 0 12px rgba(38,217,127,0.4);
 }
 .ep-welcome {
     font-family: 'IBM Plex Mono', monospace; font-size: 0.58rem;
-    color: #00e676; font-weight: 600; white-space: nowrap;
+    color: #26d97f; font-weight: 600; white-space: nowrap;
 }
 .ep-signout {
     font-family: 'IBM Plex Mono', monospace; font-size: 0.52rem;
-    color: #3a4a5e !important; text-decoration: none !important;
-    border: 1px solid #1a2235; border-radius: 6px;
+    color: #3d5068 !important; text-decoration: none !important;
+    border: 1px solid #243040; border-radius: 6px;
     padding: 0.32rem 0.7rem;
-    transition: color 0.15s, border-color 0.15s;
-    white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s; white-space: nowrap;
 }
-.ep-signout:hover { color: #ff3d57 !important; border-color: #ff3d57 !important; }
-
+.ep-signout:hover { color: #e84040 !important; border-color: #e84040 !important; }
 .ep-spacer { height: 1.4rem; }
-
-/* Remove Streamlit's default blue link color from page_link buttons */
-[data-testid="stPageLink"] a {
-    text-decoration: none !important;
-    color: inherit !important;
-}
 </style>"""
 
     body = (
         '<div class="ep-navbar">'
-        '<a class="ep-brand" href="/" target="_self">' + LOGO_IMG + '</a>'
+        '<a class="ep-brand" href="/">' + LOGO_IMG + '</a>'
         '<div class="ep-center">'
-        '<a class="ep-pill" href="/" target="_self">Home</a>'
-        '<a class="ep-pill" href="/Strategy_Lab" target="_self">Strategy Lab</a>'
-        '<a class="ep-pill" href="/Replay" target="_self">Replay</a>'
-        '<a class="ep-pill" href="/Analysis" target="_self">Analysis</a>'
-        '<a class="ep-pill" href="/Assistant" target="_self">AI Coach</a>'
-        # Research dropdown
+        '<a class="ep-pill" href="/">Home</a>'
+        '<a class="ep-pill" href="/Strategy_Lab">Strategy Lab</a>'
+        '<a class="ep-pill" href="/Replay">Replay</a>'
+        '<a class="ep-pill" href="/Analysis">Analysis</a>'
+        '<a class="ep-pill" href="/Assistant">AI Coach</a>'
         '<div class="ep-tools-wrap">'
         '<button class="ep-tools-btn">Research <span class="ep-arrow">&#9660;</span></button>'
         '<div class="ep-dropdown">'
-        '<a class="ep-drop-link" href="/Earnings" target="_self">📅 Earnings</a>'
-        '<a class="ep-drop-link" href="/Correlations" target="_self">🔗 Correlations</a>'
-        '<a class="ep-drop-link" href="/Whale_Tracker" target="_self">🐳 Whale Tracker</a>'
-        '<a class="ep-drop-link" href="/Monte_Carlo" target="_self">🎲 Monte Carlo</a>'
-        '<a class="ep-drop-link" href="/Economic_Calendar" target="_self">🏛️ Econ Calendar</a>'
-        '<a class="ep-drop-link" href="/Market_Heatmap" target="_self">🌡️ Heatmap</a>'
-        '<a class="ep-drop-link" href="/Sector_Rotation" target="_self">🔄 Sector Rotation</a>'
-        '<a class="ep-drop-link" href="/Screener" target="_self">🔍 Screener</a>'
-        '<a class="ep-drop-link" href="/Pattern_Recognition" target="_self">📐 Patterns</a>'
+        '<a class="ep-drop-link" href="/Earnings">Earnings</a>'
+        '<a class="ep-drop-link" href="/Correlations">Correlations</a>'
+        '<a class="ep-drop-link" href="/Whale_Tracker">Whale Tracker</a>'
+        '<a class="ep-drop-link" href="/Monte_Carlo">Monte Carlo</a>'
+        '<a class="ep-drop-link" href="/Economic_Calendar">Econ Calendar</a>'
+        '<a class="ep-drop-link" href="/Market_Heatmap">Heatmap</a>'
+        '<a class="ep-drop-link" href="/Sector_Rotation">Sector Rotation</a>'
+        '<a class="ep-drop-link" href="/Screener">Screener</a>'
+        '<a class="ep-drop-link" href="/Pattern_Recognition">Patterns</a>'
         '</div>'
         '</div>'
-        # Tools dropdown
         '<div class="ep-tools-wrap">'
         '<button class="ep-tools-btn">Tools <span class="ep-arrow">&#9660;</span></button>'
         '<div class="ep-dropdown">'
-        '<a class="ep-drop-link" href="/Risk_Calculator" target="_self">⚖️ Risk Calculator</a>'
-        '<a class="ep-drop-link" href="/Options_Chain" target="_self">📊 Options Chain</a>'
-        '<a class="ep-drop-link" href="/Portfolio_Tracker" target="_self">💼 Portfolio</a>'
-        '<a class="ep-drop-link" href="/Trade_Journal" target="_self">📓 Trade Journal</a>'
-        '<a class="ep-drop-link" href="/Trade_Stats" target="_self">📈 Trade Stats</a>'
+        '<a class="ep-drop-link" href="/Risk_Calculator">Risk Calculator</a>'
+        '<a class="ep-drop-link" href="/Options_Chain">Options Chain</a>'
+        '<a class="ep-drop-link" href="/Portfolio_Tracker">Portfolio</a>'
+        '<a class="ep-drop-link" href="/Trade_Journal">Trade Journal</a>'
+        '<a class="ep-drop-link" href="/Trade_Stats">Trade Stats</a>'
         '</div>'
         '</div>'
         '</div>'
         + right +
         '</div>'
         '<div class="ep-spacer"></div>'
+        # Navigation JS — routes all navbar clicks via window.top to fix URL updates
         '<script>'
-        'document.querySelectorAll(".ep-navbar a, .ep-drop-link, .ep-pill, .ep-brand, .ep-signup, .ep-signout").forEach(function(a){'
-        '  a.addEventListener("click", function(e){'
-        '    e.preventDefault();'
-        '    var url = a.getAttribute("href");'
-        '    if(url) { try { window.top.location.href = url; } catch(x) { window.location.href = url; } }'
+        '(function(){'
+        '  function nav(url){'
+        '    try{ window.top.location.href=url; }'
+        '    catch(e){ window.location.href=url; }'
+        '  }'
+        '  document.querySelectorAll(".ep-navbar a[href], .ep-drop-link[href], .ep-pill[href], .ep-brand[href], .ep-signup[href], .ep-signout[href]").forEach(function(a){'
+        '    a.addEventListener("click",function(e){'
+        '      e.preventDefault(); nav(a.getAttribute("href"));'
+        '    });'
         '  });'
-        '});'
+        '})();'
         '</script>'
     )
 
