@@ -272,87 +272,63 @@ html,body,[data-testid="stAppViewContainer"],
 .footer-legal{font-family:'IBM Plex Mono',monospace;font-size:0.48rem;color:var(--dim2);margin-top:0.5rem;}
 </style>""", unsafe_allow_html=True)
 
-# ── Animated chart canvas + grid + spotlights ─────────────────────────────────
+# ── Background divs ───────────────────────────────────────────────────────────
 st.markdown("""
 <div class="grid-bg"></div>
 <div class="spotlight"></div>
 <div class="spotlight-red"></div>
 <canvas id="chart-canvas"></canvas>
-<script>
-(function(){
-  var canvas = document.getElementById('chart-canvas');
-  if(!canvas) return;
-  var ctx = canvas.getContext('2d');
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  window.addEventListener('resize', function(){
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    initBars();
-  });
+""", unsafe_allow_html=True)
 
-  var bars = [], barW = 14, gap = 4, step = barW + gap;
+# ── Animated canvas script via components (scripts work here) ─────────────────
+import streamlit.components.v1 as _cv1
+_cv1.html("""<script>
+(function(){
+  var doc = window.parent.document;
+  var canvas = doc.getElementById('chart-canvas');
+  if(!canvas){setTimeout(arguments.callee,200);return;}
+  var ctx = canvas.getContext('2d');
+  function resize(){canvas.width=window.parent.innerWidth;canvas.height=window.parent.innerHeight;}
+  resize();
+  window.parent.addEventListener('resize',function(){resize();initBars();});
+  var bars=[],barW=14,gap=4,step=barW+gap;
   function initBars(){
-    bars = [];
-    var count = Math.ceil(canvas.width / step) + 2;
-    var baseY = canvas.height * 0.6;
-    var price = 150;
+    bars=[];
+    var count=Math.ceil(canvas.width/step)+2;
+    var price=150;
     for(var i=0;i<count;i++){
-      var change = (Math.random()-0.48)*4;
-      price += change;
-      var high = price + Math.random()*3;
-      var low  = price - Math.random()*3;
-      var open = price + (Math.random()-0.5)*2;
-      bars.push({open:open, close:price, high:high, low:low});
+      price+=(Math.random()-0.48)*4;
+      bars.push({open:price+(Math.random()-0.5)*2,close:price,high:price+Math.random()*3,low:price-Math.random()*3});
     }
   }
   initBars();
-
-  var offset = 0;
-  var scale = 3;
-  var baseY = canvas.height * 0.6;
-
-  function drawBars(){
+  var offset=0,scale=3;
+  function draw(){
+    var baseY=canvas.height*0.6;
     ctx.clearRect(0,0,canvas.width,canvas.height);
-    offset += 0.15;
-    if(offset >= step) {
-      offset -= step;
-      bars.shift();
-      var last = bars[bars.length-1];
-      var change = (Math.random()-0.48)*4;
-      var price = last.close + change;
-      var high = price + Math.random()*3;
-      var low  = price - Math.random()*3;
-      var open = price + (Math.random()-0.5)*2;
-      bars.push({open:open,close:price,high:high,low:low});
+    offset+=0.15;
+    if(offset>=step){
+      offset-=step;bars.shift();
+      var last=bars[bars.length-1];
+      var price=last.close+(Math.random()-0.48)*4;
+      bars.push({open:price+(Math.random()-0.5)*2,close:price,high:price+Math.random()*3,low:price-Math.random()*3});
     }
     bars.forEach(function(b,i){
-      var x = i*step - offset;
-      var bull = b.close >= b.open;
-      var col = bull ? 'rgba(0,255,136,' : 'rgba(255,61,90,';
-      var yO = baseY - b.open*scale;
-      var yC = baseY - b.close*scale;
-      var yH = baseY - b.high*scale;
-      var yL = baseY - b.low*scale;
-      var bodyTop = Math.min(yO,yC);
-      var bodyH = Math.max(Math.abs(yO-yC), 2);
-      ctx.fillStyle = col+'0.7)';
-      ctx.fillRect(x, bodyTop, barW, bodyH);
-      ctx.strokeStyle = col+'0.5)';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(x+barW/2, yH);
-      ctx.lineTo(x+barW/2, bodyTop);
-      ctx.moveTo(x+barW/2, bodyTop+bodyH);
-      ctx.lineTo(x+barW/2, yL);
-      ctx.stroke();
+      var x=i*step-offset;
+      var bull=b.close>=b.open;
+      var col=bull?'rgba(0,255,136,':'rgba(255,61,90,';
+      var yO=baseY-b.open*scale,yC=baseY-b.close*scale;
+      var yH=baseY-b.high*scale,yL=baseY-b.low*scale;
+      var top=Math.min(yO,yC),h=Math.max(Math.abs(yO-yC),2);
+      ctx.fillStyle=col+'0.65)';ctx.fillRect(x,top,barW,h);
+      ctx.strokeStyle=col+'0.45)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(x+barW/2,yH);ctx.lineTo(x+barW/2,top);
+      ctx.moveTo(x+barW/2,top+h);ctx.lineTo(x+barW/2,yL);ctx.stroke();
     });
-    requestAnimationFrame(drawBars);
+    requestAnimationFrame(draw);
   }
-  drawBars();
-
-  /* Same-tab nav */
-  document.addEventListener('click',function(e){
+  draw();
+  doc.addEventListener('click',function(e){
     var a=e.target.closest('a[href]');
     if(!a)return;
     var href=a.getAttribute('href');
@@ -361,8 +337,7 @@ st.markdown("""
     try{window.top.location.href=href;}catch(err){window.location.href=href;}
   },true);
 })();
-</script>
-""", unsafe_allow_html=True)
+</script>""", height=0)
 
 navbar()
 
