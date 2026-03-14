@@ -1,4 +1,7 @@
 import streamlit as st
+import sys as _sys, os as _os
+_sys.path.insert(0, _os.path.dirname(_os.path.dirname(__file__)))
+from utils.session_persist import restore_session
 import sys, os, pandas as pd, numpy as np
 from datetime import date, timedelta
 import yfinance as yf, plotly.graph_objects as go
@@ -6,6 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from utils.styles import SHARED_CSS, inject_bg, PLOTLY_THEME; from utils.nav import navbar
 
 st.set_page_config(page_title="Monte Carlo | 11%", layout="wide", initial_sidebar_state="collapsed")
+restore_session()
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
 st.markdown("""<style>
 .ph{background:linear-gradient(135deg,#0c1018,#0d1420);border:1px solid #1a2235;border-radius:16px;padding:2.5rem 3rem;margin-bottom:2rem;position:relative;overflow:hidden}
