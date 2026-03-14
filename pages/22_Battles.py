@@ -35,6 +35,22 @@ section[data-testid="stSidebar"]{display:none!important;width:0!important;max-wi
 
 restore_session()
 navbar()
+
+# ── Same-tab nav hook ─────────────────────────────────────────────────────────
+import streamlit.components.v1 as _nav_cv1
+_nav_cv1.html("""<script>
+(function(){
+  window.parent.document.addEventListener('click',function(e){
+    var a=e.target.closest('a[href]');
+    if(!a)return;
+    var href=a.getAttribute('href');
+    if(!href||href.startsWith('http')||href.startsWith('mailto')||href.startsWith('#'))return;
+    e.preventDefault();e.stopPropagation();
+    window.top.location.href=href;
+  },true);
+})();
+</script>""", height=0)
+
 inject_bg()
 
 is_logged = bool(st.session_state.get("user"))
