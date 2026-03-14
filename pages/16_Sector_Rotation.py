@@ -1,7 +1,7 @@
 import streamlit as st, sys, os, pandas as pd, yfinance as yf
 import plotly.graph_objects as go
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-from utils.styles import SHARED_CSS, PLOTLY_THEME; from utils.nav import navbar
+from utils.styles import SHARED_CSS, inject_bg, PLOTLY_THEME; from utils.nav import navbar
 
 st.set_page_config(page_title="Sector Rotation | 11%", layout="wide", initial_sidebar_state="collapsed")
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
@@ -21,6 +21,7 @@ st.markdown("""<style>
 .cycle-etfs{font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:#8896ab;line-height:1.6}
 </style>""", unsafe_allow_html=True)
 navbar()
+inject_bg()
 
 st.markdown("""<div class="ph"><div class="ph-ey">Macro & Cycles</div><h1>Sector Rotation</h1><p>Track money flow between sectors over multiple timeframes. Institutional capital rotates through sectors on a cycle — understanding that cycle is the backbone of top-down macro investing.</p></div>""", unsafe_allow_html=True)
 
