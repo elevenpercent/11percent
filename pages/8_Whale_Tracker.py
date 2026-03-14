@@ -14,6 +14,22 @@ st.set_page_config(page_title="Whale Tracker | 11%", layout="wide", initial_side
 restore_session()
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
 navbar()
+
+# ── Same-tab nav hook ─────────────────────────────────────────────────────────
+import streamlit.components.v1 as _nav_cv1
+_nav_cv1.html("""<script>
+(function(){
+  window.parent.document.addEventListener('click',function(e){
+    var a=e.target.closest('a[href]');
+    if(!a)return;
+    var href=a.getAttribute('href');
+    if(!href||href.startsWith('http')||href.startsWith('mailto')||href.startsWith('#'))return;
+    e.preventDefault();e.stopPropagation();
+    window.top.location.href=href;
+  },true);
+})();
+</script>""", height=0)
+
 inject_bg()
 
 st.markdown("""
