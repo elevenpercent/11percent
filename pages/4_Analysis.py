@@ -1,4 +1,7 @@
 import streamlit as st
+import sys as _sys, os as _os
+_sys.path.insert(0, _os.path.dirname(_os.path.dirname(__file__)))
+from utils.session_persist import restore_session
 import sys, os
 import re
 import pandas as pd
@@ -11,6 +14,7 @@ from utils.nav import navbar
 from utils.data import get_stock_data, get_ticker_info, get_news
 
 st.set_page_config(page_title="Analysis | 11%", layout="wide", initial_sidebar_state="collapsed")
+restore_session()
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
 navbar()
 inject_bg()
@@ -290,7 +294,7 @@ else:
     for i, a in enumerate(articles):
         with (nc1 if i % 2 == 0 else nc2):
             st.markdown(
-                f'<a href="{a["url"]}" target="_blank" style="text-decoration:none;">'
+                f'<a href="{a["url"]}" target="_self" style="text-decoration:none;">'
                 f'<div style="background:#0c1018;border:1px solid #1a2235;border-radius:8px;'
                 f'padding:0.85rem 1rem;margin-bottom:0.6rem;transition:border-color 0.15s;"'
                 f' onmouseover="this.style.borderColor=\'#2a3550\'" onmouseout="this.style.borderColor=\'#1a2235\'">'
