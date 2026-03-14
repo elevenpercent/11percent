@@ -7,6 +7,9 @@ from utils.session_persist import restore_session
 from utils import db
 
 st.set_page_config(page_title="Dashboard | 11%", layout="wide", initial_sidebar_state="collapsed")
+
+restore_session()
+
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
 st.markdown("""<style>
 html,body,[data-testid="stAppViewContainer"]{background:#13161a!important}
