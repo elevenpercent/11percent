@@ -1,9 +1,9 @@
 [theme]
 base = "dark"
-backgroundColor = "#07090d"
-secondaryBackgroundColor = "#0d1117"
-primaryColor = "#00d68f"
-textColor = "#cdd5e0"
+backgroundColor = "#13161a"
+secondaryBackgroundColor = "#1c1f23"
+primaryColor = "#4ade80"
+textColor = "#e6eaf0"
 font = "monospace"
 
 [browser]
@@ -11,3 +11,7 @@ gatherUsageStats = false
 
 [server]
 headless = true
+
+[runner]
+# Hide the sidebar navigation flash
+fastReruns = true
