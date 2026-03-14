@@ -40,6 +40,22 @@ st.markdown("""<style>
 .result-count{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:#eef2f7;letter-spacing:0.05em}
 </style>""", unsafe_allow_html=True)
 navbar()
+
+# ── Same-tab nav hook ─────────────────────────────────────────────────────────
+import streamlit.components.v1 as _nav_cv1
+_nav_cv1.html("""<script>
+(function(){
+  window.parent.document.addEventListener('click',function(e){
+    var a=e.target.closest('a[href]');
+    if(!a)return;
+    var href=a.getAttribute('href');
+    if(!href||href.startsWith('http')||href.startsWith('mailto')||href.startsWith('#'))return;
+    e.preventDefault();e.stopPropagation();
+    window.top.location.href=href;
+  },true);
+})();
+</script>""", height=0)
+
 inject_bg()
 
 st.markdown("""<div class="ph"><div class="ph-ey">Stock Screener</div><h1>Screener</h1>
