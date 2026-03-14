@@ -33,6 +33,22 @@ div.stButton>button:hover{border-color:#00e676!important;color:#00e676!important
 [data-testid="stSlider"] label{font-family:'IBM Plex Mono',monospace!important;font-size:0.65rem!important;color:#8896ab!important;text-transform:uppercase!important;letter-spacing:0.15em!important}
 </style>""", unsafe_allow_html=True)
 navbar()
+
+# ── Same-tab nav hook ─────────────────────────────────────────────────────────
+import streamlit.components.v1 as _nav_cv1
+_nav_cv1.html("""<script>
+(function(){
+  window.parent.document.addEventListener('click',function(e){
+    var a=e.target.closest('a[href]');
+    if(!a)return;
+    var href=a.getAttribute('href');
+    if(!href||href.startsWith('http')||href.startsWith('mailto')||href.startsWith('#'))return;
+    e.preventDefault();e.stopPropagation();
+    window.top.location.href=href;
+  },true);
+})();
+</script>""", height=0)
+
 inject_bg()
 
 for k,v in [("rp_df",None),("rp_ticker","AAPL"),("rp_loaded",False),("rp_trades",[]),("rp_capital",10000.0),("rp_interval","1d"),("rp_start",str(date.today()-timedelta(days=365))),("rp_end",str(date.today())),("rp_start_bar",60)]:
