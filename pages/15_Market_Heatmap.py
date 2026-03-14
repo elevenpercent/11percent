@@ -44,21 +44,30 @@ SECTORS = {
 }
 MACRO = {"SPY":"S&P 500","QQQ":"Nasdaq 100","IWM":"Small Cap","GLD":"Gold","TLT":"Long Bonds","BTC-USD":"Bitcoin","GC=F":"Crude Oil","DX-Y.NYB":"US Dollar"}
 
-@st.cache_data(ttl=300)  # 5 min cache for intraday freshness
+import pandas as _pd
+
+@st.cache_data(ttl=120)  # 2 min cache for near-live intraday
 def fetch_returns(syms, period):
     rows = {}
     for s in syms:
         try:
             if period == "1d":
-                h = yf.Ticker(s).history(period="2d", interval="1d")
+                h = yf.Ticker(s).history(period="1d", interval="5m")
             else:
                 h = yf.Ticker(s).history(period=period)
+            if isinstance(h.columns, _pd.MultiIndex):
+                h.columns = h.columns.get_level_values(0)
             if len(h) >= 2:
-                rows[s] = {
-                    "ret": round((h["Close"].iloc[-1]/h["Close"].iloc[-2 if period=="1d" else 0]-1)*100, 2),
-                    "price": round(float(h["Close"].iloc[-1]), 2),
-                    "open": round(float(h["Open"].iloc[-1]), 2) if period=="1d" else None,
-                }
+                current = round(float(h["Close"].iloc[-1]), 2)
+                if period == "1d":
+                    open_p = round(float(h["Open"].iloc[0]), 2)
+                    ret    = round((current / open_p - 1) * 100, 2) if open_p else 0
+                    rows[s] = {"ret": ret, "price": current, "open": open_p}
+                else:
+                    rows[s] = {
+                        "ret":   round((h["Close"].iloc[-1]/h["Close"].iloc[0]-1)*100, 2),
+                        "price": current, "open": None,
+                    }
         except: pass
     return rows
 
