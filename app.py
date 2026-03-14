@@ -14,6 +14,11 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
+# ── Restore session FIRST — before any rendering ──────────────────────────────
+restore_session()
+if st.session_state.get("user"):
+    st.switch_page("pages/21_Dashboard.py")
+
 # ── Kill white flash INSTANTLY ─────────────────────────────────────────────────
 st.markdown("""<style>
 html,body{background:#1a1510!important}
@@ -238,7 +243,6 @@ html,body,[data-testid="stAppViewContainer"],
 .mock-dot{width:9px;height:9px;border-radius:50%}
 </style>""", unsafe_allow_html=True)
 
-restore_session()
 navbar()
 
 # ── Dot grid + vignette background ──────────────────────────────────────────
