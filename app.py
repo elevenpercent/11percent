@@ -341,6 +341,25 @@ _cv1.html("""<script>
 
 navbar()
 
+# ── Global same-tab navigation injected via components ────────────────────────
+import streamlit.components.v1 as _nav_cv1
+_nav_cv1.html("""<script>
+(function(){
+  function hookLinks(doc){
+    doc.addEventListener('click', function(e){
+      var a = e.target.closest('a[href]');
+      if(!a) return;
+      var href = a.getAttribute('href');
+      if(!href || href.startsWith('http') || href.startsWith('mailto') || href.startsWith('#')) return;
+      e.preventDefault();
+      e.stopPropagation();
+      window.top.location.href = href;
+    }, true);
+  }
+  hookLinks(window.parent.document);
+})();
+</script>""", height=0)
+
 # ═══════════════════════════════════════════════════════════════
 # HERO
 # ═══════════════════════════════════════════════════════════════
