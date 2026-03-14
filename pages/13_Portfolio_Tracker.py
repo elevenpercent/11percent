@@ -29,6 +29,22 @@ st.markdown("""<style>
 .pos-pos{color:#00e676;font-weight:700}.pos-neg{color:#ff3d57;font-weight:700}.pos-neu{color:#8896ab}
 </style>""", unsafe_allow_html=True)
 navbar()
+
+# ── Same-tab nav hook ─────────────────────────────────────────────────────────
+import streamlit.components.v1 as _nav_cv1
+_nav_cv1.html("""<script>
+(function(){
+  window.parent.document.addEventListener('click',function(e){
+    var a=e.target.closest('a[href]');
+    if(!a)return;
+    var href=a.getAttribute('href');
+    if(!href||href.startsWith('http')||href.startsWith('mailto')||href.startsWith('#'))return;
+    e.preventDefault();e.stopPropagation();
+    window.top.location.href=href;
+  },true);
+})();
+</script>""", height=0)
+
 inject_bg()
 
 st.markdown("""<div class="ph"><div class="ph-ey">Live Tracking</div><h1>Portfolio Tracker</h1><p>Track your real or paper portfolio with live prices, P&L by position, sector exposure, and total return — updated every time you load.</p></div>""", unsafe_allow_html=True)
