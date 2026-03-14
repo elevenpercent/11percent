@@ -27,6 +27,21 @@ section[data-testid="stSidebar"]{display:none!important;width:0!important;max-wi
 restore_session()
 navbar()
 
+# Redirect logged-in users to dashboard on home page
+if st.session_state.get("user"):
+    _email = st.session_state.get("user_email","")
+    _uname = _email.split("@")[0].replace("."," ").replace("_"," ").title()
+    st.markdown(f'''<div style="background:rgba(74,222,128,0.05);border:1px solid rgba(74,222,128,0.18);
+    border-radius:10px;padding:0.8rem 1.3rem;margin-bottom:1rem;
+    display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-family:IBM Plex Mono,monospace;font-size:0.72rem;color:#9ca3af">
+            Welcome back, <strong style="color:#e6eaf0">{_uname}</strong>
+        </div>
+        <a href="/Dashboard" style="background:#4ade80;color:#0a0f0a;font-family:IBM Plex Mono,monospace;
+        font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;
+        padding:0.4rem 1rem;border-radius:6px;text-decoration:none">Go to Dashboard</a>
+    </div>''', unsafe_allow_html=True)
+
 # ── Particle background (canvas) ─────────────────────────────────────────────
 st.markdown("""
 <canvas id="particles" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.35"></canvas>
