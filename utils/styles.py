@@ -274,3 +274,52 @@ div[data-baseweb="select"] > div { background:var(--bg2)!important; border-color
 .page-header p { font-family:'IBM Plex Mono',monospace; font-size:0.7rem; color:var(--muted); line-height:1.8; max-width:580px; }
 </style>
 """
+
+# ── Animated background component — call inject_bg() on every page ────────────
+ANIMATED_BG = """
+<canvas id="ep-bg-canvas" style="position:fixed;top:0;left:0;width:100vw;height:100vh;
+pointer-events:none;z-index:0;opacity:0.22"></canvas>
+<script>
+(function(){
+  var c=document.getElementById('ep-bg-canvas');
+  if(!c)return;
+  var ctx=c.getContext('2d');
+  function resize(){c.width=window.innerWidth;c.height=window.innerHeight;}
+  resize();
+  window.addEventListener('resize',resize);
+  var pts=[];
+  for(var i=0;i<70;i++) pts.push({
+    x:Math.random()*c.width, y:Math.random()*c.height,
+    vx:(Math.random()-0.5)*0.35, vy:(Math.random()-0.5)*0.35,
+    r:Math.random()*1.2+0.4
+  });
+  var colors=['rgba(74,222,128,','rgba(248,113,113,'];
+  function draw(){
+    ctx.clearRect(0,0,c.width,c.height);
+    pts.forEach(function(p,i){
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<0||p.x>c.width)  p.vx*=-1;
+      if(p.y<0||p.y>c.height) p.vy*=-1;
+      var col=colors[i%2];
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=col+'0.7)';ctx.fill();
+      pts.slice(i+1).forEach(function(q){
+        var dx=p.x-q.x,dy=p.y-q.y,d=Math.sqrt(dx*dx+dy*dy);
+        if(d<110){
+          ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);
+          ctx.strokeStyle=col+(0.1*(1-d/110))+')';
+          ctx.lineWidth=0.4;ctx.stroke();
+        }
+      });
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+</script>
+"""
+
+def inject_bg():
+    """Call at the top of every page after navbar() to add the animated particle background."""
+    import streamlit as st
+    st.markdown(ANIMATED_BG, unsafe_allow_html=True)
