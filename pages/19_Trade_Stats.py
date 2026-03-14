@@ -1,7 +1,7 @@
 import streamlit as st, sys, os, pandas as pd, numpy as np
 import plotly.graph_objects as go
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-from utils.styles import SHARED_CSS, PLOTLY_THEME; from utils.nav import navbar
+from utils.styles import SHARED_CSS, inject_bg, PLOTLY_THEME; from utils.nav import navbar
 
 st.set_page_config(page_title="Trade Stats | 11%", layout="wide", initial_sidebar_state="collapsed")
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
@@ -21,6 +21,7 @@ st.markdown("""<style>
 .upload-zone-sub{font-family:'IBM Plex Mono',monospace;font-size:0.68rem;color:#3a4a5e;line-height:1.8}
 </style>""", unsafe_allow_html=True)
 navbar()
+inject_bg()
 
 st.markdown("""<div class="ph"><div class="ph-ey">Performance Analytics</div><h1>Trade Stats</h1>
 <p>Upload a CSV of your trade history and get a full breakdown: equity curve, win rate, max drawdown, streak analysis, R-distribution, and expectancy — everything you need to know if your edge is real.</p></div>""", unsafe_allow_html=True)
