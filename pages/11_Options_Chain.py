@@ -1,10 +1,14 @@
 import streamlit as st, sys, os, math, pandas as pd, numpy as np
+import sys as _sys, os as _os
+_sys.path.insert(0, _os.path.dirname(_os.path.dirname(__file__)))
+from utils.session_persist import restore_session
 import yfinance as yf, plotly.graph_objects as go
 from scipy.stats import norm
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from utils.styles import SHARED_CSS, inject_bg, PLOTLY_THEME; from utils.nav import navbar
 
 st.set_page_config(page_title="Options Chain | 11%", layout="wide", initial_sidebar_state="collapsed")
+restore_session()
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
 st.markdown("""<style>
 .ph{background:linear-gradient(135deg,#141a1f,#111820);border:1px solid #243040;border-radius:16px;padding:2.5rem 3rem;margin-bottom:2rem;position:relative;overflow:hidden}
